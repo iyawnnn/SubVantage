@@ -8,18 +8,20 @@ import {
   Text,
   Stack,
   Title,
+  Box,
 } from "@mantine/core";
 import {
   IconCoin,
   IconCalendarStats,
   IconAlertCircle,
+  IconLeaf,
 } from "@tabler/icons-react";
 import { StaggerContainer, StaggerItem, StatCard } from "./DashboardMotion";
 import { SpendingChart } from "./SpendingChart";
 import { CategoryChart } from "./CategoryChart";
 import { UpcomingBills } from "./UpcomingBills";
 import { SubscriptionTable } from "./SubscriptionTable";
-import { InsightsCard, GraveyardCard, ForecastWidget } from "./Insights";
+import { InsightsCard, ForecastWidget } from "./Insights";
 import { formatCurrency } from "@/lib/currency-helper";
 
 // --- Types ---
@@ -40,7 +42,8 @@ interface DashboardDataProps {
   monthlyBurn: number;
   annualProjection: number;
   activeTrials: number;
-  currency: string; // 👈 Added currency prop
+  totalSaved: number;
+  currency: string;
 }
 
 // --- 1. Stats Section ---
@@ -48,12 +51,15 @@ export function StatsSection({
   monthlyBurn,
   annualProjection,
   activeTrials,
+  totalSaved,
   currency,
 }: DashboardDataProps) {
+  const colSpan = { base: 12, sm: 6, md: 3 };
+
   return (
     <StaggerContainer>
       <Grid gutter="md" mb="xl">
-        <Grid.Col span={{ base: 12, sm: 4 }}>
+        <Grid.Col span={colSpan}>
           <StaggerItem>
             <StatCard shadow="xs" p="xl" radius="md" withBorder>
               <Group>
@@ -64,7 +70,6 @@ export function StatsSection({
                   <Text c="dimmed" size="xs" tt="uppercase" fw={700}>
                     Monthly Burn
                   </Text>
-                  {/* Updated to use dynamic currency */}
                   <Text fw={700} size="xl">
                     {formatCurrency(monthlyBurn, currency || "USD")}
                   </Text>
@@ -74,7 +79,7 @@ export function StatsSection({
           </StaggerItem>
         </Grid.Col>
 
-        <Grid.Col span={{ base: 12, sm: 4 }}>
+        <Grid.Col span={colSpan}>
           <StaggerItem>
             <StatCard shadow="xs" p="xl" radius="md" withBorder>
               <Group>
@@ -85,7 +90,6 @@ export function StatsSection({
                   <Text c="dimmed" size="xs" tt="uppercase" fw={700}>
                     Annual Projection
                   </Text>
-                  {/* Updated to use dynamic currency */}
                   <Text fw={700} size="xl">
                     {formatCurrency(annualProjection, currency || "USD")}
                   </Text>
@@ -95,7 +99,7 @@ export function StatsSection({
           </StaggerItem>
         </Grid.Col>
 
-        <Grid.Col span={{ base: 12, sm: 4 }}>
+        <Grid.Col span={colSpan}>
           <StaggerItem>
             <StatCard shadow="xs" p="xl" radius="md" withBorder>
               <Group>
@@ -114,48 +118,56 @@ export function StatsSection({
             </StatCard>
           </StaggerItem>
         </Grid.Col>
+
+        <Grid.Col span={colSpan}>
+          <StaggerItem>
+            <StatCard shadow="xs" p="xl" radius="md" withBorder>
+              <Group>
+                <ThemeIcon color="teal" variant="light" size={48} radius="md">
+                  <IconLeaf size="1.5rem" stroke={1.5} />
+                </ThemeIcon>
+                <div>
+                  <Text c="dimmed" size="xs" tt="uppercase" fw={700}>
+                    Monthly Savings
+                  </Text>
+                  <Text fw={700} size="xl" c="teal">
+                    {formatCurrency(totalSaved, currency || "USD")}
+                  </Text>
+                </div>
+              </Group>
+            </StatCard>
+          </StaggerItem>
+        </Grid.Col>
       </Grid>
     </StaggerContainer>
   );
 }
 
-// --- 2. NEW: Insights Section ---
+// --- 2. Insights Section ---
 export function InsightsSection({
   redundancy,
-  graveyard,
   runway,
   currency,
 }: {
   redundancy: any[];
-  graveyard: any;
   runway: any;
   currency: string;
 }) {
+  if (redundancy.length === 0 && !runway) return null;
+
   return (
     <StaggerContainer>
       <Grid gutter="md" mb="xl">
-        {/* Redundancy Alert - Only shows if there are duplicates */}
         {redundancy.length > 0 && (
-          <Grid.Col span={{ base: 12, md: 4 }}>
-            <StaggerItem>
-              <InsightsCard redundancies={redundancy} />
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <StaggerItem style={{ height: "100%" }}>
+              <InsightsCard redundancies={redundancy} currency={currency} />
             </StaggerItem>
           </Grid.Col>
         )}
 
-        {/* Graveyard Stats (Money Saved) */}
-        <Grid.Col span={{ base: 12, md: redundancy.length > 0 ? 4 : 6 }}>
-          <StaggerItem>
-            <GraveyardCard
-              savedAmount={graveyard.totalSavedMonthly}
-              currency={currency}
-            />
-          </StaggerItem>
-        </Grid.Col>
-
-        {/* Forecast Widget (Runway) */}
-        <Grid.Col span={{ base: 12, md: redundancy.length > 0 ? 4 : 6 }}>
-          <StaggerItem>
+        <Grid.Col span={{ base: 12, md: redundancy.length > 0 ? 6 : 12 }}>
+          <StaggerItem style={{ height: "100%" }}>
             <ForecastWidget
               d30={runway.d30}
               d60={runway.d60}
@@ -170,21 +182,47 @@ export function InsightsSection({
 }
 
 // --- 3. Charts Section ---
-export function ChartsSection({ subs }: { subs: Subscription[] }) {
+export function ChartsSection({
+  subs,
+  rates,
+  currency,
+}: {
+  subs: Subscription[];
+  rates: any;
+  currency: string;
+}) {
   return (
     <StaggerContainer>
       <Grid gutter="md" mb="xl">
         <Grid.Col span={{ base: 12, md: 8 }}>
-          <StaggerItem style={{ height: "100%" }}>
-            <SpendingChart data={subs} />
+          <StaggerItem>
+            {/* 👇 FIX: Enforce minimum height here so Recharts doesn't crash */}
+            <Box style={{ minHeight: 400, width: "100%" }}>
+              <SpendingChart
+                data={subs}
+                baseCurrency={currency}
+                rates={rates}
+              />
+            </Box>
           </StaggerItem>
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, md: 4 }}>
           <StaggerItem>
             <Stack>
-              <CategoryChart data={subs} />
-              <UpcomingBills data={subs} />
+               {/* 👇 FIX: Enforce height on Category Chart too */}
+              <Box style={{ minHeight: 300, width: "100%" }}>
+                <CategoryChart
+                  data={subs}
+                  baseCurrency={currency}
+                  rates={rates}
+                />
+              </Box>
+              <UpcomingBills 
+                data={subs} 
+                rates={rates} 
+                currency={currency} 
+              />
             </Stack>
           </StaggerItem>
         </Grid.Col>
@@ -194,7 +232,15 @@ export function ChartsSection({ subs }: { subs: Subscription[] }) {
 }
 
 // --- 4. Table Section ---
-export function TableSection({ subs }: { subs: Subscription[] }) {
+export function TableSection({ 
+  subs, 
+  rates, 
+  currency 
+}: { 
+  subs: Subscription[], 
+  rates: any, 
+  currency: string 
+}) {
   return (
     <StaggerContainer>
       <StaggerItem>
@@ -202,7 +248,11 @@ export function TableSection({ subs }: { subs: Subscription[] }) {
           <Title order={4} mb="md" px="xs">
             Active Subscriptions
           </Title>
-          <SubscriptionTable data={subs} />
+          <SubscriptionTable 
+            data={subs} 
+            rates={rates} 
+            baseCurrency={currency} 
+          />
         </Paper>
       </StaggerItem>
     </StaggerContainer>

@@ -14,12 +14,12 @@
 📄 Phase 3: New Page Architecture
 [ ] Landing Page (SEO Optimized): A professional "Front Door" for your app with feature bento-grids and a clear "Get Started" call to action.
 
-[ ] Archive View: A dedicated page /dashboard/archive to view historical spend.
+[x] Archive View: A dedicated page /dashboard/archive to view historical spend.
 
 [ ] Community Insights: A "Discovery" page showing what other users are subscribing to (anonymized).
 
 🛠️ Phase 4: Power-User UX
-[ ] Command Palette (Cmd + K): Global search to find vendors, navigate pages, or trigger the "Add Modal."
+[x] Command Palette (Cmd + K): Global search to find vendors, navigate pages, or trigger the "Add Modal."
 
 [ ] Subscription "Circles": The ability to "Split" a bill with another user account.
 

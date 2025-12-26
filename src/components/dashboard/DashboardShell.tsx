@@ -18,6 +18,7 @@ import {
   IconSettings,
   IconSun,
   IconMoon,
+  IconArchive, // 👈 Added Icon
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -69,10 +70,7 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
               radius="md"
               aria-label="Toggle color scheme"
             >
-              {/* Sun Icon: Shows ONLY in Dark Mode (to switch to Light) */}
               <IconSun className="hide-in-light" size={18} stroke={1.5} />
-
-              {/* Moon Icon: Shows ONLY in Light Mode (to switch to Dark) */}
               <IconMoon className="hide-in-dark" size={18} stroke={1.5} />
             </ActionIcon>
             <UserMenu
@@ -98,6 +96,22 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
           color="azure"
           style={{ borderRadius: "8px", marginBottom: "4px" }}
         />
+
+        {/* 👇 ADDED ARCHIVE LINK */}
+        <NavLink
+          label="Archive"
+          leftSection={<IconArchive size="1rem" stroke={1.5} />}
+          component={Link}
+          href="/archive"
+          active={pathname === "/archive"}
+          onClick={() => {
+            if (opened) toggle();
+          }}
+          variant="light"
+          color="azure"
+          style={{ borderRadius: "8px", marginBottom: "4px" }}
+        />
+
         <NavLink
           label="Settings"
           leftSection={<IconSettings size="1rem" stroke={1.5} />}

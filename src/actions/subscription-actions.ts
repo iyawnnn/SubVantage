@@ -14,8 +14,8 @@ export type ActionResponse = {
   errors?: Record<string, string[]>;
 };
 
-// --- ADD SUBSCRIPTION ---
-export async function addSubscription(
+// --- CREATE SUBSCRIPTION ---
+export async function createSubscription(
   data: SubscriptionFormData
 ): Promise<ActionResponse> {
   const session = await auth();
@@ -26,11 +26,7 @@ export async function addSubscription(
   // 1. Validate Input
   const validated = subscriptionSchema.safeParse(data);
   if (!validated.success) {
-    console.error(
-      "❌ Validation Errors:",
-      validated.error.flatten().fieldErrors
-    );
-
+    console.error("❌ Validation Errors:", validated.error.flatten().fieldErrors);
     return {
       success: false,
       message: "Validation failed",
@@ -39,6 +35,10 @@ export async function addSubscription(
   }
 
   const { name, website, ...subData } = validated.data;
+  
+  // Handle fields that might be optional/missing in older schemas
+  const status = (subData as any).status || "ACTIVE"; 
+  const splitCost = (subData as any).splitCost || 0; // 👈 NEW: Capture Split Cost
 
   try {
     // 2. Find or Create Vendor
@@ -68,12 +68,14 @@ export async function addSubscription(
     await prisma.subscription.create({
       data: {
         cost: subData.cost,
-        currency: subData.currency, // 👈 ADDED THIS
+        splitCost: splitCost, // 👈 SAVING SPLIT COST TO DB
+        currency: subData.currency,
         frequency: subData.frequency,
         startDate: subData.startDate,
         nextRenewalDate: renewalDate,
         isTrial: subData.isTrial,
         category: subData.category,
+        status: status,
         userId: session.user.id,
         vendorId: vendor.id,
       },
@@ -105,6 +107,8 @@ export async function updateSubscription(
   }
 
   const { name, ...subData } = validated.data;
+  const status = (subData as any).status || "ACTIVE";
+  const splitCost = (subData as any).splitCost || 0; // 👈 NEW: Capture Split Cost
 
   try {
     // 1. Check Ownership
@@ -118,7 +122,6 @@ export async function updateSubscription(
 
     // 2. Handle Vendor Change
     let vendorId = existingSub.vendorId;
-
     let vendor = await prisma.vendor.findFirst({
       where: {
         name: { equals: name, mode: "insensitive" },
@@ -145,12 +148,14 @@ export async function updateSubscription(
       data: {
         vendorId: vendorId,
         cost: subData.cost,
-        currency: subData.currency, // 👈 ADDED THIS
+        splitCost: splitCost, // 👈 UPDATING SPLIT COST
+        currency: subData.currency,
         frequency: subData.frequency,
         startDate: subData.startDate,
         nextRenewalDate: renewalDate,
         isTrial: subData.isTrial,
         category: subData.category,
+        status: status,
       },
     });
 
@@ -173,14 +178,10 @@ export async function deleteSubscription(id: string): Promise<ActionResponse> {
     });
 
     if (!sub || sub.userId !== session.user.id) {
-      return {
-        success: false,
-        message: "Subscription not found or access denied.",
-      };
+      return { success: false, message: "Not found" };
     }
 
     await prisma.subscription.delete({ where: { id } });
-
     revalidatePath("/dashboard");
     return { success: true, message: "Subscription deleted." };
   } catch (error) {
@@ -188,11 +189,8 @@ export async function deleteSubscription(id: string): Promise<ActionResponse> {
   }
 }
 
-// --- HELPER FUNCTION ---
-function calculateRenewalDate(
-  startDate: Date,
-  frequency: "MONTHLY" | "YEARLY"
-) {
+// --- HELPER ---
+function calculateRenewalDate(startDate: Date, frequency: "MONTHLY" | "YEARLY") {
   const date = new Date(startDate);
   if (frequency === "MONTHLY") {
     date.setMonth(date.getMonth() + 1);
@@ -200,4 +198,40 @@ function calculateRenewalDate(
     date.setFullYear(date.getFullYear() + 1);
   }
   return date;
+}
+
+// --- ARCHIVE SUBSCRIPTION ---
+export async function archiveSubscription(id: string): Promise<ActionResponse> {
+  const session = await auth();
+  if (!session?.user?.id) return { success: false, message: "Unauthorized" };
+
+  try {
+    await prisma.subscription.update({
+      where: { id },
+      data: { status: "CANCELLED" },
+    });
+    revalidatePath("/dashboard");
+    revalidatePath("/archive");
+    return { success: true, message: "Subscription archived." };
+  } catch (error) {
+    return { success: false, message: "Failed to archive." };
+  }
+}
+
+// --- RESTORE SUBSCRIPTION ---
+export async function restoreSubscription(id: string): Promise<ActionResponse> {
+  const session = await auth();
+  if (!session?.user?.id) return { success: false, message: "Unauthorized" };
+
+  try {
+    await prisma.subscription.update({
+      where: { id },
+      data: { status: "ACTIVE" },
+    });
+    revalidatePath("/dashboard");
+    revalidatePath("/archive");
+    return { success: true, message: "Subscription restored." };
+  } catch (error) {
+    return { success: false, message: "Failed to restore." };
+  }
 }

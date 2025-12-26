@@ -1,88 +1,57 @@
 "use client";
 
+import { Modal, TextInput, NumberInput, Select, Button, Group, Checkbox, Stack } from "@mantine/core";
+import { DateInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
-import {
-  Modal,
-  TextInput,
-  NumberInput,
-  Select,
-  Button,
-  Group,
-  Switch,
-  Stack,
-} from "@mantine/core";
-import { DatePickerInput } from "@mantine/dates";
-import {
-  addSubscription,
-  updateSubscription,
-} from "@/actions/subscription-actions";
+import { createSubscription, updateSubscription } from "@/actions/subscription-actions"; 
 import { notifications } from "@mantine/notifications";
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { CURRENCIES, CURRENCY_SYMBOLS } from "@/lib/currency-helper"; // Ensure this import exists
-
-interface SubscriptionData {
-  id: string;
-  vendor: { name: string };
-  cost: number;
-  currency: string; // 👈 Ensure this is here
-  frequency: string;
-  startDate: Date;
-  isTrial: boolean;
-  category: string;
-}
+import { useEffect, useState } from "react";
 
 interface SubscriptionModalProps {
   opened: boolean;
   close: () => void;
-  subToEdit?: SubscriptionData | null;
+  subToEdit?: any | null; 
 }
 
-const CATEGORIES = [
-  "Entertainment",
-  "Work",
-  "Utilities",
-  "Dev Tools",
-  "Personal",
-];
-
-export function SubscriptionModal({
-  opened,
-  close,
-  subToEdit,
-}: SubscriptionModalProps) {
-  const [loading, setLoading] = useState(false);
+export function SubscriptionModal({ opened, close, subToEdit }: SubscriptionModalProps) {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   const form = useForm({
     initialValues: {
-      name: "",
+      vendorName: "",
+      website: "",
       cost: 0,
-      currency: "USD", // 👈 Default value
+      splitCost: 0, // 👈 NEW: Default to 0
+      currency: "PHP",
       frequency: "MONTHLY",
       category: "Personal",
       startDate: new Date(),
+      status: "ACTIVE",
       isTrial: false,
     },
     validate: {
-      name: (value) => (value.length < 2 ? "Name is too short" : null),
+      vendorName: (value) => (value.length < 2 ? "Name is too short" : null),
       cost: (value) => (value < 0 ? "Cost cannot be negative" : null),
-      startDate: (value) => (!value ? "Date is required" : null),
+      splitCost: (value) => (value < 0 ? "Split cost cannot be negative" : null),
     },
   });
 
-  // Get dynamic symbol
-  const currentSymbol = CURRENCY_SYMBOLS[form.values.currency] || "$";
-
+  // Populate form when editing
   useEffect(() => {
     if (subToEdit) {
       form.setValues({
-        name: subToEdit.vendor.name,
+        vendorName: subToEdit.vendor.name,
+        website: subToEdit.vendor.website || "",
         cost: Number(subToEdit.cost),
-        currency: subToEdit.currency || "USD", // 👈 Load existing currency
+        // 👈 NEW: Load splitCost if it exists, otherwise 0
+        splitCost: subToEdit.splitCost ? Number(subToEdit.splitCost) : 0,
+        currency: subToEdit.currency,
         frequency: subToEdit.frequency,
-        category: subToEdit.category || "Personal",
+        category: subToEdit.category,
         startDate: new Date(subToEdit.startDate),
+        status: subToEdit.status,
         isTrial: subToEdit.isTrial,
       });
     } else {
@@ -92,116 +61,146 @@ export function SubscriptionModal({
 
   const handleSubmit = async (values: typeof form.values) => {
     setLoading(true);
-    let result;
-
+    
+    // Map 'vendorName' to 'name' so the Server understands it
     const payload = {
-      ...values,
-      frequency: values.frequency as "MONTHLY" | "YEARLY",
+        ...values,
+        name: values.vendorName, 
     };
 
-    if (subToEdit) {
-      result = await updateSubscription(subToEdit.id, payload);
-    } else {
-      result = await addSubscription(payload);
-    }
+    try {
+      if (subToEdit) {
+        // --- UPDATE MODE ---
+        const result = await updateSubscription(subToEdit.id, payload);
+        
+        if (result.success) {
+          notifications.show({ title: "Success", message: "Subscription updated!", color: "green" });
+          close();
+          router.refresh();
+        } else {
+          const errorMsg = result.errors ? Object.values(result.errors).flat().join(", ") : result.message;
+          notifications.show({ title: "Error", message: errorMsg, color: "red" });
+        }
+      } else {
+        // --- CREATE MODE ---
+        const result = await createSubscription(payload);
 
-    setLoading(false);
-
-    if (result.success) {
-      notifications.show({
-        title: "Success",
-        message: subToEdit ? "Subscription updated" : "Subscription added",
-        color: "green",
-      });
-      if (!subToEdit) form.reset();
-      router.refresh();
-      close();
-    } else {
-      notifications.show({
-        title: "Error",
-        message: result.message,
-        color: "red",
-      });
+        if (result.success) {
+          notifications.show({ title: "Success", message: "Subscription added!", color: "green" });
+          form.reset();
+          close();
+          router.refresh();
+        } else {
+          const errorMsg = result.errors ? Object.values(result.errors).flat().join(", ") : result.message;
+          notifications.show({ title: "Error", message: errorMsg, color: "red" });
+        }
+      }
+    } catch (error) {
+      notifications.show({ title: "Error", message: "Something went wrong", color: "red" });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <Modal
-      opened={opened}
-      onClose={() => {
-        close();
-        form.reset();
-      }}
-      title={subToEdit ? "Edit Subscription" : "Add Subscription"}
+    <Modal 
+      opened={opened} 
+      onClose={() => { close(); form.reset(); }} 
+      title={subToEdit ? "Edit Subscription" : "Add Subscription"} 
       centered
     >
       <form onSubmit={form.onSubmit(handleSubmit)}>
-        <Stack gap="md">
+        <Stack>
           <TextInput
             label="Vendor Name"
-            placeholder="Netflix, AWS, etc."
-            required
-            {...form.getInputProps("name")}
+            placeholder="e.g. Netflix"
+            withAsterisk
+            data-autofocus
+            {...form.getInputProps("vendorName")}
           />
 
-          <Group grow align="flex-start">
+          <Group grow>
             <NumberInput
-              label="Price"
+              label="Full Price" // 👈 Renamed for clarity
+              placeholder="0.00"
+              min={0}
               decimalScale={2}
-              allowNegative={false}
-              prefix={currentSymbol + " "}
-              required
+              fixedDecimalScale
+              withAsterisk
               {...form.getInputProps("cost")}
-              style={{ flex: 2 }}
             />
-            {/* 👇 THIS WAS MISSING IN YOUR FILE.
-               Make sure this Select component is here!
-            */}
-            <Select
-              label="Currency"
-              data={CURRENCIES}
-              required
-              allowDeselect={false}
-              searchable
-              {...form.getInputProps("currency")}
-              style={{ flex: 1 }}
+            {/* 👈 NEW: Split Cost Input */}
+            <NumberInput
+              label="My Share (Optional)"
+              description="Leave 0 if you pay full price"
+              placeholder="0.00"
+              min={0}
+              decimalScale={2}
+              fixedDecimalScale
+              {...form.getInputProps("splitCost")}
             />
           </Group>
 
           <Group grow>
             <Select
+              label="Currency"
+              data={["PHP", "USD", "EUR", "GBP", "AUD", "CAD", "JPY"]}
+              withAsterisk
+              allowDeselect={false}
+              {...form.getInputProps("currency")}
+            />
+            <Select
               label="Billing Cycle"
               data={["MONTHLY", "YEARLY"]}
-              required
+              withAsterisk
               allowDeselect={false}
               {...form.getInputProps("frequency")}
             />
+          </Group>
+
+          <Group grow>
             <Select
               label="Category"
-              data={CATEGORIES}
-              required
-              allowDeselect={false}
+              placeholder="Select category"
+              data={[
+                "Entertainment", "Personal", "Work", "Dev Tools",
+                "Utilities", "Health", "Education", "Uncategorized"
+              ]}
+              searchable
+              withAsterisk
               {...form.getInputProps("category")}
+            />
+             <Select
+              label="Status"
+              data={[
+                { value: "ACTIVE", label: "Active" },
+                { value: "PAUSED", label: "Paused" },
+                { value: "CANCELLED", label: "Cancelled" },
+              ]}
+              allowDeselect={false}
+              {...form.getInputProps("status")}
             />
           </Group>
 
-          <DatePickerInput
+          <DateInput
             label="Start Date"
-            placeholder="Pick a date"
-            required
+            placeholder="When did it start?"
+            withAsterisk
             {...form.getInputProps("startDate")}
           />
 
-          <Group justify="space-between" mt="xs">
-            <Switch
-              label="This is a Free Trial"
-              {...form.getInputProps("isTrial", { type: "checkbox" })}
-            />
-          </Group>
+          <Checkbox
+            mt="md"
+            label="This is a Free Trial"
+            {...form.getInputProps("isTrial", { type: "checkbox" })}
+          />
 
-          <Button type="submit" fullWidth loading={loading} mt="md">
-            {subToEdit ? "Update Subscription" : "Save Subscription"}
-          </Button>
+          <Group justify="flex-end" mt="xl">
+            <Button variant="default" onClick={close}>Cancel</Button>
+            <Button type="submit" loading={loading}>
+              {subToEdit ? "Save Changes" : "Add Subscription"}
+            </Button>
+          </Group>
         </Stack>
       </form>
     </Modal>

@@ -1,42 +1,41 @@
 "use client";
 
 import { DonutChart } from "@mantine/charts";
-import { Paper, Text, Title, Center } from "@mantine/core";
+import { Paper, Text, Center } from "@mantine/core";
+import { convertTo, formatCurrency } from "@/lib/currency-helper";
 
-interface Subscription {
-  cost: number;
-  category: string;
+interface CategoryChartProps {
+  data: any[];
+  baseCurrency: string;
+  rates: Record<string, number>;
 }
 
-export function CategoryChart({ data }: { data: Subscription[] }) {
-  // Logic: Group total cost by category
-  const categoryTotals: Record<string, number> = {};
+export function CategoryChart({ data, baseCurrency, rates }: CategoryChartProps) {
+  const grouped = data.reduce((acc: any, sub) => {
+    const rawCost = Number(sub.cost);
+    const converted = convertTo(rawCost, sub.currency, baseCurrency, rates);
+    const monthly = sub.frequency === "YEARLY" ? converted / 12 : converted;
 
-  data.forEach((sub) => {
-    // Handle legacy data that might be null
-    const cat = sub.category || "Uncategorized";
-    categoryTotals[cat] = (categoryTotals[cat] || 0) + sub.cost;
-  });
+    acc[sub.category] = (acc[sub.category] || 0) + monthly;
+    return acc;
+  }, {});
 
-  const chartData = Object.keys(categoryTotals).map((cat, index) => ({
+  const chartData = Object.keys(grouped).map((cat, index) => ({
     name: cat,
-    value: categoryTotals[cat],
-    color: ['blue.6', 'teal.6', 'violet.6', 'orange.6', 'red.6'][index % 5],
+    value: parseFloat(grouped[cat].toFixed(2)),
+    color: `var(--mantine-color-blue-${index + 4})`, 
   }));
 
-  if (data.length === 0) return null;
-
   return (
-    <Paper p="xl" withBorder radius="md" h="100%">
-      <Title order={4} mb="lg">Spend by Category</Title>
-      <Center>
-        <DonutChart 
-          data={chartData} 
-          tooltipDataSource="segment" 
-          withLabelsLine 
-          withLabels 
-          size={160} 
-          thickness={20}
+    // FIX: Use style={{ minHeight: 350 }} instead of minH={350}
+    <Paper p="md" withBorder radius="md" style={{ minHeight: 350 }}>
+      <Text fw={600} mb="md">Spending by Category</Text>
+      <Center h={300}>
+        <DonutChart
+          data={chartData}
+          withTooltip
+          tooltipDataSource="segment"
+          valueFormatter={(val) => formatCurrency(val, baseCurrency)}
         />
       </Center>
     </Paper>

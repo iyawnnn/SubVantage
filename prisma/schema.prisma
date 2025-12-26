@@ -11,21 +11,21 @@ datasource db {
 // --- Auth.js v5 Models ---
 
 model User {
-  id            String          @id @default(cuid())
+  id            String    @id @default(cuid())
   name          String?
-  email         String          @unique
+  email         String    @unique
   emailVerified DateTime?
   image         String?
+  password      String?
+  
+  // Relations
   accounts      Account[]
   sessions      Session[]
-  
-  // Custom Relations
   subscriptions Subscription[]
   vendors       Vendor[]
+  circles       UserCircle[] // 👈 NEW: Many-to-Many relation to Circles
   
-  // New Field: User's preferred display currency
-  preferredCurrency String @default("PHP")
- 
+  preferredCurrency String @default("USD")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -82,6 +82,12 @@ enum SubStatus {
   CANCELLED
 }
 
+enum CircleRole {
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
 model Vendor {
   id        String   @id @default(cuid())
   name      String
@@ -100,30 +106,52 @@ model Vendor {
 }
 
 model Subscription {
-  id        String   @id @default(cuid())
+  id              String   @id @default(cuid())
+  userId          String
+  vendorId        String
+  
+  cost            Decimal  @db.Decimal(10, 2)
+  splitCost       Decimal  @default(0) @db.Decimal(10, 2)
+  currency        String   @default("USD")
+  
+  // 👇 FIX 1: Use the Enum, not String
+  frequency       BillingFrequency 
 
-  // Cost & Frequency
-  cost      Decimal  @db.Decimal(10, 2)
-  currency  String   @default("USD")
-  frequency BillingFrequency @default(MONTHLY)
-
-  // Dates
   startDate       DateTime
   nextRenewalDate DateTime
   isTrial         Boolean  @default(false)
-
   category        String   @default("Uncategorized")
+  
+  // 👇 FIX 2: Use the Enum here too (It's safer)
+  status          SubStatus @default(ACTIVE) 
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  // Status
-  status          SubStatus @default(ACTIVE)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vendor Vendor @relation(fields: [vendorId], references: [id])
+}
 
-  // Relations
+// --- 👈 NEW: Collaborative Models ---
+
+model Circle {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  members     UserCircle[]
+}
+
+model UserCircle {
+  id        String     @id @default(cuid())
+  role      CircleRole @default(MEMBER)
+  
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  circleId  String
+  
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  circle    Circle     @relation(fields: [circleId], references: [id], onDelete: Cascade)
 
-  vendorId  String
-  vendor    Vendor   @relation(fields: [vendorId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  @@unique([userId, circleId]) // Prevent adding same user to circle twice
 }

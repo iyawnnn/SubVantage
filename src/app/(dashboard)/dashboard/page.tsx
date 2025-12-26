@@ -1,108 +1,105 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { calculateMonthlyBurnRate } from "@/lib/calculations";
-import { Group, Title, Text, Container } from "@mantine/core";
-import { AddButton } from "@/components/dashboard/AddButton";
-import {
-  StatsSection,
-  ChartsSection,
-  TableSection,
-  InsightsSection,
-} from "@/components/dashboard/DashboardWidgets";
+import { StatsSection, ChartsSection, TableSection, InsightsSection } from "@/components/dashboard/DashboardWidgets";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader"; // 👈 IMPORT THIS
+import { convertTo } from "@/lib/currency-helper";
+import { getLiveRates } from "@/lib/exchange-rates";
+import { getRedundancyInsights, getGraveyardStats, getCashFlowRunway } from "@/lib/intelligence";
+import dayjs from "dayjs";
 
-// Intelligence Imports
-import {
-  getRedundancyInsights,
-  getGraveyardStats,
-  getCashFlowRunway,
-} from "@/lib/intelligence";
-
-// Static Rates (In a real app, fetch these from DB or API)
-const RATES = {
-  USD: 1,
-  PHP: 58.0,
-  EUR: 0.93,
-  GBP: 0.79,
-  AUD: 1.52,
-  CAD: 1.36,
-  JPY: 155.0,
-};
-
-async function getSubscriptionData() {
+async function getData() {
   const session = await auth();
-  if (!session?.user?.id) return [];
+  if (!session?.user?.id) return { subs: [], user: null, rates: {} };
 
-  const data = await prisma.subscription.findMany({
-    where: { userId: session.user.id },
-    orderBy: { cost: "desc" },
-    include: { vendor: true },
-  });
+  const [user, rates] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      include: {
+        subscriptions: {
+          where: { status: { not: "CANCELLED" } },
+          include: { vendor: true },
+          orderBy: { cost: "desc" },
+        },
+      },
+    }),
+    getLiveRates("USD"),
+  ]);
 
-  return data.map((sub) => ({
-    ...sub,
-    cost: Number(sub.cost),
-    // Ensure these match the types expected by intelligence.ts
-    status: sub.status as string,
-    frequency: sub.frequency as string,
-  }));
+  const subs = user?.subscriptions.map((sub) => {
+    return {
+      id: sub.id,
+      vendor: {
+        name: sub.vendor.name,
+        website: sub.vendor.website,
+      },
+      cost: Number(sub.cost), 
+      splitCost: sub.splitCost ? Number(sub.splitCost) : 0, 
+      currency: sub.currency,
+      frequency: sub.frequency,
+      startDate: sub.startDate,
+      nextRenewalDate: sub.nextRenewalDate,
+      isTrial: sub.isTrial,
+      category: sub.category,
+      status: sub.status,
+      userId: sub.userId,
+    };
+  }) || [];
+
+  return { subs, user, rates };
 }
 
 export default async function DashboardPage() {
-  const session = await auth();
-  const subs = await getSubscriptionData();
-
-  // 1. Get User's Preferred Currency (Default to USD if not set)
-  const user = await prisma.user.findUnique({
-    where: { id: session?.user?.id },
-    select: { preferredCurrency: true },
-  });
+  const { subs, user, rates } = await getData();
   const baseCurrency = user?.preferredCurrency || "USD";
+  
+  // Logic Engine
+  const monthlyBurn = subs
+    .filter((s) => s.status === "ACTIVE")
+    .reduce((acc, sub) => {
+      const finalCost = sub.splitCost > 0 ? sub.splitCost : sub.cost;
+      const costInBase = convertTo(finalCost, sub.currency, baseCurrency, rates);
+      return acc + (sub.frequency === "YEARLY" ? costInBase / 12 : costInBase);
+    }, 0);
 
-  // 2. Financial Engine (Pass rates & currency)
-  const monthlyBurn = calculateMonthlyBurnRate(subs, RATES, baseCurrency);
   const annualProjection = monthlyBurn * 12;
-  const activeTrials = subs.filter((s) => s.isTrial).length;
+  const activeTrials = subs.filter(
+    (s) => s.isTrial && dayjs(s.nextRenewalDate).diff(dayjs(), "day") >= 0
+  ).length;
 
-  // 3. Intelligence Engine 🧠
-  const redundancy = getRedundancyInsights(subs);
-  const graveyard = getGraveyardStats(subs, RATES, baseCurrency);
-  const runway = getCashFlowRunway(subs, RATES, baseCurrency);
+  const redundancyInsights = getRedundancyInsights(subs);
+  const graveyardStats = getGraveyardStats(subs, rates, baseCurrency);
+  const runwayStats = getCashFlowRunway(subs, rates, baseCurrency);
 
-  // Bundle data
-  const dashboardData = {
-    subs,
+  const statsProps = {
     monthlyBurn,
     annualProjection,
     activeTrials,
+    totalSaved: graveyardStats.totalSavedMonthly,
     currency: baseCurrency,
+    subs: [],
   };
 
   return (
-    <Container size="lg" py="lg">
-      <Group justify="space-between" mb="xl">
-        <div>
-          <Title order={2}>Financial Overview</Title>
-          <Text c="dimmed">Track your recurring expenses in one place.</Text>
-        </div>
-        <AddButton />
-      </Group>
+    <div style={{ maxWidth: 1200, margin: "0 auto", paddingBottom: 40 }}>
+      
+      {/* 👇 REPLACED: The interactive Header is back */}
+      <DashboardHeader />
 
-      {/* 1. Main Stats (Burn Rate, etc.) */}
-      <StatsSection {...dashboardData} />
+      <StatsSection {...statsProps} subs={subs} />
 
-      {/* 2. Intelligence Layer (Redundancy, Graveyard, Forecast) */}
-      <InsightsSection
-        redundancy={redundancy}
-        graveyard={graveyard}
-        runway={runway}
-        currency={baseCurrency}
+      <InsightsSection 
+        redundancy={redundancyInsights} 
+        runway={runwayStats} 
+        currency={baseCurrency} 
       />
 
-      {/* 3. Charts */}
-      <ChartsSection subs={subs} />
+      <div style={{ marginTop: 40, minHeight: 400 }}>
+         <ChartsSection subs={subs} rates={rates} currency={baseCurrency} />
+      </div>
 
-      {/* 4. Table */}
-      <TableSection subs={subs} />
-    </Container>
+      <div style={{ marginTop: 40 }}>
+        <TableSection subs={subs} rates={rates} currency={baseCurrency} />
+      </div>
+    </div>
   );
 }

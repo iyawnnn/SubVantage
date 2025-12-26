@@ -7,60 +7,94 @@ interface Subscription {
   id: string;
   vendor: { name: string };
   cost: number;
+  splitCost?: number; // 👈 ADDED THIS
   currency: string;
   category: string;
-  status: SubStatus | string; // Handle Prisma enum strings
+  status: SubStatus | string;
   frequency: "MONTHLY" | "YEARLY" | string;
   nextRenewalDate: Date;
 }
 
-// 👇 LIST OF CATEGORIES TO IGNORE FOR REDUNDANCY CHECKS
 const SAFE_CATEGORIES = [
   "Personal",
   "Work",
   "Uncategorized",
   "General",
   "Utilities",
+  "Entertainment",
+  "Dev Tools",
+  "Health",
+  "Education"
 ];
 
+// Helper to get the actual amount you pay
+function getRealCost(sub: Subscription) {
+  return (sub.splitCost && sub.splitCost > 0) ? sub.splitCost : sub.cost;
+}
+
 /**
- * 1. Redundancy Insights
- * Groups active subscriptions by category.
- * Returns categories that have more than 1 active subscription,
- * EXCLUDING generic buckets like "Personal".
+ * 1. Redundancy Insights (v2.1 - Collaborative Aware)
  */
 export function getRedundancyInsights(subs: Subscription[]) {
   const activeSubs = subs.filter((s) => s.status === "ACTIVE");
-  const groups: Record<string, Subscription[]> = {};
+  const alerts: any[] = [];
+  const processedIDs = new Set<string>(); 
 
+  // --- CHECK 1: EXACT VENDOR DUPLICATES ---
+  const vendorGroups: Record<string, Subscription[]> = {};
   activeSubs.forEach((sub) => {
-    if (!groups[sub.category]) groups[sub.category] = [];
-    groups[sub.category].push(sub);
+    const name = sub.vendor.name;
+    if (!vendorGroups[name]) vendorGroups[name] = [];
+    vendorGroups[name].push(sub);
   });
 
-  // Filter for categories with > 1 subscription
-  return Object.entries(groups)
-    .filter(([category, items]) => {
-      // Rule 1: Must have more than 1 subscription
-      if (items.length <= 1) return false;
+  Object.entries(vendorGroups).forEach(([vendorName, items]) => {
+    if (items.length > 1) {
+      items.forEach(i => processedIDs.add(i.id));
 
-      // Rule 2: Must NOT be a safe/generic category
-      if (SAFE_CATEGORIES.includes(category)) return false;
+      alerts.push({
+        type: "DUPLICATE_VENDOR",
+        category: vendorName, 
+        count: items.length,
+        vendors: items.map(i => i.vendor.name), 
+        // 👈 FIX: Use real cost (your share) for total
+        totalCost: items.reduce((sum, i) => sum + getRealCost(i), 0),
+        message: `You have ${items.length} subscriptions for ${vendorName}.`
+      });
+    }
+  });
 
-      return true;
-    })
-    .map(([category, items]) => ({
-      category,
+  // --- CHECK 2: CATEGORY OVERLOAD ---
+  const categoryGroups: Record<string, Subscription[]> = {};
+  activeSubs.forEach((sub) => {
+    if (!categoryGroups[sub.category]) categoryGroups[sub.category] = [];
+    categoryGroups[sub.category].push(sub);
+  });
+
+  Object.entries(categoryGroups).forEach(([category, items]) => {
+    if (SAFE_CATEGORIES.includes(category)) return;
+    if (items.length <= 1) return;
+
+    const unprocessedItems = items.filter(i => !processedIDs.has(i.id));
+    if (unprocessedItems.length < 2) return;
+
+    alerts.push({
+      type: "CATEGORY_OVERLOAD",
+      category: category,
       count: items.length,
-      vendors: items.map((i) => i.vendor.name),
-      totalCost: items.reduce((sum, i) => sum + i.cost, 0),
-    }));
+      vendors: items.map(i => i.vendor.name),
+      // 👈 FIX: Use real cost for total
+      totalCost: items.reduce((sum, i) => sum + getRealCost(i), 0),
+      message: `You have ${items.length} subscriptions in ${category}.`
+    });
+  });
+
+  return alerts;
 }
 
 /**
  * 2. Graveyard Stats (Money Saved)
- * Sums the cost of all CANCELLED subscriptions.
- * Normalizes to the User's Base Currency.
+ * Calculates savings based on YOUR share, not full price.
  */
 export function getGraveyardStats(
   subs: Subscription[],
@@ -70,13 +104,12 @@ export function getGraveyardStats(
   const cancelled = subs.filter((s) => s.status === "CANCELLED");
 
   const totalSavedMonthly = cancelled.reduce((acc, sub) => {
-    // 1. Normalize cost to Base Currency
-    const costInBase = convertTo(sub.cost, sub.currency, baseCurrency, rates);
-
-    // 2. Normalize frequency to Monthly (to show "Monthly Savings")
+    // 👈 FIX: Calculate savings based on what YOU were paying
+    const realCost = getRealCost(sub);
+    
+    const costInBase = convertTo(realCost, sub.currency, baseCurrency, rates);
     const monthlyCost =
       sub.frequency === "YEARLY" ? costInBase / 12 : costInBase;
-
     return acc + monthlyCost;
   }, 0);
 
@@ -89,8 +122,7 @@ export function getGraveyardStats(
 
 /**
  * 3. Cash Flow Runway (30/60/90 Days)
- * Projects spending based on renewal dates.
- * Handles recurring logic (e.g. a monthly sub appears 3 times in 90 days).
+ * Projects future liabilities using your Split Cost.
  */
 export function getCashFlowRunway(
   subs: Subscription[],
@@ -106,16 +138,14 @@ export function getCashFlowRunway(
 
   active.forEach((sub) => {
     let renewal = dayjs(sub.nextRenewalDate);
-    // Normalize cost to base currency once
-    const cost = convertTo(sub.cost, sub.currency, baseCurrency, rates);
+    
+    // 👈 FIX: Use getRealCost so projections are accurate to your wallet
+    const realCost = getRealCost(sub);
+    const cost = convertTo(realCost, sub.currency, baseCurrency, rates);
 
-    // Look ahead 90 days
-    // We loop to catch multiple renewals (e.g. 3 monthly payments in 90 days)
     for (let i = 0; i < 12; i++) {
-      // Safety break
       const diff = renewal.diff(now, "day");
-
-      if (diff > 90) break; // Beyond our window
+      if (diff > 90) break;
 
       if (diff >= 0) {
         if (diff <= 30) d30 += cost;
@@ -123,13 +153,12 @@ export function getCashFlowRunway(
         if (diff <= 90) d90 += cost;
       }
 
-      // Advance to next period
       if (sub.frequency === "MONTHLY") {
         renewal = renewal.add(1, "month");
       } else if (sub.frequency === "YEARLY") {
         renewal = renewal.add(1, "year");
       } else {
-        break; // Unknown frequency
+        break;
       }
     }
   });

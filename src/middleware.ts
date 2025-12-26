@@ -1,20 +1,31 @@
 import NextAuth from "next-auth";
+// 👇 FIX: Add curly braces to import the named export
 import { authConfig } from "./auth.config";
 
-// Initialize a lightweight instance just for middleware
 const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
-  const isDashboard = req.nextUrl.pathname.startsWith("/dashboard");
+  const { nextUrl } = req;
+  
+  const isDashboard = nextUrl.pathname.startsWith("/dashboard");
+  const isAuthRoute = nextUrl.pathname.startsWith("/auth");
+  // const isPublicRoute = nextUrl.pathname === "/"; 
 
-  // Redirect unauthenticated users trying to access dashboard
-  if (isDashboard && !isLoggedIn) {
-    return Response.redirect(new URL("/", req.nextUrl));
+  if (isAuthRoute) {
+    if (isLoggedIn) {
+      return Response.redirect(new URL("/dashboard", nextUrl));
+    }
+    return;
   }
+
+  if (isDashboard && !isLoggedIn) {
+     return Response.redirect(new URL("/auth/login", nextUrl));
+  }
+
+  return;
 });
 
-// Configure which routes the middleware should run on
 export const config = {
   matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };

@@ -1,50 +1,41 @@
 "use client";
 
 import { BarChart } from "@mantine/charts";
-import { Paper, Text, Title } from "@mantine/core";
+import { Paper, Text } from "@mantine/core";
+import { convertTo, formatCurrency } from "@/lib/currency-helper";
 
-interface Subscription {
-  cost: number;
-  frequency: string;
-  nextRenewalDate: Date;
+interface SpendingChartProps {
+  data: any[];
+  baseCurrency: string;
+  rates: Record<string, number>;
 }
 
-export function SpendingChart({ data }: { data: Subscription[] }) {
-  // Logic: Project costs for the next 6 months
-  const chartData = Array.from({ length: 6 }, (_, i) => {
-    const date = new Date();
-    date.setMonth(date.getMonth() + i);
-    const monthName = date.toLocaleString('default', { month: 'short' });
-    
-    // Sum costs for this specific month
-    const monthlyTotal = data.reduce((acc, sub) => {
-      // Monthly subs always count
-      if (sub.frequency === "MONTHLY") return acc + sub.cost;
-      
-      // Yearly subs only count if their renewal month matches the chart month
-      const renewalMonth = new Date(sub.nextRenewalDate).getMonth();
-      if (sub.frequency === "YEARLY" && renewalMonth === date.getMonth()) {
-        return acc + sub.cost;
-      }
-      
-      return acc;
-    }, 0);
+export function SpendingChart({ data, baseCurrency, rates }: SpendingChartProps) {
+  const chartData = data.map((sub) => {
+    const rawCost = Number(sub.cost);
+    const convertedCost = convertTo(rawCost, sub.currency, baseCurrency, rates);
+    const monthlyCost = sub.frequency === "YEARLY" ? convertedCost / 12 : convertedCost;
 
-    return { month: monthName, cost: monthlyTotal };
+    return {
+      name: sub.vendor.name,
+      cost: monthlyCost,
+    };
   });
 
   return (
-    <Paper p="xl" withBorder radius="md">
-      <Title order={4} mb="lg">6-Month Spending Forecast</Title>
+    // FIX: Use style={{ minHeight: 350 }} instead of minH={350}
+    <Paper p="md" withBorder radius="md" style={{ minHeight: 350 }}>
+      <Text fw={600} mb="md">Monthly Spending Breakdown ({baseCurrency})</Text>
       <BarChart
         h={300}
         data={chartData}
-        dataKey="month"
-        series={[{ name: 'cost', color: 'blue.6' }]}
+        dataKey="name"
+        series={[{ name: "cost", color: "blue.6", label: `Cost (${baseCurrency})` }]}
         tickLine="y"
         gridAxis="y"
+        withTooltip
         tooltipAnimationDuration={200}
-        valueFormatter={(value) => `$${value}`}
+        valueFormatter={(value) => formatCurrency(value, baseCurrency)}
       />
     </Paper>
   );

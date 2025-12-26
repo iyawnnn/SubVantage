@@ -1,14 +1,16 @@
 import { z } from "zod";
 
 export const subscriptionSchema = z.object({
-  name: z.string().min(1, "Vendor name is required"),
+  name: z.string().min(2, "Vendor name is required"),
   website: z.string().optional(),
-  currency: z.string().length(3).default("USD"),
-  cost: z.number().min(0, "Cost cannot be negative"),
+  cost: z.coerce.number().min(0, "Cost must be positive"),
+  splitCost: z.number().min(0).optional(),
+  currency: z.string().min(3),
   frequency: z.enum(["MONTHLY", "YEARLY"]),
-  startDate: z.coerce.date(), 
+  category: z.string().min(1, "Category is required"),
+  startDate: z.coerce.date(),
   isTrial: z.boolean().default(false),
-  category: z.string().min(1).default("Personal"),
+  status: z.enum(["ACTIVE", "PAUSED", "CANCELLED"]).default("ACTIVE"),
 });
 
 export type SubscriptionFormData = z.infer<typeof subscriptionSchema>;
