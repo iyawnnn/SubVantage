@@ -1,8 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Paper, PaperProps } from "@mantine/core";
 import { forwardRef } from "react";
+import { cn } from "@/lib/utils";
 
 // 1. Container that staggers its children (Float Up effect)
 export const StaggerContainer = ({
@@ -59,27 +59,29 @@ export const StaggerItem = ({
   </motion.div>
 );
 
-// 3. Hover Card with Azure Glow (Client Component)
-// We wrap Mantine's Paper with motion
-// FIX: Cast Paper to 'any' to bypass TypeScript strict polymorphic type checking
-const MotionPaper = motion.create(Paper as any);
-
+// 3. Hover Card with Azure Glow
+// Replaces Mantine Paper with a Tailwind styled div
 export const StatCard = forwardRef<
   HTMLDivElement,
-  PaperProps & { children: React.ReactNode }
->(({ children, ...props }, ref) => {
+  React.HTMLAttributes<HTMLDivElement> & { children: React.ReactNode }
+>(({ children, className, ...props }, ref) => {
   return (
-    <MotionPaper
+    <motion.div
       ref={ref}
-      {...props}
+      // Apply base Shadcn Card styles: rounded, border, background
+      className={cn(
+        "rounded-xl border bg-card text-card-foreground shadow-sm", 
+        className
+      )}
       whileHover={{
         y: -5, // Lift up slightly
         boxShadow: "0 10px 30px -10px rgba(0, 112, 243, 0.4)", // Azure Glow
       }}
       transition={{ duration: 0.2 }}
+      {...props}
     >
       {children}
-    </MotionPaper>
+    </motion.div>
   );
 });
 StatCard.displayName = "StatCard";

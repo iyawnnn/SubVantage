@@ -1,101 +1,148 @@
 "use client";
 
-import {
-  Select,
-  Group,
-  Text,
-  Switch,
-  Button,
-  Stack,
-  useMantineColorScheme,
-} from "@mantine/core";
 import { useState, useEffect } from "react";
 import { updateUserSettings } from "@/actions/user-actions";
-import { notifications } from "@mantine/notifications";
-import { IconSun, IconMoon } from "@tabler/icons-react";
+import { toast } from "sonner";
+import { Loader2, Save, Moon, Sun, Laptop } from "lucide-react";
+import { useTheme } from "next-themes"; // 👈 Import useTheme
+
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 const CURRENCIES = ["USD", "PHP", "EUR", "GBP", "AUD", "CAD", "JPY"];
 
-export function SettingsForm({ initialCurrency }: { initialCurrency: string }) {
-  const { colorScheme, toggleColorScheme } = useMantineColorScheme();
-  const [currency, setCurrency] = useState<string | null>(initialCurrency);
+export function SettingsForm({ user }: { user: any }) {
   const [loading, setLoading] = useState(false);
+  const [currency, setCurrency] = useState(user?.preferredCurrency || "USD");
   
-  // 👇 1. Add Mounted State
+  // 👇 Theme Hooks
+  const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  // 👇 2. Set Mounted on Client
+  // Avoid hydration mismatch
   useEffect(() => {
     setMounted(true);
   }, []);
 
   const handleSave = async () => {
-    if (!currency) return;
     setLoading(true);
-
-    const formData = new FormData();
-    formData.append("preferredCurrency", currency);
-
-    const result = await updateUserSettings(formData);
-
-    if (result.success) {
-      notifications.show({
-        title: "Saved",
-        message: "Preferences updated",
-        color: "green",
+    try {
+      const result = await updateUserSettings({ preferredCurrency: currency });
+      
+      if (result.success) {
+        toast.success("Settings Saved", {
+          description: "Your preferences have been updated.",
+        });
+      } else {
+        toast.error("Update Failed", {
+          description: "Could not save your changes. Please try again.",
+        });
+      }
+    } catch (error) {
+      toast.error("System Error", {
+        description: "An unexpected error occurred.",
       });
-    } else {
-      notifications.show({
-        title: "Error",
-        message: "Failed to save",
-        color: "red",
-      });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-    <Stack gap="xl">
-      {/* Theme Switcher */}
-      <Group justify="space-between">
-        <div>
-          <Text fw={500}>Appearance</Text>
-          <Text size="sm" c="dimmed">
-            Toggle between Light and Dark mode
-          </Text>
+    <Card className="border-border bg-card text-card-foreground">
+      <CardHeader>
+        <CardTitle>Preferences</CardTitle>
+        <CardDescription>
+          Customize appearance and financial defaults.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        
+        {/* 👇 THEME SETTING */}
+        <div className="grid gap-2">
+          <Label htmlFor="theme">Appearance</Label>
+          <div className="flex items-center gap-4">
+            <div className="w-[180px]">
+              <Select 
+                value={mounted ? theme : "system"} 
+                onValueChange={setTheme}
+              >
+                <SelectTrigger id="theme">
+                  <SelectValue placeholder="Select theme" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="light">
+                    <div className="flex items-center gap-2">
+                      <Sun className="h-4 w-4" /> Light
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="dark">
+                    <div className="flex items-center gap-2">
+                      <Moon className="h-4 w-4" /> Dark
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="system">
+                    <div className="flex items-center gap-2">
+                      <Laptop className="h-4 w-4" /> System
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Select your preferred display mode.
+            </p>
+          </div>
         </div>
-        <Switch
-          size="lg"
-          onLabel={<IconSun size={16} />}
-          offLabel={<IconMoon size={16} />}
-          // 👇 3. Fix Hydration Error: Force false until mounted
-          checked={mounted && colorScheme === "light"}
-          onChange={() => toggleColorScheme()}
-        />
-      </Group>
 
-      {/* Currency Select */}
-      <Group justify="space-between">
-        <div>
-          <Text fw={500}>Base Currency</Text>
-          <Text size="sm" c="dimmed">
-            This will be used to calculate your total burn rate
-          </Text>
+        {/* CURRENCY SETTING */}
+        <div className="grid gap-2">
+          <Label htmlFor="currency">Preferred Currency</Label>
+          <div className="flex items-center gap-4">
+            <div className="w-[180px]">
+              <Select value={currency} onValueChange={setCurrency}>
+                <SelectTrigger id="currency">
+                  <SelectValue placeholder="Select currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CURRENCIES.map((curr) => (
+                    <SelectItem key={curr} value={curr}>
+                      {curr}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Calculations will be based on this currency.
+            </p>
+          </div>
         </div>
-        <Select
-          data={CURRENCIES}
-          value={currency}
-          onChange={setCurrency}
-          w={120}
-          allowDeselect={false}
-        />
-      </Group>
 
-      <Group justify="flex-end" mt="md">
-        <Button onClick={handleSave} loading={loading}>
-          Save Changes
-        </Button>
-      </Group>
-    </Stack>
+        <div className="flex items-center justify-end">
+          <Button onClick={handleSave} disabled={loading} className="gap-2">
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            Save Changes
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

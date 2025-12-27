@@ -1,44 +1,18 @@
 "use client";
 
-import {
-  Grid,
-  Paper,
-  Group,
-  ThemeIcon,
-  Text,
-  Stack,
-  Title,
-  Box,
-} from "@mantine/core";
-import {
-  IconCoin,
-  IconCalendarStats,
-  IconAlertCircle,
-  IconLeaf,
-} from "@tabler/icons-react";
-import { StaggerContainer, StaggerItem, StatCard } from "./DashboardMotion";
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Banknote, CalendarDays, AlertCircle, Leaf } from "lucide-react";
 import { SpendingChart } from "./SpendingChart";
 import { CategoryChart } from "./CategoryChart";
 import { UpcomingBills } from "./UpcomingBills";
 import { SubscriptionTable } from "./SubscriptionTable";
-import { InsightsCard, ForecastWidget } from "./Insights";
+import { InsightsCard, ForecastWidget } from "./Insights"; // GraveyardCard removed
 import { formatCurrency } from "@/lib/currency-helper";
-
-// --- Types ---
-interface Subscription {
-  id: string;
-  vendor: { name: string; website: string | null };
-  cost: number;
-  currency: string;
-  frequency: string;
-  startDate: Date;
-  nextRenewalDate: Date;
-  isTrial: boolean;
-  category: string;
-}
+import { StaggerContainer, StaggerItem } from "./DashboardMotion";
 
 interface DashboardDataProps {
-  subs: Subscription[];
+  subs: any[];
   monthlyBurn: number;
   annualProjection: number;
   activeTrials: number;
@@ -54,206 +28,120 @@ export function StatsSection({
   totalSaved,
   currency,
 }: DashboardDataProps) {
-  const colSpan = { base: 12, sm: 6, md: 3 };
-
   return (
     <StaggerContainer>
-      <Grid gutter="md" mb="xl">
-        <Grid.Col span={colSpan}>
-          <StaggerItem>
-            <StatCard shadow="xs" p="xl" radius="md" withBorder>
-              <Group>
-                <ThemeIcon color="blue" variant="light" size={48} radius="md">
-                  <IconCoin size="1.5rem" stroke={1.5} />
-                </ThemeIcon>
-                <div>
-                  <Text c="dimmed" size="xs" tt="uppercase" fw={700}>
-                    Monthly Burn
-                  </Text>
-                  <Text fw={700} size="xl">
-                    {formatCurrency(monthlyBurn, currency || "USD")}
-                  </Text>
-                </div>
-              </Group>
-            </StatCard>
-          </StaggerItem>
-        </Grid.Col>
-
-        <Grid.Col span={colSpan}>
-          <StaggerItem>
-            <StatCard shadow="xs" p="xl" radius="md" withBorder>
-              <Group>
-                <ThemeIcon color="violet" variant="light" size={48} radius="md">
-                  <IconCalendarStats size="1.5rem" stroke={1.5} />
-                </ThemeIcon>
-                <div>
-                  <Text c="dimmed" size="xs" tt="uppercase" fw={700}>
-                    Annual Projection
-                  </Text>
-                  <Text fw={700} size="xl">
-                    {formatCurrency(annualProjection, currency || "USD")}
-                  </Text>
-                </div>
-              </Group>
-            </StatCard>
-          </StaggerItem>
-        </Grid.Col>
-
-        <Grid.Col span={colSpan}>
-          <StaggerItem>
-            <StatCard shadow="xs" p="xl" radius="md" withBorder>
-              <Group>
-                <ThemeIcon color="orange" variant="light" size={48} radius="md">
-                  <IconAlertCircle size="1.5rem" stroke={1.5} />
-                </ThemeIcon>
-                <div>
-                  <Text c="dimmed" size="xs" tt="uppercase" fw={700}>
-                    Active Trials
-                  </Text>
-                  <Text fw={700} size="xl">
-                    {activeTrials}
-                  </Text>
-                </div>
-              </Group>
-            </StatCard>
-          </StaggerItem>
-        </Grid.Col>
-
-        <Grid.Col span={colSpan}>
-          <StaggerItem>
-            <StatCard shadow="xs" p="xl" radius="md" withBorder>
-              <Group>
-                <ThemeIcon color="teal" variant="light" size={48} radius="md">
-                  <IconLeaf size="1.5rem" stroke={1.5} />
-                </ThemeIcon>
-                <div>
-                  <Text c="dimmed" size="xs" tt="uppercase" fw={700}>
-                    Monthly Savings
-                  </Text>
-                  <Text fw={700} size="xl" c="teal">
-                    {formatCurrency(totalSaved, currency || "USD")}
-                  </Text>
-                </div>
-              </Group>
-            </StatCard>
-          </StaggerItem>
-        </Grid.Col>
-      </Grid>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4 mb-8">
+        <StaggerItem>
+          <StatCard 
+            title="Monthly Burn" 
+            value={formatCurrency(monthlyBurn, currency)} 
+            icon={<Banknote className="h-5 w-5 text-blue-500" />} 
+          />
+        </StaggerItem>
+        <StaggerItem>
+          <StatCard 
+            title="Annual Projection" 
+            value={formatCurrency(annualProjection, currency)} 
+            icon={<CalendarDays className="h-5 w-5 text-violet-500" />} 
+          />
+        </StaggerItem>
+        <StaggerItem>
+          <StatCard 
+            title="Active Trials" 
+            value={activeTrials.toString()} 
+            icon={<AlertCircle className="h-5 w-5 text-orange-500" />} 
+          />
+        </StaggerItem>
+        <StaggerItem>
+          <StatCard 
+            title="Monthly Savings" 
+            value={formatCurrency(totalSaved, currency)} 
+            icon={<Leaf className="h-5 w-5 text-emerald-500" />} 
+          />
+        </StaggerItem>
+      </div>
     </StaggerContainer>
   );
 }
 
+function StatCard({ title, value, icon }: { title: string; value: string; icon: React.ReactNode }) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-xs font-bold uppercase text-muted-foreground">
+          {title}
+        </CardTitle>
+        {icon}
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{value}</div>
+      </CardContent>
+    </Card>
+  );
+}
+
 // --- 2. Insights Section ---
-export function InsightsSection({
-  redundancy,
-  runway,
-  currency,
-}: {
-  redundancy: any[];
-  runway: any;
-  currency: string;
-}) {
+export function InsightsSection({ redundancy, runway, currency }: { redundancy: any[]; runway: any; currency: string; }) {
   if (redundancy.length === 0 && !runway) return null;
 
   return (
     <StaggerContainer>
-      <Grid gutter="md" mb="xl">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 mb-8">
         {redundancy.length > 0 && (
-          <Grid.Col span={{ base: 12, md: 6 }}>
-            <StaggerItem style={{ height: "100%" }}>
-              <InsightsCard redundancies={redundancy} currency={currency} />
-            </StaggerItem>
-          </Grid.Col>
-        )}
-
-        <Grid.Col span={{ base: 12, md: redundancy.length > 0 ? 6 : 12 }}>
-          <StaggerItem style={{ height: "100%" }}>
-            <ForecastWidget
-              d30={runway.d30}
-              d60={runway.d60}
-              d90={runway.d90}
-              currency={currency}
-            />
+          <StaggerItem className="h-full">
+            <InsightsCard redundancies={redundancy} currency={currency} />
           </StaggerItem>
-        </Grid.Col>
-      </Grid>
+        )}
+        <div className={redundancy.length > 0 ? "" : "col-span-2"}>
+          <StaggerItem className="h-full">
+             <ForecastWidget d30={runway.d30} d60={runway.d60} d90={runway.d90} currency={currency} />
+          </StaggerItem>
+        </div>
+      </div>
     </StaggerContainer>
   );
 }
 
 // --- 3. Charts Section ---
-export function ChartsSection({
-  subs,
-  rates,
-  currency,
-}: {
-  subs: Subscription[];
-  rates: any;
-  currency: string;
-}) {
+export function ChartsSection({ subs, rates, currency }: { subs: any[]; rates: any; currency: string; }) {
   return (
     <StaggerContainer>
-      <Grid gutter="md" mb="xl">
-        <Grid.Col span={{ base: 12, md: 8 }}>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-12 mb-8">
+        <div className="md:col-span-8">
           <StaggerItem>
-            {/* 👇 FIX: Enforce minimum height here so Recharts doesn't crash */}
-            <Box style={{ minHeight: 400, width: "100%" }}>
-              <SpendingChart
-                data={subs}
-                baseCurrency={currency}
-                rates={rates}
-              />
-            </Box>
+            <div className="min-h-[400px]">
+              <SpendingChart data={subs} />
+            </div>
           </StaggerItem>
-        </Grid.Col>
-
-        <Grid.Col span={{ base: 12, md: 4 }}>
+        </div>
+        <div className="md:col-span-4 space-y-6">
           <StaggerItem>
-            <Stack>
-               {/* 👇 FIX: Enforce height on Category Chart too */}
-              <Box style={{ minHeight: 300, width: "100%" }}>
-                <CategoryChart
-                  data={subs}
-                  baseCurrency={currency}
-                  rates={rates}
-                />
-              </Box>
-              <UpcomingBills 
-                data={subs} 
-                rates={rates} 
-                currency={currency} 
-              />
-            </Stack>
+            <div className="min-h-[300px]">
+              <CategoryChart subs={subs} rates={rates} currency={currency} />
+            </div>
           </StaggerItem>
-        </Grid.Col>
-      </Grid>
+          <StaggerItem>
+            <UpcomingBills data={subs} rates={rates} currency={currency} />
+          </StaggerItem>
+        </div>
+      </div>
     </StaggerContainer>
   );
 }
 
 // --- 4. Table Section ---
-export function TableSection({ 
-  subs, 
-  rates, 
-  currency 
-}: { 
-  subs: Subscription[], 
-  rates: any, 
-  currency: string 
-}) {
+export function TableSection({ subs, rates, currency }: { subs: any[], rates: any, currency: string }) {
   return (
     <StaggerContainer>
       <StaggerItem>
-        <Paper p="md" withBorder radius="md">
-          <Title order={4} mb="md" px="xs">
-            Active Subscriptions
-          </Title>
-          <SubscriptionTable 
-            data={subs} 
-            rates={rates} 
-            baseCurrency={currency} 
-          />
-        </Paper>
+        <Card>
+          <CardHeader>
+            <CardTitle>Active Subscriptions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SubscriptionTable data={subs} rates={rates} baseCurrency={currency} />
+          </CardContent>
+        </Card>
       </StaggerItem>
     </StaggerContainer>
   );

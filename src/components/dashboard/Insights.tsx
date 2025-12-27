@@ -1,8 +1,9 @@
 "use client";
 
-import { Paper, Text, Group, ThemeIcon, Stack, RingProgress, Center } from "@mantine/core";
-import { IconAlertTriangle, IconTrendingUp, IconBulb } from "@tabler/icons-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertTriangle, TrendingUp, Lightbulb } from "lucide-react";
 import { formatCurrency } from "@/lib/currency-helper";
+import { cn } from "@/lib/utils";
 
 // --- 1. Redundancy (Insights) Card ---
 export function InsightsCard({ 
@@ -12,58 +13,74 @@ export function InsightsCard({
   redundancies: any[], 
   currency: string 
 }) {
-  // Grab the first/most important alert
   const alert = redundancies[0];
   const isVendorDup = alert.type === "DUPLICATE_VENDOR";
 
   return (
-    <Paper 
-      shadow="xs" 
-      radius="md" 
-      p="xl" 
-      withBorder 
-      style={{ height: "100%", borderColor: "var(--mantine-color-red-3)" }}
-    >
-      <Group align="flex-start" mb="md">
-        <ThemeIcon 
-          color="red" 
-          variant="light" 
-          size={42} 
-          radius="md"
-        >
-          <IconAlertTriangle size="1.4rem" stroke={1.5} />
-        </ThemeIcon>
-        
-        <div style={{ flex: 1 }}>
-          <Text c="red.7" tt="uppercase" fw={700} size="xs" mb={4}>
-            Attention Needed
-          </Text>
-          <Text fw={700} size="lg" lh={1.2}>
-            {isVendorDup ? "Duplicate Subscriptions" : "Category Overload"}
-          </Text>
+    <Card className="h-full border-red-200 bg-red-50/50 dark:border-red-900/50 dark:bg-red-950/10">
+      <CardContent className="pt-6">
+        <div className="flex items-start gap-4">
+          <div className="rounded-lg bg-red-100 p-3 text-red-600 dark:bg-red-900/30 dark:text-red-400">
+            <AlertTriangle className="h-6 w-6" />
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-red-600 dark:text-red-400">
+              Attention Needed
+            </p>
+            <h3 className="text-lg font-bold">
+              {isVendorDup ? "Duplicate Subscriptions" : "Category Overload"}
+            </h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {alert.message || `You have multiple subscriptions in ${alert.category}.`}
+            </p>
+          </div>
         </div>
-      </Group>
 
-      <Text size="sm" c="dimmed" mb="lg">
-        {alert.message || `You have multiple subscriptions in ${alert.category}.`}
-      </Text>
+        <div className="mt-6 flex flex-col gap-2">
+          {alert.vendors.map((vendor: string, i: number) => (
+            <div key={i} className="flex items-center justify-between rounded-md border bg-background px-3 py-2 text-sm font-medium">
+               {vendor}
+            </div>
+          ))}
+        </div>
 
-      {/* List of Offenders */}
-      <Stack gap="sm">
-        {alert.vendors.map((vendor: string, i: number) => (
-          <Group key={i} justify="space-between" p="xs" bg="gray.0" style={{ borderRadius: 6 }}>
-             <Text size="sm" fw={500}>{vendor}</Text>
-          </Group>
-        ))}
-      </Stack>
+        <div className="mt-6 text-sm font-bold text-red-600 dark:text-red-400">
+          Potential Savings: {formatCurrency(alert.totalCost, currency)} / mo
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
-      <Group mt="xl">
-         <Text size="sm" fw={700}>
-            {/* 👇 FIXED: Uses dynamic currency prop instead of hardcoded PHP */}
-            Potential Savings: {formatCurrency(alert.totalCost, currency)} / mo
-         </Text>
-      </Group>
-    </Paper>
+// --- Helper: Simple Circular Progress ---
+function CircleProgress({ value, label, colorClass }: { value: number; label: string; colorClass: string }) {
+  const radius = 30;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (value / 100) * circumference;
+
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <span className="text-xs font-bold text-muted-foreground">{label}</span>
+      <div className="relative flex items-center justify-center">
+        {/* Background Circle */}
+        <svg className="h-20 w-20 -rotate-90 transform">
+          <circle cx="40" cy="40" r={radius} stroke="currentColor" strokeWidth="6" fill="transparent" className="text-muted/20" />
+          {/* Progress Circle */}
+          <circle 
+            cx="40" cy="40" r={radius} 
+            stroke="currentColor" strokeWidth="6" 
+            fill="transparent" 
+            strokeDasharray={circumference} 
+            strokeDashoffset={strokeDashoffset} 
+            strokeLinecap="round"
+            className={cn("transition-all duration-500", colorClass)} 
+          />
+        </svg>
+        <div className="absolute text-muted-foreground/50">
+          <TrendingUp size={20} />
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -80,73 +97,35 @@ export function ForecastWidget({
   currency: string 
 }) {
   return (
-    <Paper shadow="xs" radius="md" p="xl" withBorder style={{ height: "100%" }}>
-      <Group mb="md">
-        <ThemeIcon color="grape" variant="light" size={42} radius="md">
-          <IconBulb size="1.4rem" stroke={1.5} />
-        </ThemeIcon>
-        <div>
-          <Text c="dimmed" tt="uppercase" fw={700} size="xs">
-            3-Month Forecast
-          </Text>
-          <Text fw={700} size="lg">
-            Cash Flow Runway
-          </Text>
+    <Card className="h-full">
+      <CardContent className="pt-6">
+        <div className="mb-6 flex items-center gap-4">
+          <div className="rounded-lg bg-violet-100 p-3 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400">
+            <Lightbulb className="h-6 w-6" />
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              3-Month Forecast
+            </p>
+            <h3 className="text-lg font-bold">Cash Flow Runway</h3>
+          </div>
         </div>
-      </Group>
 
-      <Group grow align="flex-end" gap="xs">
-        {/* 30 Days */}
-        <Stack gap={4} align="center">
-            <Text size="xs" c="dimmed" fw={700}>30 Days</Text>
-            <RingProgress
-              size={80}
-              thickness={8}
-              roundCaps
-              sections={[{ value: 33, color: 'blue' }]}
-              label={
-                <Center>
-                  <IconTrendingUp size={20} style={{ opacity: 0.5 }} />
-                </Center>
-              }
-            />
-            <Text size="sm" fw={700}>{formatCurrency(d30, currency)}</Text>
-        </Stack>
-
-        {/* 60 Days */}
-        <Stack gap={4} align="center">
-            <Text size="xs" c="dimmed" fw={700}>60 Days</Text>
-            <RingProgress
-              size={80}
-              thickness={8}
-              roundCaps
-              sections={[{ value: 66, color: 'violet' }]}
-              label={
-                <Center>
-                  <IconTrendingUp size={20} style={{ opacity: 0.5 }} />
-                </Center>
-              }
-            />
-            <Text size="sm" fw={700}>{formatCurrency(d60, currency)}</Text>
-        </Stack>
-
-        {/* 90 Days */}
-        <Stack gap={4} align="center">
-            <Text size="xs" c="dimmed" fw={700}>90 Days</Text>
-            <RingProgress
-              size={80}
-              thickness={8}
-              roundCaps
-              sections={[{ value: 100, color: 'grape' }]}
-              label={
-                <Center>
-                  <IconTrendingUp size={20} style={{ opacity: 0.5 }} />
-                </Center>
-              }
-            />
-            <Text size="sm" fw={700}>{formatCurrency(d90, currency)}</Text>
-        </Stack>
-      </Group>
-    </Paper>
+        <div className="grid grid-cols-3 gap-2">
+          <div className="flex flex-col items-center gap-1">
+            <CircleProgress value={33} label="30 Days" colorClass="text-blue-500" />
+            <span className="text-sm font-bold">{formatCurrency(d30, currency)}</span>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <CircleProgress value={66} label="60 Days" colorClass="text-violet-500" />
+            <span className="text-sm font-bold">{formatCurrency(d60, currency)}</span>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <CircleProgress value={100} label="90 Days" colorClass="text-purple-500" />
+            <span className="text-sm font-bold">{formatCurrency(d90, currency)}</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

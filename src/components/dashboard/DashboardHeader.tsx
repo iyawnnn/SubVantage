@@ -1,37 +1,32 @@
 "use client";
 
-import { Title, Text, Button, Group } from "@mantine/core";
-import { IconPlus } from "@tabler/icons-react";
-import { useDisclosure } from "@mantine/hooks";
+import React, { useState } from "react";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { SubscriptionModal } from "./SubscriptionModal";
 
 export function DashboardHeader() {
-  const [opened, { open, close }] = useDisclosure(false);
+  const [open, setOpen] = useState(false);
 
   return (
-    <>
-      <Group justify="space-between" mb="xl" align="flex-end">
-        <div>
-          <Title order={2} fw={800}>Financial Overview</Title>
-          <Text c="dimmed" size="sm">Track your recurring expenses in one place.</Text>
-        </div>
-        
-        <Button 
-          leftSection={<IconPlus size={16} />} 
-          color="blue" 
-          radius="md"
-          onClick={open}
-        >
-          Add Subscription
-        </Button>
-      </Group>
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
+      <div>
+        <h2 className="text-3xl font-bold tracking-tight">Financial Overview</h2>
+        <p className="text-muted-foreground">
+          Track your recurring expenses in one place.
+        </p>
+      </div>
+      
+      <Button onClick={() => setOpen(true)} className="gap-2">
+        <Plus className="h-4 w-4" />
+        Add Subscription
+      </Button>
 
-      {/* The Modal lives here for "Create" mode */}
       <SubscriptionModal 
-        opened={opened} 
-        close={close} 
-        subToEdit={null} // null means "Create Mode"
+        opened={open} 
+        close={() => setOpen(false)} 
+        subToEdit={null} 
       />
-    </>
+    </div>
   );
 }

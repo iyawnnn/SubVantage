@@ -1,240 +1,116 @@
 "use client";
 
-import {
-  AppShell,
-  AppShellHeader,
-  AppShellMain,
-  Group,
-  Title,
-  Button,
-  Container,
-  Text,
-  UnstyledButton,
-  Stack,
-  ThemeIcon,
-  Kbd, // 👈 Import Kbd
-} from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import {
-  IconSearch,
-  IconLayoutDashboard,
-  IconArchive,
-  IconGridDots,
-  IconX,
-  IconChevronRight,
-} from "@tabler/icons-react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { 
+  LayoutDashboard, 
+  Archive, 
+  Search, 
+  Menu, 
+  Command 
+} from "lucide-react";
 import { UserMenu } from "./UserMenu";
-import { spotlight } from "@mantine/spotlight";
-import { AnimatePresence, motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetTrigger,
+  SheetTitle,
+  SheetDescription 
+} from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
-interface DashboardShellProps {
-  children: React.ReactNode;
-  user: { name?: string | null; email?: string | null; image?: string | null };
-}
-
-export function DashboardShell({ children, user }: DashboardShellProps) {
+export function DashboardShell({ children, user }: { children: React.ReactNode; user: any }) {
   const pathname = usePathname();
-  const [mobileOpened, { toggle: toggleMobile, close: closeMobile }] = useDisclosure(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const navLinks = [
-    { link: "/dashboard", label: "Overview", icon: IconLayoutDashboard },
-    { link: "/archive", label: "Archive", icon: IconArchive },
+    { link: "/dashboard", label: "Overview", icon: LayoutDashboard },
+    { link: "/archive", label: "Archive", icon: Archive },
   ];
 
   return (
-    <AppShell header={{ height: 70 }} padding="md">
-      <AppShellHeader className="glass-header" withBorder={false}>
-        <Container size="xl" h="100%">
-          <Group h="100%" justify="space-between" wrap="nowrap">
-            
-            {/* LEFT: Brand + Links */}
-            <Group gap="xl">
-              <Title order={3} c="violet" style={{ letterSpacing: '-0.5px' }}>
-                SubTrack
-              </Title>
+    <div className="flex min-h-screen flex-col bg-background">
+      {/* SOLID HEADER - No transparency/glass effect */}
+      <header className="sticky top-0 z-50 w-full border-b border-border bg-background">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-8">
+          
+          <div className="flex items-center gap-8">
+            <span className="text-xl font-bold tracking-tight text-primary">SubTrack</span>
+            <nav className="hidden items-center gap-1 sm:flex">
+              {navLinks.map((item) => {
+                const isActive = pathname === item.link;
+                return (
+                  <Link
+                    key={item.link}
+                    href={item.link}
+                    className={cn(
+                      "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                      isActive 
+                        ? "bg-primary/10 text-primary" 
+                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    )}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
 
-              <Group gap="xs" visibleFrom="sm">
-                {navLinks.map((item) => {
-                  const isActive = pathname === item.link;
-                  return (
-                    <Button
-                      key={item.link}
-                      component={Link}
-                      href={item.link}
-                      variant={isActive ? "light" : "subtle"}
-                      color={isActive ? "violet" : "gray"}
-                      size="sm"
-                      radius="md"
-                      fw={isActive ? 600 : 500}
-                      leftSection={<item.icon size={16} />}
-                    >
-                      {item.label}
-                    </Button>
-                  );
-                })}
-              </Group>
-            </Group>
+          <div className="flex items-center gap-4">
+            {/* Search Trigger */}
+            <button className="hidden w-64 items-center justify-between rounded-md border border-input bg-secondary/50 px-3 py-1.5 text-sm text-muted-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground sm:flex">
+              <div className="flex items-center gap-2">
+                <Search className="h-4 w-4 opacity-50" />
+                <span>Search...</span>
+              </div>
+              <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100">
+                <span className="text-xs">⌘</span>K
+              </kbd>
+            </button>
 
-            {/* RIGHT: Search + User + Mobile Toggle */}
-            <Group gap="sm">
-              
-              {/* Desktop Search Bar */}
-              <UnstyledButton
-                onClick={() => spotlight.open()}
-                visibleFrom="sm"
-                w={260}
-                className="search-trigger" // Uses new CSS for white bg + darker border
-                style={{
-                  borderRadius: '8px',
-                  padding: '6px 8px 6px 12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  transition: 'all 0.2s',
-                }}
-              >
-                <IconSearch size={14} style={{ opacity: 0.5 }} />
-                <Text size="sm" style={{ flex: 1, color: 'inherit', opacity: 0.7 }}>Search</Text>
+            <UserMenu image={user?.image} name={user?.name} email={user?.email} />
+
+            {/* Mobile Menu */}
+            <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="sm:hidden">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="bg-background border-border">
+                <SheetTitle className="text-lg font-bold text-foreground">Navigation</SheetTitle>
+                <SheetDescription className="sr-only">
+                  Mobile navigation menu
+                </SheetDescription>
                 
-                {/* 👇 The Command+K Badge */}
-                <Kbd size="xs" style={{ fontSize: '10px', fontWeight: 700 }}>⌘K</Kbd>
-              </UnstyledButton>
-
-              <UnstyledButton hiddenFrom="sm" onClick={() => spotlight.open()}>
-                <ThemeIcon variant="default" size="lg" radius="md">
-                  <IconSearch size={18} />
-                </ThemeIcon>
-              </UnstyledButton>
-
-              <UserMenu image={user?.image} name={user?.name} email={user?.email} />
-
-              <ActionIconTrigger opened={mobileOpened} onClick={toggleMobile} />
-            </Group>
-
-          </Group>
-        </Container>
-      </AppShellHeader>
-
-      <AppShellMain>
-        <Container size="xl">
+                <div className="flex flex-col gap-4 mt-8">
+                  {navLinks.map((item) => (
+                    <Link
+                      key={item.link}
+                      href={item.link}
+                      onClick={() => setIsMobileOpen(false)}
+                      className="flex items-center gap-2 text-lg font-medium text-foreground hover:text-primary"
+                    >
+                      <item.icon className="h-5 w-5" />
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
+      </header>
+      
+      <main className="flex-1">
+        <div className="container mx-auto px-4 py-8 sm:px-8">
           {children}
-        </Container>
-      </AppShellMain>
-
-      <AnimatePresence>
-        {mobileOpened && (
-          <MobileMenuOverlay 
-            links={navLinks} 
-            onClose={closeMobile} 
-            pathname={pathname}
-          />
-        )}
-      </AnimatePresence>
-
-    </AppShell>
+        </div>
+      </main>
+    </div>
   );
 }
-
-// ... ActionIconTrigger and MobileMenuOverlay remain unchanged ...
-function ActionIconTrigger({ opened, onClick }: { opened: boolean; onClick: () => void }) {
-    return (
-      <UnstyledButton
-        hiddenFrom="sm"
-        onClick={onClick}
-        style={{
-          width: 34,
-          height: 34,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderRadius: '8px',
-          backgroundColor: opened ? 'var(--mantine-color-default-hover)' : 'transparent',
-          color: 'var(--mantine-color-text)',
-          transition: 'background-color 0.2s',
-        }}
-      >
-        {opened ? <IconX size={20} /> : <IconGridDots size={20} />}
-      </UnstyledButton>
-    );
-  }
-  
-  function MobileMenuOverlay({ 
-    links, 
-    onClose, 
-    pathname, 
-  }: { 
-    links: any[], 
-    onClose: () => void, 
-    pathname: string,
-  }) {
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-        className="mobile-overlay" 
-        style={{
-          position: "fixed",
-          top: 70, 
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backdropFilter: "blur(12px)",
-          zIndex: 100,
-          padding: "2rem",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-        }}
-      >
-        <Stack gap="sm" w="100%" maw={400}>
-          <Text c="dimmed" size="xs" fw={700} tt="uppercase" mb="xs">
-            Navigation
-          </Text>
-          
-          {links.map((item, index) => (
-            <motion.div
-              key={item.link}
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: index * 0.05 }}
-            >
-              <Link 
-                href={item.link} 
-                onClick={onClose}
-                style={{ textDecoration: 'none' }}
-              >
-                <Group 
-                  justify="space-between" 
-                  p="md"
-                  className="mobile-link"
-                  data-active={pathname === item.link}
-                  style={{
-                    borderRadius: '12px',
-                  }}
-                >
-                  <Group>
-                    <ThemeIcon 
-                      variant={pathname === item.link ? "filled" : "light"} 
-                      color={pathname === item.link ? "violet" : "gray"} 
-                      size="lg" 
-                      radius="md"
-                    >
-                      <item.icon size={20} />
-                    </ThemeIcon>
-                    <Text fw={600} c={pathname === item.link ? "violet" : "var(--mantine-color-text)"}>
-                      {item.label}
-                    </Text>
-                  </Group>
-                  <IconChevronRight size={16} color="var(--mantine-color-dimmed)" />
-                </Group>
-              </Link>
-            </motion.div>
-          ))}
-        </Stack>
-      </motion.div>
-    );
-  }

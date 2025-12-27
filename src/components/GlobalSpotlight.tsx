@@ -1,14 +1,25 @@
 "use client";
 
-import { Spotlight, SpotlightActionData, spotlight } from "@mantine/spotlight";
-import { IconSearch, IconDashboard, IconArchive, IconPlus, IconReceipt, IconCreditCard } from "@tabler/icons-react";
+import * as React from "react";
 import { useRouter } from "next/navigation";
-import { useDisclosure } from "@mantine/hooks";
+import {
+  LayoutDashboard,
+  Archive,
+  Plus,
+  CreditCard,
+  Search,
+} from "lucide-react";
+
+import {
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from "@/components/ui/command";
 import { SubscriptionModal } from "./dashboard/SubscriptionModal";
-import { rem, Text, Group, Badge } from "@mantine/core";
-import { useMemo } from "react";
-// Import styles in your layout or here if using css modules
-import '@mantine/spotlight/styles.css';
 
 interface SimpleSub {
   id: string;
@@ -17,68 +28,66 @@ interface SimpleSub {
 
 export function GlobalSpotlight({ subscriptions }: { subscriptions: SimpleSub[] }) {
   const router = useRouter();
-  
-  // Modal State for "Add Subscription" action
-  const [opened, { open, close }] = useDisclosure(false);
+  const [open, setOpen] = React.useState(false);
+  const [modalOpen, setModalOpen] = React.useState(false);
 
-  // Memoize actions to prevent unnecessary recalculations (optimizes lag)
-  const actions: SpotlightActionData[] = useMemo(() => {
-    const staticActions: SpotlightActionData[] = [
-      {
-        id: 'dashboard',
-        label: 'Dashboard',
-        description: 'Go to financial overview',
-        onClick: () => router.push('/dashboard'),
-        leftSection: <IconDashboard style={{ width: rem(24), height: rem(24) }} stroke={1.5} />,
-      },
-      {
-        id: 'archive',
-        label: 'Archive',
-        description: 'View cancelled subscriptions',
-        onClick: () => router.push('/archive'),
-        leftSection: <IconArchive style={{ width: rem(24), height: rem(24) }} stroke={1.5} />,
-      },
-      {
-        id: 'add-new',
-        label: 'Add Subscription',
-        description: 'Track a new expense',
-        onClick: () => open(),
-        leftSection: <IconPlus style={{ width: rem(24), height: rem(24) }} stroke={1.5} />,
-      },
-    ];
+  // Toggle with CMD+K
+  React.useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setOpen((open) => !open);
+      }
+    };
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
+  }, []);
 
-    const subActions: SpotlightActionData[] = subscriptions.map((sub) => ({
-      id: sub.id,
-      label: sub.vendorName,
-      description: 'View subscription details',
-      // 👇 NAVIGATE TO DETAILED PAGE
-      onClick: () => router.push(`/subscriptions/${sub.id}`),
-      leftSection: <IconCreditCard style={{ width: rem(24), height: rem(24) }} stroke={1.5} color="var(--mantine-color-violet-filled)" />,
-    }));
-
-    return [...staticActions, ...subActions];
-  }, [subscriptions, router, open]);
+  const runCommand = React.useCallback((command: () => void) => {
+    setOpen(false);
+    command();
+  }, []);
 
   return (
     <>
-      <Spotlight
-        actions={actions}
-        nothingFound="Nothing found..."
-        highlightQuery
-        // 👇 LARGER SEARCH BAR STYLING
-        searchProps={{
-          leftSection: <IconSearch style={{ width: rem(24), height: rem(24) }} stroke={1.5} />,
-          placeholder: "Search subscriptions or actions...",
-          size: "lg", // Makes standard size larger
-          styles: {
-            input: { height: '60px', fontSize: '1.2rem' } // Custom height override
-          }
-        }}
-        shortcut={['mod + K', '/']}
+      <CommandDialog open={open} onOpenChange={setOpen}>
+        <CommandInput placeholder="Type a command or search..." />
+        <CommandList>
+          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandGroup heading="Suggestions">
+            <CommandItem onSelect={() => runCommand(() => router.push("/dashboard"))}>
+              <LayoutDashboard className="mr-2 h-4 w-4" />
+              <span>Dashboard</span>
+            </CommandItem>
+            <CommandItem onSelect={() => runCommand(() => router.push("/archive"))}>
+              <Archive className="mr-2 h-4 w-4" />
+              <span>Archive</span>
+            </CommandItem>
+            <CommandItem onSelect={() => runCommand(() => setModalOpen(true))}>
+              <Plus className="mr-2 h-4 w-4" />
+              <span>Add Subscription</span>
+            </CommandItem>
+          </CommandGroup>
+          <CommandSeparator />
+          <CommandGroup heading="Subscriptions">
+            {subscriptions.map((sub) => (
+              <CommandItem
+                key={sub.id}
+                onSelect={() => runCommand(() => router.push(`/subscriptions/${sub.id}`))}
+              >
+                <CreditCard className="mr-2 h-4 w-4" />
+                <span>{sub.vendorName}</span>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        </CommandList>
+      </CommandDialog>
+
+      <SubscriptionModal 
+        opened={modalOpen} 
+        close={() => setModalOpen(false)} 
+        subToEdit={null} 
       />
-      
-      {/* This Modal lives here so Spotlight can trigger it globally */}
-      <SubscriptionModal opened={opened} close={close} subToEdit={null} />
     </>
   );
 }

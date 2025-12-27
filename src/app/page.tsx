@@ -1,155 +1,107 @@
-import { 
-  Container, 
-  Title, 
-  Text, 
-  Button, 
-  Group, 
-  SimpleGrid, 
-  Card, 
-  ThemeIcon, 
-  rem, 
-  Stack,
-  Badge
-} from "@mantine/core";
-import { 
-  IconChartDots, 
-  IconCurrencyDollar, 
-  IconUsers, 
-  IconArrowRight, 
-  IconShieldLock 
-} from "@tabler/icons-react";
 import Link from "next/link";
-
-// --- Feature Data ---
-const features = [
-  {
-    icon: IconChartDots,
-    title: "Intelligent Forecasting",
-    description: "Our engine analyzes your renewal dates and predicts your monthly burn, so you never get hit with a surprise bill.",
-    color: "blue"
-  },
-  {
-    icon: IconCurrencyDollar,
-    title: "Multi-Currency Support",
-    description: "Paying for tools in USD, EUR, and PHP? We normalize everything to your home currency instantly.",
-    color: "green"
-  },
-  {
-    icon: IconUsers,
-    title: "Collaborative Billing",
-    description: "Track shared subscriptions like Spotify Family. Record the full price, but only count your specific share.",
-    color: "violet"
-  },
-  {
-    icon: IconShieldLock,
-    title: "Privacy First",
-    description: "Your financial data is yours. We use bank-grade encryption and never sell your usage habits.",
-    color: "orange"
-  }
-];
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { 
+  BarChart3, 
+  Wallet, 
+  Bell, 
+  ShieldCheck, 
+  ArrowRight 
+} from "lucide-react";
+import { SignInButton } from "@/components/auth/SignInButton"; // We will fix this next
 
 export default function LandingPage() {
   return (
-    <div style={{ position: "relative", overflow: "hidden" }}>
-      {/* Background Glow Effect */}
-      <div 
-        style={{
-          position: "absolute",
-          top: "-20%",
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: "600px",
-          height: "600px",
-          background: "radial-gradient(circle, rgba(34,139,230,0.15) 0%, rgba(0,0,0,0) 70%)",
-          zIndex: -1,
-          pointerEvents: "none",
-        }} 
-      />
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Navbar */}
+      <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4">
+          <div className="flex items-center gap-2">
+            <div className="rounded-lg bg-primary/10 p-1">
+              <Wallet className="h-6 w-6 text-primary" />
+            </div>
+            <span className="text-xl font-bold tracking-tight">SubTrack</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <Link href="/auth/login">
+              <Button variant="ghost">Log in</Button>
+            </Link>
+            <Link href="/auth/signup">
+              <Button>Get Started</Button>
+            </Link>
+          </div>
+        </div>
+      </header>
 
-      <Container size="lg" py={120}>
-        {/* --- Hero Section --- */}
-        <Stack align="center" gap="xl" mb={120} style={{ textAlign: "center" }}>
-           <Badge variant="light" color="blue" size="lg" radius="sm">
-              v1.0 is Live
-           </Badge>
-           
-           <Title 
-             order={1} 
-             style={{ 
-               fontSize: rem(64), 
-               lineHeight: 1.1, 
-               fontWeight: 800,
-               letterSpacing: "-1px"
-             }}
-           >
-             Master your subscriptions,<br />
-             <span style={{ color: "var(--mantine-color-blue-5)" }}>not just track them.</span>
-           </Title>
+      {/* Hero Section */}
+      <main>
+        <section className="container mx-auto px-4 py-24 text-center sm:py-32">
+          <Badge variant="secondary" className="mb-4 text-primary">
+            v2.0 is now live
+          </Badge>
+          <h1 className="mx-auto max-w-4xl text-5xl font-extrabold tracking-tight sm:text-7xl">
+            Stop paying for <br />
+            <span className="text-primary">forgotten subscriptions.</span>
+          </h1>
+          <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
+            Track, manage, and cancel your recurring expenses in one beautiful dashboard. 
+            Get alerts before you get charged.
+          </p>
+          <div className="mt-10 flex justify-center gap-4">
+            <SignInButton />
+            <Link href="#features">
+              <Button variant="outline" size="lg">
+                Learn more
+              </Button>
+            </Link>
+          </div>
+        </section>
 
-           <Text c="dimmed" size="xl" maw={600}>
-             Stop leaking money on forgotten free trials and unused tools. 
-             SubTrack gives you a crystal-clear view of your recurring expenses.
-           </Text>
+        {/* Features Grid (Replaces SimpleGrid) */}
+        <section id="features" className="container mx-auto px-4 py-24">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+            <FeatureCard 
+              icon={<BarChart3 className="h-8 w-8 text-primary" />}
+              title="Visual Insights"
+              description="See exactly where your money goes with beautiful, interactive charts and spending breakdowns."
+            />
+            <FeatureCard 
+              icon={<Bell className="h-8 w-8 text-primary" />}
+              title="Smart Alerts"
+              description="Get notified days before a renewal happens so you never pay for an unwanted service again."
+            />
+            <FeatureCard 
+              icon={<ShieldCheck className="h-8 w-8 text-primary" />}
+              title="Bank Level Security"
+              description="Your data is encrypted and secure. We never sell your personal financial information."
+            />
+          </div>
+        </section>
+      </main>
 
-           <Group mt="md">
-             {/* 👇 FIX: Wrap Button in Link */}
-             <Link href="/auth/signup">
-               <Button 
-                 size="xl" 
-                 radius="md" 
-                 color="blue"
-                 rightSection={<IconArrowRight size={18} />}
-                 component="div" // Renders as div to be valid inside <a> tag
-               >
-                 Get Started Free
-               </Button>
-             </Link>
-
-             {/* 👇 FIX: Wrap Button in Link */}
-             <Link href="/auth/login">
-               <Button 
-                 size="xl" 
-                 radius="md" 
-                 variant="default"
-                 component="div"
-               >
-                 Log In
-               </Button>
-             </Link>
-           </Group>
-        </Stack>
-
-        {/* --- Bento Grid Features --- */}
-        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing={30}>
-           {features.map((feature) => (
-             <Card 
-               key={feature.title} 
-               padding="xl" 
-               radius="lg" 
-               className="glass-card" 
-               style={{ 
-                 background: "rgba(255, 255, 255, 0.03)", 
-                 border: "1px solid rgba(255, 255, 255, 0.08)",
-                 backdropFilter: "blur(10px)"
-               }}
-             >
-               <ThemeIcon 
-                 size={50} 
-                 radius="md" 
-                 variant="light" 
-                 color={feature.color}
-                 mb="lg"
-               >
-                 <feature.icon size={26} stroke={1.5} />
-               </ThemeIcon>
-               
-               <Text fw={700} size="lg" mb="sm">{feature.title}</Text>
-               <Text c="dimmed" style={{ lineHeight: 1.6 }}>{feature.description}</Text>
-             </Card>
-           ))}
-        </SimpleGrid>
-
-      </Container>
+      {/* Footer */}
+      <footer className="border-t border-border/50 py-12">
+        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+          <p>&copy; {new Date().getFullYear()} SubTrack. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
+  );
+}
+
+function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
+  return (
+    <Card className="border-border/50 bg-card/50 transition-colors hover:bg-card">
+      <CardHeader>
+        <div className="mb-4 inline-flex w-fit rounded-lg bg-primary/10 p-3 ring-1 ring-inset ring-primary/20">
+          {icon}
+        </div>
+        <CardTitle className="text-xl">{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-muted-foreground">{description}</p>
+      </CardContent>
+    </Card>
   );
 }

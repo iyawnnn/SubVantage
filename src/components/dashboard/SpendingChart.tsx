@@ -1,42 +1,56 @@
 "use client";
 
-import { BarChart } from "@mantine/charts";
-import { Paper, Text } from "@mantine/core";
-import { convertTo, formatCurrency } from "@/lib/currency-helper";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 
-interface SpendingChartProps {
-  data: any[];
-  baseCurrency: string;
-  rates: Record<string, number>;
-}
+const chartConfig = {
+  cost: {
+    label: "Cost",
+    color: "hsl(var(--primary))",
+  },
+} satisfies ChartConfig;
 
-export function SpendingChart({ data, baseCurrency, rates }: SpendingChartProps) {
-  const chartData = data.map((sub) => {
-    const rawCost = Number(sub.cost);
-    const convertedCost = convertTo(rawCost, sub.currency, baseCurrency, rates);
-    const monthlyCost = sub.frequency === "YEARLY" ? convertedCost / 12 : convertedCost;
-
-    return {
-      name: sub.vendor.name,
-      cost: monthlyCost,
-    };
-  });
-
+export function SpendingChart({ data }: { data: any[] }) {
   return (
-    // FIX: Use style={{ minHeight: 350 }} instead of minH={350}
-    <Paper p="md" withBorder radius="md" style={{ minHeight: 350 }}>
-      <Text fw={600} mb="md">Monthly Spending Breakdown ({baseCurrency})</Text>
-      <BarChart
-        h={300}
-        data={chartData}
-        dataKey="name"
-        series={[{ name: "cost", color: "blue.6", label: `Cost (${baseCurrency})` }]}
-        tickLine="y"
-        gridAxis="y"
-        withTooltip
-        tooltipAnimationDuration={200}
-        valueFormatter={(value) => formatCurrency(value, baseCurrency)}
-      />
-    </Paper>
+    <Card className="border-border/50 bg-card/50">
+      <CardHeader>
+        <CardTitle>Spending Trends</CardTitle>
+        <CardDescription>Your subscription costs over time</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ChartContainer config={chartConfig} className="h-[300px] w-full">
+          <AreaChart data={data} margin={{ left: 12, right: 12 }}>
+            <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.1} />
+            <XAxis
+              dataKey="month"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+            />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Area
+              dataKey="cost"
+              type="natural"
+              fill="var(--color-cost)"
+              fillOpacity={0.1}
+              stroke="var(--color-cost)"
+              stackId="a"
+            />
+          </AreaChart>
+        </ChartContainer>
+      </CardContent>
+    </Card>
   );
 }

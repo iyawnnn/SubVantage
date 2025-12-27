@@ -4,13 +4,18 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
-export async function updateUserSettings(formData: FormData) {
+interface UpdateSettingsData {
+  preferredCurrency: string;
+}
+
+export async function updateUserSettings(data: UpdateSettingsData) {
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, message: "Unauthorized" };
   }
 
-  const preferredCurrency = formData.get("preferredCurrency") as string;
+  // 👇 Fix: Access property directly from the object
+  const { preferredCurrency } = data;
 
   try {
     await prisma.user.update({
@@ -20,6 +25,7 @@ export async function updateUserSettings(formData: FormData) {
 
     revalidatePath("/dashboard");
     revalidatePath("/settings");
+    revalidatePath("/archive"); // Ensure currency updates everywhere
     
     return { success: true, message: "Settings updated successfully" };
   } catch (error) {
