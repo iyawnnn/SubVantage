@@ -3,8 +3,14 @@
 import React from "react";
 import dayjs from "dayjs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarClock, CheckCircle2 } from "lucide-react";
+import { CalendarClock, CheckCircle2, Info } from "lucide-react";
 import { formatCurrency, convertTo } from "@/lib/currency-helper";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface UpcomingBillsProps {
   data: any[];
@@ -21,11 +27,8 @@ export function UpcomingBills({ data, rates, currency }: UpcomingBillsProps) {
         const diff = renewal.diff(now, "day");
         return { ...sub, daysLeft: diff };
       })
-      // Filter for future bills or bills due today
       .filter((sub) => sub.daysLeft >= 0)
-      // Sort by CLOSEST due date first (ascending)
       .sort((a, b) => a.daysLeft - b.daysLeft)
-      // 👇 FIX: Increased limit from 3 to 4
       .slice(0, 4);
   }, [data]);
 
@@ -35,6 +38,17 @@ export function UpcomingBills({ data, rates, currency }: UpcomingBillsProps) {
         <CardTitle className="flex items-center gap-2 text-base font-bold">
            <CalendarClock className="h-4 w-4 text-primary" />
            Upcoming Bills
+           {/* Tooltip */}
+           <TooltipProvider>
+            <Tooltip delayDuration={300}>
+              <TooltipTrigger asChild>
+                <Info className="h-3.5 w-3.5 text-muted-foreground/50 cursor-help hover:text-primary transition-colors" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Your next 4 scheduled payments. Sorted by closest due date.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </CardTitle>
       </CardHeader>
       
@@ -50,7 +64,6 @@ export function UpcomingBills({ data, rates, currency }: UpcomingBillsProps) {
         ) : (
           <div className="space-y-4 pt-2">
             {upcoming.map((sub) => {
-              // Handle "My Share" logic for display if applicable, or just standard cost
               const rawCost = Number(sub.splitCost) > 0 ? Number(sub.splitCost) : Number(sub.cost);
               const cost = convertTo(rawCost, sub.currency, currency, rates);
               

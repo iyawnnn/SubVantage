@@ -5,7 +5,15 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { 
+  CalendarIcon, 
+  Loader2, 
+  CreditCard, 
+  Tag, 
+  ChevronDown, 
+  ChevronUp, 
+  Sparkles 
+} from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
@@ -15,7 +23,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -43,6 +50,7 @@ import {
 import { cn } from "@/lib/utils";
 import { createSubscription, updateSubscription } from "@/actions/subscription-actions";
 
+// Schema Validation
 const formSchema = z.object({
   vendorName: z.string().min(2, "Name is too short"),
   cost: z.coerce.number().min(0),
@@ -58,6 +66,7 @@ const formSchema = z.object({
 export function SubscriptionModal({ opened, close, subToEdit }: { opened: boolean; close: () => void; subToEdit?: any }) {
   const router = useRouter();
   const [loading, setLoading] = React.useState(false);
+  const [showAdvanced, setShowAdvanced] = React.useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -87,6 +96,9 @@ export function SubscriptionModal({ opened, close, subToEdit }: { opened: boolea
         startDate: new Date(subToEdit.startDate),
         isTrial: subToEdit.isTrial,
       });
+      if (subToEdit.splitCost > 0 || subToEdit.isTrial || subToEdit.status !== "ACTIVE") {
+        setShowAdvanced(true);
+      }
     } else {
       form.reset({
         vendorName: "",
@@ -99,11 +111,13 @@ export function SubscriptionModal({ opened, close, subToEdit }: { opened: boolea
         startDate: new Date(),
         isTrial: false,
       });
+      setShowAdvanced(false);
     }
   }, [subToEdit, opened, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
+    // Map 'vendorName' to 'name' for the backend
     const payload = { ...values, name: values.vendorName };
     try {
       const result = subToEdit 
@@ -113,7 +127,7 @@ export function SubscriptionModal({ opened, close, subToEdit }: { opened: boolea
       if (result.success) {
         toast.success(subToEdit ? "Subscription Updated" : "Subscription Added");
         close();
-        router.refresh();
+        router.refresh(); // Refreshes the server components (dashboard data)
       } else {
         toast.error("Error", { description: typeof result.message === "string" ? result.message : "Failed to save." });
       }
@@ -126,196 +140,252 @@ export function SubscriptionModal({ opened, close, subToEdit }: { opened: boolea
 
   return (
     <Dialog open={opened} onOpenChange={(val) => !val && close()}>
-      <DialogContent className="sm:max-w-[500px] bg-background border-border text-foreground">
-        <DialogHeader>
-          <DialogTitle>{subToEdit ? "Edit Subscription" : "Add Subscription"}</DialogTitle>
-          <DialogDescription>
-            {subToEdit 
-              ? "Modify the details of your existing subscription." 
-              : "Enter the details for your new subscription."}
-          </DialogDescription>
+      {/* 👇 FIX: Mobile Responsive Classes (w-[90vw], max-h-[85vh]) */}
+      <DialogContent className="w-[90vw] sm:max-w-[420px] max-h-[85vh] overflow-y-auto bg-card border-border shadow-2xl p-0 gap-0">
+        
+        {/* Header */}
+        <DialogHeader className="p-6 pb-2 border-b border-border/40">
+          <DialogTitle className="flex items-center gap-2 text-xl">
+            {subToEdit ? <Sparkles className="h-5 w-5 text-primary" /> : <CreditCard className="h-5 w-5 text-primary" />}
+            {subToEdit ? "Edit Subscription" : "New Subscription"}
+          </DialogTitle>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="vendorName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Vendor Name</FormLabel>
-                  <FormControl><Input placeholder="e.g. Netflix" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <div className="grid grid-cols-2 gap-4">
+
+        {/* Scrollable Form Body */}
+        <div className="p-6 pt-4">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              
+              {/* 1. HERO INPUT: VENDOR NAME */}
               <FormField
                 control={form.control}
-                name="cost"
+                name="vendorName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Full Price</FormLabel>
-                    <FormControl><Input type="number" step="0.01" {...field} /></FormControl>
+                    <FormControl>
+                      <div className="relative">
+                        <Input 
+                          placeholder="Subscription Name (e.g. Netflix)" 
+                          {...field} 
+                          className="pl-3 h-12 text-lg font-medium placeholder:font-normal bg-background/50 border-input"
+                        />
+                      </div>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="splitCost"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>My Share (Optional)</FormLabel>
-                    <FormControl><Input type="number" step="0.01" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="currency"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Currency</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
-                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        {["PHP", "USD", "EUR", "GBP", "JPY"].map((c) => (
-                           <SelectItem key={c} value={c}>{c}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="frequency"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cycle</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
-                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        <SelectItem value="MONTHLY">Monthly</SelectItem>
-                        <SelectItem value="YEARLY">Yearly</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )}
-              />
-            </div>
+              {/* 2. THE 'MONEY' ROW: Cost | Currency | Frequency */}
+              <div className="flex gap-3">
+                <div className="flex-[2]">
+                  <FormField
+                    control={form.control}
+                    name="cost"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Cost</FormLabel>
+                        <FormControl>
+                          <div className="flex items-center rounded-md border border-input bg-background/50 ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                            <Input 
+                              type="number" 
+                              step="0.01" 
+                              {...field} 
+                              className="border-0 focus-visible:ring-0 shadow-none h-10 rounded-r-none pr-1 bg-transparent"
+                              placeholder="0.00"
+                            />
+                             <FormField
+                              control={form.control}
+                              name="currency"
+                              render={({ field: currencyField }) => (
+                                <Select onValueChange={currencyField.onChange} value={currencyField.value}>
+                                  <FormControl>
+                                    <SelectTrigger className="h-10 w-[4.5rem] border-0 border-l border-border rounded-l-none bg-muted/20 focus:ring-0 shadow-none text-xs font-bold text-muted-foreground hover:bg-muted/40">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {["PHP", "USD", "EUR", "GBP", "JPY"].map((c) => (
+                                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              )}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-            <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
-                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>
-                          {["Entertainment", "Personal", "Work", "Utilities", "Health"].map(c => (
-                            <SelectItem key={c} value={c}>{c}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )}
-                />
-                 <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
-                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>
-                          <SelectItem value="ACTIVE">Active</SelectItem>
-                          <SelectItem value="PAUSED">Paused</SelectItem>
-                          <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )}
-                />
-            </div>
+                <div className="flex-1">
+                   <FormField
+                    control={form.control}
+                    name="frequency"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Cycle</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="bg-background/50 border-input h-10">
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="MONTHLY">Monthly</SelectItem>
+                            <SelectItem value="YEARLY">Yearly</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
 
-            <FormField
-              control={form.control}
-              name="startDate"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Start Date</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
-                        >
-                          {field.value ? format(field.value, "MMM d, yyyy") : <span>Pick a date</span>}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        // 👇 FIX 1: Allow future dates (removed date > new Date())
-                        disabled={(date) => date < new Date("1900-01-01")}
-                        initialFocus
-                        // 👇 FIX 2: Enable Dropdowns for Year/Month to fix "Blocking"
-                        captionLayout="dropdown-buttons"
-                        fromYear={2010}
-                        toYear={new Date().getFullYear() + 5}
-                        // 👇 FIX 3: Make it Bigger
-                        className="p-3"
-                        classNames={{
-                          head_cell: "w-10 font-normal text-[0.8rem]",
-                          cell: "h-10 w-10 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-                          day: "h-10 w-10 p-0 font-normal aria-selected:opacity-100",
-                          caption_label: "text-base font-medium",
-                        }}
+              {/* 3. DETAILS ROW: Category | Start Date */}
+              <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                         <FormLabel className="flex items-center gap-1.5 text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+                            Category
+                         </FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="bg-background/50 border-input h-10">
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {["Entertainment", "Personal", "Work", "Utilities", "Health", "Education", "Dev Tools"].map(c => (
+                              <SelectItem key={c} value={c}>
+                                <div className="flex items-center gap-2">
+                                  <Tag className="h-3 w-3 opacity-50" />
+                                  {c}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="startDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">First Bill</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className={cn("w-full pl-3 text-left font-normal bg-background/50 border-input h-10", !field.value && "text-muted-foreground")}
+                              >
+                                {field.value ? format(field.value, "MMM d, yyyy") : <span>Pick date</span>}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="end">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              disabled={(date) => date < new Date("1900-01-01")}
+                              captionLayout="dropdown-buttons"
+                              fromYear={2010}
+                              toYear={new Date().getFullYear() + 5}
+                              initialFocus
+                              className="p-3"
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </FormItem>
+                    )}
+                  />
+              </div>
+
+              {/* 4. ADVANCED TOGGLE */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                  className="flex items-center gap-2 text-xs font-medium text-primary hover:underline transition-all"
+                >
+                  {showAdvanced ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                  {showAdvanced ? "Hide Advanced Options" : "More Options (Trial, Split Cost)"}
+                </button>
+
+                {/* HIDDEN ADVANCED SECTION */}
+                {showAdvanced && (
+                  <div className="mt-3 space-y-4 rounded-lg border border-border/50 bg-secondary/20 p-4 animate-in slide-in-from-top-2 fade-in duration-200">
+                    <div className="grid grid-cols-2 gap-4">
+                       <FormField
+                        control={form.control}
+                        name="splitCost"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">My Share (If Split)</FormLabel>
+                            <FormControl><Input type="number" step="0.01" {...field} className="bg-background h-9 border-input" placeholder="0.00" /></FormControl>
+                          </FormItem>
+                        )}
                       />
-                    </PopoverContent>
-                  </Popover>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="isTrial"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                  <FormControl>
-                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>This is a Free Trial</FormLabel>
+                       <FormField
+                        control={form.control}
+                        name="status"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Status</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                              <FormControl><SelectTrigger className="bg-background h-9 border-input"><SelectValue /></SelectTrigger></FormControl>
+                              <SelectContent>
+                                <SelectItem value="ACTIVE">Active</SelectItem>
+                                <SelectItem value="PAUSED">Paused</SelectItem>
+                                <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <FormField
+                      control={form.control}
+                      name="isTrial"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border border-border/60 bg-background p-3">
+                          <FormControl>
+                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel className="text-sm font-medium">This is a Free Trial</FormLabel>
+                            <p className="text-[10px] text-muted-foreground">Calculations will treat this as $0.00 until it converts.</p>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
                   </div>
-                </FormItem>
-              )}
-            />
+                )}
+              </div>
 
-            <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={close}>Cancel</Button>
-              <Button type="submit" disabled={loading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {subToEdit ? "Save Changes" : "Add Subscription"}
-              </Button>
-            </div>
-          </form>
-        </Form>
+              {/* FOOTER */}
+              <div className="flex justify-end gap-3 pt-2">
+                <Button type="button" variant="ghost" onClick={close} className="hover:bg-muted">Cancel</Button>
+                <Button type="submit" disabled={loading} className="px-6 bg-gradient-to-r from-primary to-violet-600 text-white font-medium hover:shadow-lg hover:shadow-primary/20 transition-all">
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {subToEdit ? "Save Changes" : "Add Subscription"}
+                </Button>
+              </div>
+
+            </form>
+          </Form>
+        </div>
       </DialogContent>
     </Dialog>
   );

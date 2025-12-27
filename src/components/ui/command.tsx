@@ -23,10 +23,19 @@ const Command = React.forwardRef<
 ))
 Command.displayName = CommandPrimitive.displayName
 
-const CommandDialog = ({ children, ...props }: DialogProps) => {
+// 👇 FIX 1: Allow 'className' to pass through to DialogContent
+interface CommandDialogProps extends DialogProps {
+  className?: string
+}
+
+const CommandDialog = ({ children, className, ...props }: CommandDialogProps) => {
   return (
     <Dialog {...props}>
-      <DialogContent className="overflow-hidden p-0">
+      {/* 👇 FIX 1 Applied: We merge 'className' here. 
+         This allows 'w-[90vw]' from GlobalSpotlight to actually work,
+         giving you the space on the left/right of the screen.
+      */}
+      <DialogContent className={cn("overflow-hidden p-0 shadow-lg", className)}>
         <Command className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
           {children}
         </Command>
@@ -60,7 +69,14 @@ const CommandList = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CommandPrimitive.List
     ref={ref}
-    className={cn("max-h-[300px] overflow-y-auto overflow-x-hidden", className)}
+    // 👇 FIX 2: Added global scrollbar hiding classes here.
+    // [&::-webkit-scrollbar]:hidden -> Hides Chrome/Safari scrollbar
+    // [-ms-overflow-style:none] -> Hides IE/Edge scrollbar
+    // [scrollbar-width:none] -> Hides Firefox scrollbar
+    className={cn(
+      "max-h-[300px] overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]", 
+      className
+    )}
     {...props}
   />
 ))

@@ -9,6 +9,8 @@ import { InsightsCard } from "@/components/dashboard/Insights";
 import { getLiveRates } from "@/lib/exchange-rates";
 import { processSubscriptionData } from "@/lib/calculations";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
 
 async function getData() {
   const session = await auth();
@@ -43,10 +45,8 @@ export default async function DashboardPage() {
   } = processSubscriptionData(subs, rates, baseCurrency);
 
   return (
-    // 👇 FIX: Added 'overflow-x-hidden' to prevent horizontal scroll
-    <div className="mx-auto max-w-[1600px] space-y-6 animate-in fade-in duration-500 pb-10 overflow-x-hidden">
+    <div className="mx-auto max-w-[1600px] space-y-6 animate-in fade-in duration-500 pb-0 overflow-x-hidden">
       
-      {/* Pass the 'user' object here for the name & greeting */}
       <DashboardHeader user={user} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -72,7 +72,20 @@ export default async function DashboardPage() {
         <div className="lg:col-span-2 xl:col-span-3 h-[320px] lg:h-full">
            <Card className="h-full border-border bg-card shadow-sm flex flex-col">
               <CardHeader className="pb-2">
-                <CardTitle className="text-base font-bold">Spending Velocity</CardTitle>
+                <CardTitle className="text-base font-bold flex items-center gap-2">
+                  Spending Velocity
+                  {/* Tooltip added here manually since Chart is wrapped in generic Card */}
+                  <TooltipProvider>
+                    <Tooltip delayDuration={300}>
+                      <TooltipTrigger asChild>
+                        <Info className="h-3.5 w-3.5 text-muted-foreground/50 cursor-help hover:text-primary transition-colors" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Visualizes your projected spending for the next 6 months.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </CardTitle>
               </CardHeader>
               <CardContent className="flex-1 min-h-0">
                  <SpendingChart data={subs} />

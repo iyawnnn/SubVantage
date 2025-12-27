@@ -63,7 +63,6 @@ export function DashboardShell({ children, user }: { children: React.ReactNode; 
           scrolled ? "border-b border-border/40 shadow-sm" : "border-b border-transparent"
         )}
       >
-        {/* 👇 FIX: Consistent padding breakpoints (sm:px-6 lg:px-8) ensures perfect alignment */}
         <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
           
           {/* LEFT: Logo & Desktop Nav */}
@@ -77,7 +76,6 @@ export function DashboardShell({ children, user }: { children: React.ReactNode; 
               </span>
             </Link>
 
-            {/* 👇 FIX: Hidden on tablets (<1024px), Visible only on Large Desktop */}
             <nav className="hidden items-center gap-1 lg:flex relative">
               {navLinks.map((item) => {
                 const isActive = pathname === item.link;
@@ -111,9 +109,10 @@ export function DashboardShell({ children, user }: { children: React.ReactNode; 
           <div className="flex items-center justify-end gap-2 sm:gap-4">
             
             {/* Search Bar - Only shows on Large screens */}
+            {/* 👇 FIX: Added 'cursor-pointer' to the button class */}
             <button 
               onClick={openSpotlight}
-              className="group hidden w-60 items-center justify-between rounded-full border border-border/50 bg-secondary/30 px-4 py-2 text-sm text-muted-foreground transition-all hover:bg-secondary/80 hover:border-border lg:flex"
+              className="group hidden w-60 items-center justify-between rounded-full border border-border/50 bg-secondary/30 px-4 py-2 text-sm text-muted-foreground transition-all hover:bg-secondary/80 hover:border-border lg:flex cursor-pointer"
             >
               <div className="flex items-center gap-2">
                 <Search className="h-4 w-4 opacity-50 group-hover:opacity-100" />
@@ -129,20 +128,20 @@ export function DashboardShell({ children, user }: { children: React.ReactNode; 
               variant="ghost" 
               size="icon" 
               onClick={openSpotlight}
-              className="lg:hidden text-muted-foreground hover:text-foreground"
+              className="lg:hidden text-muted-foreground hover:text-foreground cursor-pointer"
             >
               <Search className="h-5 w-5" />
             </Button>
 
             <UserMenu image={user?.image} name={user?.name} email={user?.email} />
 
-            {/* Mobile Menu Trigger - Shows on Tablets & Mobile (<1024px) */}
+            {/* Mobile Menu Trigger */}
             <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
               <SheetTrigger asChild>
                 <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="lg:hidden text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                    className="lg:hidden text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer"
                 >
                   <AlignRight className="h-6 w-6" />
                 </Button>
@@ -158,23 +157,23 @@ export function DashboardShell({ children, user }: { children: React.ReactNode; 
                 
                 <div className="flex flex-col gap-2 mt-6">
                   {navLinks.map((item) => {
-                     const isActive = pathname === item.link;
-                     return (
-                      <Link
-                        key={item.link}
-                        href={item.link}
-                        onClick={() => setIsMobileOpen(false)}
-                        className={cn(
-                          "flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium transition-all duration-200",
-                          isActive 
-                            ? "bg-primary/10 text-primary shadow-sm" 
-                            : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
-                        )}
-                      >
-                        <item.icon className="h-5 w-5" />
-                        {item.label}
-                      </Link>
-                     );
+                      const isActive = pathname === item.link;
+                      return (
+                       <Link
+                         key={item.link}
+                         href={item.link}
+                         onClick={() => setIsMobileOpen(false)}
+                         className={cn(
+                           "flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium transition-all duration-200",
+                           isActive 
+                             ? "bg-primary/10 text-primary shadow-sm" 
+                             : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+                         )}
+                       >
+                         <item.icon className="h-5 w-5" />
+                         {item.label}
+                       </Link>
+                      );
                   })}
                 </div>
               </SheetContent>
@@ -184,7 +183,6 @@ export function DashboardShell({ children, user }: { children: React.ReactNode; 
       </header>
       
       <main className="flex-1">
-        {/* 👇 FIX: Matched padding with Header (px-4 sm:px-6 lg:px-8) */}
         <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
           {children}
         </div>

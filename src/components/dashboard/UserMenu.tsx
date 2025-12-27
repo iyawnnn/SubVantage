@@ -31,7 +31,8 @@ export function UserMenu({ image, name, email }: UserMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+        {/* 👇 FIX: Added 'cursor-pointer' to ensure the hand icon appears on hover */}
+        <Button variant="ghost" className="relative h-9 w-9 rounded-full cursor-pointer">
           <Avatar className="h-9 w-9 border border-border">
             <AvatarImage src={image || ""} alt={name || "User"} />
             <AvatarFallback>{initials}</AvatarFallback>

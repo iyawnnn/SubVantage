@@ -1,10 +1,8 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { SubscriptionTable } from "@/components/dashboard/SubscriptionTable";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader"; 
 import { getLiveRates } from "@/lib/exchange-rates";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { SubscriptionsView } from "@/components/subscriptions/SubscriptionsView";
 
 export const metadata = {
   title: "My Subscriptions | SubTrack",
@@ -17,16 +15,12 @@ async function getData() {
   const rawSubs = await prisma.subscription.findMany({
     where: { 
       userId: session.user.id,
-      // 👇 FIX: Exclude Cancelled (Archived) items from this view
-      status: {
-        not: "CANCELLED"
-      }
+      status: { not: "CANCELLED" }
     }, 
     include: { vendor: true },
     orderBy: { nextRenewalDate: "asc" },
   });
 
-  // Serialize Decimals for Client Components
   const subs = rawSubs.map(sub => ({
     ...sub,
     cost: Number(sub.cost),
@@ -45,23 +39,13 @@ export default async function SubscriptionsPage() {
   const baseCurrency = user?.preferredCurrency || "USD";
 
   return (
-    <div className="mx-auto max-w-[1600px] space-y-8 animate-in fade-in duration-500 pb-10">
-      
-      {/* Reusing header for the "Add" button functionality */}
-      <DashboardHeader />
-
-      <Card className="border-border bg-card shadow-sm">
-        <CardHeader className="border-b border-border">
-          <CardTitle>Active & Paused Subscriptions</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <SubscriptionTable 
-            data={subs} 
-            rates={rates} 
-            baseCurrency={baseCurrency} 
-          />
-        </CardContent>
-      </Card>
+    <div className="mx-auto max-w-[1600px] pb-0">
+      {/* We now use the Client Component to manage everything */}
+      <SubscriptionsView 
+        initialData={subs} 
+        rates={rates} 
+        baseCurrency={baseCurrency} 
+      />
     </div>
   );
 }
