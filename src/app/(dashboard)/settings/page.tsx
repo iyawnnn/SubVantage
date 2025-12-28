@@ -1,36 +1,27 @@
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
-import { Settings } from "lucide-react";
-import { SettingsForm } from "@/components/dashboard/SettingsForm";
-import { Separator } from "@/components/ui/separator";
+import { prisma } from "@/lib/prisma"; // 👈 Import prisma
+import { redirect } from "next/navigation";
+import SettingsView from "@/components/settings/SettingsView";
+
+export const metadata = {
+  title: "Settings | SubTrack",
+};
 
 export default async function SettingsPage() {
   const session = await auth();
-  if (!session?.user?.id) return null;
+  if (!session?.user?.id) redirect("/");
 
+  // 👇 FIX: Fetch fresh user data from DB instead of relying on stale session
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
   });
 
-  return (
-    <div className="mx-auto max-w-4xl space-y-8">
-      <div className="flex items-center gap-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <Settings className="h-6 w-6" />
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-          <p className="text-muted-foreground">
-            Manage your account preferences and application defaults.
-          </p>
-        </div>
-      </div>
-      
-      <Separator />
+  if (!user) redirect("/");
 
-      <div className="grid gap-6">
-        <SettingsForm user={user} />
-      </div>
+  return (
+    <div className="mx-auto max-w-[1600px] px-4 py-8">
+      {/* Pass the fresh user object */}
+      <SettingsView user={user} />
     </div>
   );
 }

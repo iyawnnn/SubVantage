@@ -1,21 +1,30 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { getLiveRates } from "@/lib/exchange-rates";
 import { SubscriptionsView } from "@/components/subscriptions/SubscriptionsView";
+import { getExchangeRates } from "@/lib/currency-helper"; 
 
 export const metadata = {
-  title: "My Subscriptions | SubTrack",
+  title: "Subscriptions | SubTrack",
 };
 
-async function getData() {
+export default async function SubscriptionsPage() {
   const session = await auth();
-  if (!session?.user?.id) return { subs: [], user: null, rates: {} };
+  if (!session?.user?.id) redirect("/");
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { preferredCurrency: true }
+  });
+
+  const baseCurrency = user?.preferredCurrency || "USD";
 
   const rawSubs = await prisma.subscription.findMany({
     where: { 
       userId: session.user.id,
-      status: { not: "CANCELLED" }
+      // 👇 FIX: Removed "TRIAL". Only "ACTIVE" is valid in your Enum.
+      // Trials are handled by the separate 'isTrial' boolean field.
+      status: "ACTIVE"
     }, 
     include: { vendor: true },
     orderBy: { nextRenewalDate: "asc" },
@@ -27,20 +36,10 @@ async function getData() {
     splitCost: sub.splitCost ? Number(sub.splitCost) : 0,
   }));
 
-  const rates = await getLiveRates();
-  return { subs, user: session.user, rates };
-}
-
-export default async function SubscriptionsPage() {
-  const session = await auth();
-  if (!session?.user) redirect("/");
-
-  const { subs, user, rates } = await getData();
-  const baseCurrency = user?.preferredCurrency || "USD";
+  const rates = await getExchangeRates(baseCurrency);
 
   return (
-    <div className="mx-auto max-w-[1600px] pb-0">
-      {/* We now use the Client Component to manage everything */}
+    <div className="mx-auto max-w-[1600px] px-4 py-8 pb-0">
       <SubscriptionsView 
         initialData={subs} 
         rates={rates} 

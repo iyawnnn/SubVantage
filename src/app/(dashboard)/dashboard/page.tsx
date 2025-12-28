@@ -12,9 +12,20 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
 
+// 👇 ADDED: Page Metadata
+export const metadata = {
+  title: "Dashboard | SubTrack",
+  description: "Your financial pulse at a glance.",
+};
+
 async function getData() {
   const session = await auth();
   if (!session?.user?.id) return { subs: [], user: null, rates: {} };
+
+  // Fetch fresh user data (ensures currency setting is up-to-date)
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+  });
 
   const rawSubs = await prisma.subscription.findMany({
     where: { userId: session.user.id, status: "ACTIVE" },
@@ -28,8 +39,8 @@ async function getData() {
     splitCost: sub.splitCost ? Number(sub.splitCost) : 0,
   }));
 
-  const rates = await getLiveRates();
-  return { subs, user: session.user, rates };
+  const rates = await getLiveRates(user?.preferredCurrency || "USD");
+  return { subs, user, rates };
 }
 
 export default async function DashboardPage() {
@@ -74,7 +85,6 @@ export default async function DashboardPage() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-base font-bold flex items-center gap-2">
                   Spending Velocity
-                  {/* Tooltip added here manually since Chart is wrapped in generic Card */}
                   <TooltipProvider>
                     <Tooltip delayDuration={300}>
                       <TooltipTrigger asChild>
@@ -88,7 +98,7 @@ export default async function DashboardPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex-1 min-h-0">
-                 <SpendingChart data={subs} />
+                 <SpendingChart data={subs} rates={rates} currency={baseCurrency} />
               </CardContent>
            </Card>
         </div>

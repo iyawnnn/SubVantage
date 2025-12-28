@@ -1,73 +1,42 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { Archive } from "lucide-react";
-import { getLiveRates } from "@/lib/exchange-rates";
-import { ArchiveList } from "@/components/dashboard/ArchiveList";
+import { redirect } from "next/navigation";
+import ArchiveView from "@/components/archive/ArchiveView";
 
-async function getArchivedData(userId: string) {
-  const data = await prisma.subscription.findMany({
-    where: {
-      userId: userId,
-      status: "CANCELLED",
-    },
-    orderBy: { updatedAt: "desc" },
+export const metadata = {
+  title: "Archive | SubTrack",
+};
+
+async function getData() {
+  const session = await auth();
+  if (!session?.user?.id) return [];
+
+  const rawSubs = await prisma.subscription.findMany({
+    where: { 
+      userId: session.user.id,
+      status: "CANCELLED"
+    }, 
     include: { vendor: true },
+    orderBy: { updatedAt: "desc" },
   });
 
-  // 👇 SERIALIZATION FIX: Convert Decimal to Number
-  return data.map((sub) => ({
-    id: sub.id,
-    vendorName: sub.vendor?.name || sub.name, // Flatten for Client Component
-    vendor: {
-        name: sub.vendor?.name || sub.name,
-        website: sub.vendor?.website
-    },
+  return rawSubs.map(sub => ({
+    ...sub,
     cost: Number(sub.cost),
-    splitCost: sub.splitCost ? Number(sub.splitCost) : 0,
-    currency: sub.currency,
-    frequency: sub.frequency,
-    category: sub.category,
-    startDate: sub.startDate,
-    nextRenewalDate: sub.nextRenewalDate,
-    updatedAt: sub.updatedAt,
-    isTrial: sub.isTrial,
+    // 👇 FIX: Explicitly convert Decimal to Number
+    splitCost: sub.splitCost ? Number(sub.splitCost) : 0, 
   }));
 }
 
 export default async function ArchivePage() {
   const session = await auth();
-  if (!session?.user?.id) return null;
+  if (!session?.user) redirect("/");
 
-  const [archivedSubs, rates] = await Promise.all([
-    getArchivedData(session.user.id),
-    getLiveRates(),
-  ]);
-
-  const baseCurrency = session.user.preferredCurrency || "USD";
+  const subs = await getData();
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
-      <div className="flex items-center gap-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400">
-          <Archive className="h-6 w-6" />
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Graveyard</h1>
-          <p className="text-muted-foreground">
-            Subscriptions you have cancelled. Restore them anytime.
-          </p>
-        </div>
-      </div>
-
-      <div className="rounded-xl border bg-card">
-        <div className="p-6">
-          <ArchiveList 
-            data={archivedSubs} 
-            rates={rates} 
-            baseCurrency={baseCurrency} 
-          />
-        </div>
-      </div>
+    <div className="mx-auto max-w-[1600px] pb-0">
+      <ArchiveView initialData={subs} />
     </div>
   );
 }

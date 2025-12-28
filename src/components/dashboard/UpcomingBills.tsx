@@ -2,9 +2,10 @@
 
 import React from "react";
 import dayjs from "dayjs";
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CalendarClock, CheckCircle2, Info } from "lucide-react";
-import { formatCurrency, convertTo } from "@/lib/currency-helper";
+import { formatCurrency } from "@/lib/currency-helper";
 import {
   Tooltip,
   TooltipContent,
@@ -18,18 +19,26 @@ interface UpcomingBillsProps {
   currency: string;
 }
 
-export function UpcomingBills({ data, rates, currency }: UpcomingBillsProps) {
+export function UpcomingBills({ data }: UpcomingBillsProps) {
+  // Memoize the calculation
   const upcoming = React.useMemo(() => {
+    const today = dayjs().startOf("day");
+    
     return data
       .map((sub) => {
-        const now = dayjs().startOf("day");
-        const renewal = dayjs(sub.nextRenewalDate).startOf("day");
-        const diff = renewal.diff(now, "day");
-        return { ...sub, daysLeft: diff };
+        // Calculate the NEXT renewal date relative to today
+        let nextDate = dayjs(sub.nextRenewalDate).startOf("day");
+        
+        // If the stored date is in the past, project it forward
+        while (nextDate.isBefore(today)) {
+           nextDate = nextDate.add(sub.frequency === "MONTHLY" ? 1 : 12, 'month');
+        }
+
+        const daysLeft = nextDate.diff(today, "day");
+        return { ...sub, nextRenewalDate: nextDate, daysLeft };
       })
-      .filter((sub) => sub.daysLeft >= 0)
-      .sort((a, b) => a.daysLeft - b.daysLeft)
-      .slice(0, 4);
+      .sort((a, b) => a.daysLeft - b.daysLeft) // Sort by closest date
+      .slice(0, 4); // Take top 4
   }, [data]);
 
   return (
@@ -38,7 +47,6 @@ export function UpcomingBills({ data, rates, currency }: UpcomingBillsProps) {
         <CardTitle className="flex items-center gap-2 text-base font-bold">
            <CalendarClock className="h-4 w-4 text-primary" />
            Upcoming Bills
-           {/* Tooltip */}
            <TooltipProvider>
             <Tooltip delayDuration={300}>
               <TooltipTrigger asChild>
@@ -62,38 +70,44 @@ export function UpcomingBills({ data, rates, currency }: UpcomingBillsProps) {
              <p className="text-xs text-muted-foreground/70">No active subscriptions due.</p>
           </div>
         ) : (
-          <div className="space-y-4 pt-2">
+          <div className="pt-2 flex flex-col h-full">
             {upcoming.map((sub) => {
               const rawCost = Number(sub.splitCost) > 0 ? Number(sub.splitCost) : Number(sub.cost);
-              const cost = convertTo(rawCost, sub.currency, currency, rates);
+              
+              // 👇 FIX: STRICTLY usage of sub.currency (No conversion)
+              const displayCost = formatCurrency(rawCost, sub.currency);
               
               return (
-                <div
+                <Link 
+                  href={`/subscriptions/${sub.id}`} 
                   key={sub.id}
-                  className="flex items-center justify-between border-b border-border pb-3 last:border-0 last:pb-0"
+                  className="group block border-b border-border last:border-0 hover:bg-muted/50 transition-colors -mx-6 px-6 py-3"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 flex-col items-center justify-center rounded-lg border border-border bg-background text-xs font-bold leading-none">
-                       <span className="text-[10px] text-muted-foreground uppercase">{dayjs(sub.nextRenewalDate).format("MMM")}</span>
-                       <span className="text-sm">{dayjs(sub.nextRenewalDate).format("D")}</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 flex-col items-center justify-center rounded-lg border border-border bg-background text-xs font-bold leading-none group-hover:border-primary/50 transition-colors">
+                         <span className="text-[10px] text-muted-foreground uppercase">{dayjs(sub.nextRenewalDate).format("MMM")}</span>
+                         <span className="text-sm">{dayjs(sub.nextRenewalDate).format("D")}</span>
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm line-clamp-1 group-hover:text-primary transition-colors">{sub.vendor.name}</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {sub.daysLeft === 0 ? (
+                             <span className="text-primary font-bold">Due Today</span>
+                          ) : sub.daysLeft === 1 ? (
+                             <span className="text-primary font-medium">Tomorrow</span>
+                          ) : (
+                             `in ${sub.daysLeft} days`
+                          )}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-sm line-clamp-1">{sub.vendor.name}</p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {sub.daysLeft === 0 ? (
-                           <span className="text-primary font-bold">Due Today</span>
-                        ) : sub.daysLeft === 1 ? (
-                           <span className="text-primary font-medium">Tomorrow</span>
-                        ) : (
-                           `in ${sub.daysLeft} days`
-                        )}
-                      </p>
+                    <div className="text-right">
+                      {/* 👇 FIX: Display Original Price */}
+                      <p className="font-bold text-sm">{displayCost}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold text-sm">{formatCurrency(cost, currency)}</p>
-                  </div>
-                </div>
+                </Link>
               );
             })}
           </div>

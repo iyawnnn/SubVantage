@@ -2,8 +2,8 @@
 
 import React from "react";
 import dayjs from "dayjs";
-import { MoreHorizontal, Info } from "lucide-react";
-import Link from "next/link";
+import { MoreHorizontal, Info, Edit, Archive, ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -38,6 +38,8 @@ interface TableProps {
 }
 
 export function SubscriptionTable({ data, rates, baseCurrency, onEdit, onArchive }: TableProps) {
+  const router = useRouter();
+
   if (data.length === 0) {
     return (
       <div className="flex h-32 items-center justify-center text-muted-foreground">
@@ -54,7 +56,7 @@ export function SubscriptionTable({ data, rates, baseCurrency, onEdit, onArchive
           <TableHead>Cost</TableHead>
           <TableHead>Next Renewal</TableHead>
           <TableHead>Status</TableHead>
-          <TableHead className="w-[50px]"></TableHead>
+          <TableHead className="w-[100px] text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -69,12 +71,14 @@ export function SubscriptionTable({ data, rates, baseCurrency, onEdit, onArchive
           return (
             <TableRow
               key={sub.id}
-              className="border-b border-border hover:bg-muted/50 transition-colors"
+              // 👇 FIX: Whole row is clickable
+              onClick={() => router.push(`/subscriptions/${sub.id}`)}
+              className="group border-b border-border hover:bg-muted/50 transition-all cursor-pointer relative"
             >
               <TableCell>
-                <Link href={`/subscriptions/${sub.id}`} className="font-medium text-foreground hover:underline">
+                <div className="font-medium text-foreground group-hover:text-primary transition-colors">
                   {sub.vendor.name}
-                </Link>
+                </div>
                 <div className="text-xs text-muted-foreground">{sub.category}</div>
               </TableCell>
               
@@ -116,23 +120,33 @@ export function SubscriptionTable({ data, rates, baseCurrency, onEdit, onArchive
                 </Badge>
               </TableCell>
               
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    {/* 👇 FIX: Added 'cursor-pointer' to the button */}
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground cursor-pointer">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => onEdit(sub)} className="cursor-pointer">
-                      Edit Subscription
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onArchive(sub.id)} className="text-destructive focus:text-destructive cursor-pointer">
-                      Archive
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+              <TableCell className="text-right">
+                <div className="flex items-center justify-end gap-2">
+                  {/* 👇 FIX: Chevron appears on hover to indicate 'Click me' */}
+                  <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        // 👇 FIX: stopPropagation prevents row click when opening menu
+                        onClick={(e) => e.stopPropagation()} 
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground cursor-pointer"
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(sub); }} className="cursor-pointer">
+                        <Edit className="mr-2 h-4 w-4" /> Edit Subscription
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onArchive(sub.id); }} className="text-destructive focus:text-destructive cursor-pointer">
+                        <Archive className="mr-2 h-4 w-4" /> Archive
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </TableCell>
             </TableRow>
           );

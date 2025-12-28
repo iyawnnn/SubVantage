@@ -24,6 +24,7 @@ import { SubscriptionModal } from "@/components/dashboard/SubscriptionModal";
 import { SubscriptionsHeader } from "./SubscriptionsHeader";
 import { SubscriptionStats } from "./SubscriptionStats";
 import { SubscriptionCardList } from "./SubscriptionCardList";
+import { EmptySubscriptionState } from "./EmptySubscriptionState"; 
 import { archiveSubscription } from "@/actions/subscription-actions";
 import { toast } from "sonner";
 
@@ -83,6 +84,14 @@ export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
     return result;
   }, [initialData, search, category, sort]);
 
+  // 👇 FIX: Auto-redirect logic
+  useEffect(() => {
+    const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [filteredData.length, currentPage]);
+
   const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
   const paginatedData = filteredData.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
@@ -120,7 +129,6 @@ export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
              {/* Filters */}
              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                 <Select value={category} onValueChange={setCategory}>
-                  {/* 👇 FIX: Added 'cursor-pointer' to SelectTrigger */}
                   <SelectTrigger className="w-full sm:w-[180px] bg-secondary/30 border-transparent focus:ring-0 cursor-pointer">
                      <div className="flex items-center gap-2 truncate">
                        <Filter className="h-4 w-4 opacity-50 flex-shrink-0" />
@@ -140,7 +148,6 @@ export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
                 </Select>
 
                 <Select value={sort} onValueChange={setSort}>
-                   {/* 👇 FIX: Added 'cursor-pointer' to SelectTrigger */}
                   <SelectTrigger className="w-full sm:w-[160px] bg-secondary/30 border-transparent focus:ring-0 cursor-pointer">
                      <div className="flex items-center gap-2">
                        <ArrowUpDown className="h-4 w-4 opacity-50" />
@@ -156,67 +163,76 @@ export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
          </div>
       </div>
 
-      <div className="hidden md:block rounded-xl border border-border/60 bg-card/50 shadow-sm overflow-hidden">
-        <SubscriptionTable 
-          data={paginatedData} 
-          rates={rates} 
-          baseCurrency={baseCurrency} 
-          onEdit={handleEdit}
-          onArchive={handleArchive}
+      {filteredData.length === 0 ? (
+        <EmptySubscriptionState 
+          onAdd={handleAdd} 
+          isSearching={search.length > 0 || category !== "ALL"} 
         />
-      </div>
+      ) : (
+        <>
+          <div className="hidden md:block rounded-xl border border-border/60 bg-card/50 shadow-sm overflow-hidden">
+            <SubscriptionTable 
+              data={paginatedData} 
+              rates={rates} 
+              baseCurrency={baseCurrency} 
+              onEdit={handleEdit}
+              onArchive={handleArchive}
+            />
+          </div>
 
-      <div className="md:hidden">
-        <SubscriptionCardList 
-          data={paginatedData} 
-          onEdit={handleEdit} 
-          onArchive={handleArchive} 
-        />
-      </div>
+          <div className="md:hidden">
+            <SubscriptionCardList 
+              data={paginatedData} 
+              onEdit={handleEdit} 
+              onArchive={handleArchive} 
+            />
+          </div>
 
-      {totalPages > 1 && (
-        <div className="pt-4 pb-8">
-           <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious 
-                  onClick={() => handlePageChange(currentPage - 1)} 
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                />
-              </PaginationItem>
-
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                 if (
-                   totalPages > 7 && 
-                   page !== 1 && 
-                   page !== totalPages && 
-                   (page < currentPage - 1 || page > currentPage + 1)
-                 ) {
-                   if (page === 2 || page === totalPages - 1) return <PaginationItem key={page}><PaginationEllipsis /></PaginationItem>;
-                   return null;
-                 }
-
-                 return (
-                  <PaginationItem key={page}>
-                    <PaginationLink 
-                      isActive={currentPage === page}
-                      onClick={() => handlePageChange(page)}
-                    >
-                      {page}
-                    </PaginationLink>
+          {totalPages > 1 && (
+            <div className="pt-4 pb-8">
+               <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => handlePageChange(currentPage - 1)} 
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                    />
                   </PaginationItem>
-                 );
-              })}
 
-              <PaginationItem>
-                <PaginationNext 
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                     if (
+                       totalPages > 7 && 
+                       page !== 1 && 
+                       page !== totalPages && 
+                       (page < currentPage - 1 || page > currentPage + 1)
+                     ) {
+                       if (page === 2 || page === totalPages - 1) return <PaginationItem key={page}><PaginationEllipsis /></PaginationItem>;
+                       return null;
+                     }
+
+                     return (
+                      <PaginationItem key={page}>
+                        <PaginationLink 
+                          isActive={currentPage === page}
+                          onClick={() => handlePageChange(page)}
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                     );
+                  })}
+
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
+        </>
       )}
 
       <SubscriptionModal 

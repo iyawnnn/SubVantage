@@ -7,8 +7,7 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  ResponsiveContainer,
-  Cell
+  ResponsiveContainer
 } from "recharts";
 import {
   ChartConfig,
@@ -16,7 +15,7 @@ import {
 } from "@/components/ui/chart";
 import dayjs from "dayjs";
 import { BarChart3 } from "lucide-react";
-import { formatCurrency } from "@/lib/currency-helper";
+import { formatCurrency, convertTo } from "@/lib/currency-helper"; // 👈 Added convertTo
 
 const PREDEFINED_COLORS = [
   "hsl(263.4, 70%, 50.4%)", // Vivid Purple
@@ -26,7 +25,8 @@ const PREDEFINED_COLORS = [
   "hsl(330, 80%, 60%)",      // Pink
 ];
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+// 👇 Updated Tooltip to accept 'currency' prop
+const CustomTooltip = ({ active, payload, currency }: any) => {
   if (active && payload && payload.length) {
     const total = payload.reduce((sum: number, entry: any) => sum + entry.value, 0);
     return (
@@ -46,7 +46,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                   </span>
                 </div>
                 <span className="text-xs font-mono font-medium text-popover-foreground">
-                  {formatCurrency(entry.value, "USD")}
+                  {/* 👇 FIX: Use dynamic currency */}
+                  {formatCurrency(entry.value, currency)}
                 </span>
               </div>
             )
@@ -55,7 +56,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         <div className="pt-2 border-t border-border flex items-center justify-between">
           <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Total</span>
           <span className="text-sm font-bold text-primary">
-            {formatCurrency(total, "USD")}
+            {/* 👇 FIX: Use dynamic currency */}
+            {formatCurrency(total, currency)}
           </span>
         </div>
       </div>
@@ -64,7 +66,14 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export function SpendingChart({ data }: { data: any[] }) {
+// 👇 Updated Props Interface
+interface ChartProps {
+  data: any[];
+  rates: Record<string, number>;
+  currency: string;
+}
+
+export function SpendingChart({ data, rates, currency }: ChartProps) {
   if (data.length === 0) {
     return (
       <div className="flex h-[250px] flex-col items-center justify-center gap-2 text-muted-foreground">
@@ -88,7 +97,7 @@ export function SpendingChart({ data }: { data: any[] }) {
 
   const currentMonth = dayjs();
   
-  // Prepare Monthly Data (Not Cumulative)
+  // Prepare Monthly Data
   const chartData = Array.from({ length: 6 }).map((_, i) => {
     const monthDate = currentMonth.add(i, "month");
     const monthName = monthDate.format("MMM");
@@ -111,7 +120,11 @@ export function SpendingChart({ data }: { data: any[] }) {
       }
 
       if (applies) {
-         dataPoint[sub.category] += Number(sub.cost); 
+         // 👇 FIX: Convert cost to User's Currency
+         const rawCost = Number(sub.splitCost) > 0 ? Number(sub.splitCost) : Number(sub.cost);
+         const convertedCost = convertTo(rawCost, sub.currency, currency, rates);
+         
+         dataPoint[sub.category] += convertedCost;
       }
     });
 
@@ -132,7 +145,6 @@ export function SpendingChart({ data }: { data: any[] }) {
               axisLine={false}
               tickMargin={10}
               interval={0} 
-              // 👇 PADDING: Ensures first/last bars aren't cut off
               padding={{ left: 20, right: 20 }}
               tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} 
             />
@@ -144,13 +156,12 @@ export function SpendingChart({ data }: { data: any[] }) {
             />
 
             <Tooltip 
-              content={<CustomTooltip />} 
-              cursor={{ fill: "var(--muted)", opacity: 0.2 }} // Highlight the column on hover
+              content={<CustomTooltip currency={currency} />} // 👇 Pass currency prop
+              cursor={{ fill: "var(--muted)", opacity: 0.2 }} 
             />
             
             {/* Stacked Bars */}
             {categories.map((category, index) => {
-              // Only round the top corners of the LAST category in the stack
               const isLast = index === categories.length - 1;
               const radius: [number, number, number, number] = isLast ? [4, 4, 0, 0] : [0, 0, 0, 0];
 
@@ -158,7 +169,7 @@ export function SpendingChart({ data }: { data: any[] }) {
                 <Bar
                   key={category}
                   dataKey={category}
-                  stackId="a" // Stacks them on top of each other
+                  stackId="a"
                   fill={chartConfig[category].color}
                   radius={radius}
                 />
