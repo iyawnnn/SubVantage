@@ -44,3 +44,10 @@ next-env.d.ts
 
 features.md
 tasks.md
+
+# Testing artifacts
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+coverage/
