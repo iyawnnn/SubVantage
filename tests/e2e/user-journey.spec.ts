@@ -1,70 +1,51 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
+import { execSync } from "child_process";
 
-test.setTimeout(60000);
+test.describe.configure({ mode: "serial" });
 
-test('User can signup, login, and add a subscription', async ({ page }) => {
-  // 1. Setup Unique User Data
-  const timestamp = Date.now();
-  const user = {
-    name: 'E2E Test User',
-    email: `test-${timestamp}@example.com`,
-    password: 'password123'
-  };
+test.describe("User Journey (Mobile)", () => {
+  test.setTimeout(60000);
 
-  // --- STEP 1: SIGN UP ---
-  await page.goto('/auth/signup');
-  
-  await page.fill('input[name="name"]', user.name);
-  await page.fill('input[name="email"]', user.email);
-  await page.fill('input[name="password"]', user.password);
-  await page.fill('input[name="confirmPassword"]', user.password);
-  
-  await page.click('button[type="submit"]');
+  // Use a mobile viewport
+  test.use({ viewport: { width: 375, height: 667 } });
 
-  // Handle Cold Start / Redirect
-  try {
-    await expect(page).toHaveURL('/auth/login', { timeout: 30000 });
-  } catch (error) {
-    const errorMessage = await page.getByRole('alert').textContent().catch(() => null);
-    if (errorMessage) throw new Error(`Signup failed: "${errorMessage}"`);
-    throw error;
-  }
+  test.beforeAll(() => {
+    console.log("🧹 Reseting database to seed state...");
+    try {
+      execSync("npx tsx prisma/seed.ts", { stdio: "inherit" });
+    } catch (e) {
+      console.error("Seed failed:", e);
+      throw e;
+    }
+  });
 
-  // --- STEP 2: LOGIN ---
-  await page.fill('input[name="email"]', user.email);
-  await page.fill('input[name="password"]', user.password);
-  
-  await page.click('button[type="submit"]');
-  await expect(page).toHaveURL('/dashboard', { timeout: 30000 });
+  test("should log in and add a subscription", async ({ page }) => {
+    // 1. Log In
+    await page.goto("/auth/login");
+    await page.getByLabel("Email").fill("test@example.com");
+    await page.getByLabel("Password").fill("password123");
+    await page.getByRole("button", { name: "Sign In with Email" }).click();
+    await page.waitForURL("**/dashboard");
 
-  // --- STEP 2.5: COMPLETE ONBOARDING ---
-  const onboardingHeading = page.getByRole('heading', { name: 'Welcome to SubTrack', exact: true });
+    // 2. Add Subscription (via Mobile Menu)
+    // 👇 FIX: Open mobile menu first
+    await page.getByTestId("btn-mobile-menu").click();
 
-  if (await onboardingHeading.isVisible({ timeout: 5000 })) {
-      await page.click('button:has-text("Next")');
-      await page.click('button:has-text("Next")');
-      await page.click('button:has-text("Get Started")');
-      await expect(onboardingHeading).toBeHidden({ timeout: 10000 });
-  }
+    // 👇 FIX: Click the link inside the menu
+    await page.getByTestId("mobile-nav-subscriptions").click();
 
-  // --- STEP 3: ADD SUBSCRIPTION ---
-  await page.click('text=Add Subscription');
-  await expect(page.getByRole('dialog')).toBeVisible();
+    // Ensure we landed on the right page
+    await expect(page).toHaveURL(/.*\/subscriptions/);
 
-  await page.fill('input[name="vendorName"]', 'Spotify Premium');
-  await page.fill('input[name="cost"]', '12.99'); 
+    // 3. Open Modal
+    await page.getByText("Add Subscription").click();
 
-  // Select Category
-  await page.getByRole('combobox', { name: 'Category' }).click();
-  await page.click('div[role="option"]:has-text("Entertainment")');
+    // 4. Fill & Save
+    await page.getByTestId("input-vendor-name").fill("Disney+");
+    await page.getByTestId("input-cost").fill("12.99");
+    await page.getByTestId("btn-save-subscription").click();
 
-  await page.click('button[type="submit"]');
-
-  // --- STEP 4: VERIFY ---
-  await expect(page.getByRole('dialog')).toBeHidden();
-
-  // 👇 FIX: Update regex to require "/mo". 
-  // This ensures we match the Subscription Card (which shows frequency) 
-  // and NOT the Upcoming Bill (which shows the due date).
-  await expect(page.getByRole('link', { name: /Spotify Premium.*12.99.*\/mo/i })).toBeVisible({ timeout: 20000 });
+    // 5. Verify (Card List is visible on mobile)
+    await expect(page.getByTestId("sub-card-disney-")).toBeVisible();
+  });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useOptimistic } from "react";
 import { Search, Filter, ArrowUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -24,7 +24,7 @@ import { SubscriptionModal } from "@/components/dashboard/SubscriptionModal";
 import { SubscriptionsHeader } from "./SubscriptionsHeader";
 import { SubscriptionStats } from "./SubscriptionStats";
 import { SubscriptionCardList } from "./SubscriptionCardList";
-import { EmptySubscriptionState } from "./EmptySubscriptionState"; 
+import { EmptySubscriptionState } from "./EmptySubscriptionState";
 import { archiveSubscription } from "@/actions/subscription-actions";
 import { toast } from "sonner";
 
@@ -33,11 +33,17 @@ const ITEMS_PER_PAGE = 6;
 export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("ALL");
-  const [sort, setSort] = useState("RENEWAL"); 
+  const [sort, setSort] = useState("RENEWAL");
   const [currentPage, setCurrentPage] = useState(1);
-  
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSub, setEditingSub] = useState(null);
+
+  // OPTIMISTIC UI: Manage the state of subscriptions locally
+  const [optimisticSubs, addOptimisticSub] = useOptimistic(
+    initialData,
+    (state: any[], newSub: any) => [newSub, ...state]
+  );
 
   useEffect(() => {
     setCurrentPage(1);
@@ -55,36 +61,39 @@ export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
 
   const handleArchive = async (id: string) => {
     toast.promise(archiveSubscription(id), {
-       loading: 'Archiving...',
-       success: 'Subscription archived',
-       error: 'Failed to archive'
+      loading: "Archiving...",
+      success: "Subscription archived",
+      error: "Failed to archive",
     });
   };
 
   const filteredData = React.useMemo(() => {
-    let result = [...initialData];
+    // Use optimisticSubs instead of initialData
+    let result = [...optimisticSubs];
 
     if (search) {
-      result = result.filter(s => 
+      result = result.filter((s) =>
         s.vendor.name.toLowerCase().includes(search.toLowerCase())
       );
     }
 
     if (category !== "ALL") {
-      result = result.filter(s => s.category === category);
+      result = result.filter((s) => s.category === category);
     }
 
     result.sort((a, b) => {
       if (sort === "COST") {
         return b.cost - a.cost;
       }
-      return new Date(a.nextRenewalDate).getTime() - new Date(b.nextRenewalDate).getTime();
+      return (
+        new Date(a.nextRenewalDate).getTime() -
+        new Date(b.nextRenewalDate).getTime()
+      );
     });
 
     return result;
-  }, [initialData, search, category, sort]);
+  }, [optimisticSubs, search, category, sort]);
 
-  // 👇 FIX: Auto-redirect logic
   useEffect(() => {
     const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
     if (currentPage > totalPages && totalPages > 0) {
@@ -109,123 +118,141 @@ export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
     <div className="space-y-8">
       <SubscriptionsHeader onAdd={handleAdd} />
 
-      <SubscriptionStats subs={initialData} rates={rates} baseCurrency={baseCurrency} />
+      {/* Use optimisticSubs for stats as well */}
+      <SubscriptionStats
+        subs={optimisticSubs}
+        rates={rates}
+        baseCurrency={baseCurrency}
+      />
 
-      {/* Controls */}
       <div className="sticky top-16 z-40 bg-background/95 backdrop-blur-xl py-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-border/40 transition-all">
-         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-             
-             {/* Search */}
-             <div className="relative w-full sm:flex-1 sm:max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search subscriptions..." 
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10 bg-secondary/30 border-transparent focus:bg-background focus:border-primary/50 transition-all"
-                />
-             </div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative w-full sm:flex-1 sm:max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search subscriptions..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 bg-secondary/30 border-transparent focus:bg-background focus:border-primary/50 transition-all"
+            />
+          </div>
 
-             {/* Filters */}
-             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger className="w-full sm:w-[180px] bg-secondary/30 border-transparent focus:ring-0 cursor-pointer">
-                     <div className="flex items-center gap-2 truncate">
-                       <Filter className="h-4 w-4 opacity-50 flex-shrink-0" />
-                       <span className="truncate"><SelectValue placeholder="Category" /></span>
-                     </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">All Categories</SelectItem>
-                    <SelectItem value="Entertainment">Entertainment</SelectItem>
-                    <SelectItem value="Personal">Personal</SelectItem>
-                    <SelectItem value="Work">Work</SelectItem>
-                    <SelectItem value="Utilities">Utilities</SelectItem>
-                    <SelectItem value="Health">Health</SelectItem>
-                    <SelectItem value="Education">Education</SelectItem>
-                    <SelectItem value="Dev Tools">Dev Tools</SelectItem>
-                  </SelectContent>
-                </Select>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger className="w-full sm:w-[180px] bg-secondary/30 border-transparent focus:ring-0 cursor-pointer">
+                <div className="flex items-center gap-2 truncate">
+                  <Filter className="h-4 w-4 opacity-50 flex-shrink-0" />
+                  <span className="truncate">
+                    <SelectValue placeholder="Category" />
+                  </span>
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All Categories</SelectItem>
+                <SelectItem value="Entertainment">Entertainment</SelectItem>
+                <SelectItem value="Personal">Personal</SelectItem>
+                <SelectItem value="Work">Work</SelectItem>
+                <SelectItem value="Utilities">Utilities</SelectItem>
+                <SelectItem value="Health">Health</SelectItem>
+                <SelectItem value="Education">Education</SelectItem>
+                <SelectItem value="Dev Tools">Dev Tools</SelectItem>
+              </SelectContent>
+            </Select>
 
-                <Select value={sort} onValueChange={setSort}>
-                  <SelectTrigger className="w-full sm:w-[160px] bg-secondary/30 border-transparent focus:ring-0 cursor-pointer">
-                     <div className="flex items-center gap-2">
-                       <ArrowUpDown className="h-4 w-4 opacity-50" />
-                       <SelectValue placeholder="Sort" />
-                     </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="RENEWAL">Next Bill</SelectItem>
-                    <SelectItem value="COST">Highest Cost</SelectItem>
-                  </SelectContent>
-                </Select>
-             </div>
-         </div>
+            <Select value={sort} onValueChange={setSort}>
+              <SelectTrigger className="w-full sm:w-[160px] bg-secondary/30 border-transparent focus:ring-0 cursor-pointer">
+                <div className="flex items-center gap-2">
+                  <ArrowUpDown className="h-4 w-4 opacity-50" />
+                  <SelectValue placeholder="Sort" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="RENEWAL">Next Bill</SelectItem>
+                <SelectItem value="COST">Highest Cost</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </div>
 
       {filteredData.length === 0 ? (
-        <EmptySubscriptionState 
-          onAdd={handleAdd} 
-          isSearching={search.length > 0 || category !== "ALL"} 
+        <EmptySubscriptionState
+          onAdd={handleAdd}
+          isSearching={search.length > 0 || category !== "ALL"}
         />
       ) : (
         <>
           <div className="hidden md:block rounded-xl border border-border/60 bg-card/50 shadow-sm overflow-hidden">
-            <SubscriptionTable 
-              data={paginatedData} 
-              rates={rates} 
-              baseCurrency={baseCurrency} 
+            <SubscriptionTable
+              data={paginatedData}
+              rates={rates}
+              baseCurrency={baseCurrency}
               onEdit={handleEdit}
               onArchive={handleArchive}
             />
           </div>
 
           <div className="md:hidden">
-            <SubscriptionCardList 
-              data={paginatedData} 
-              onEdit={handleEdit} 
-              onArchive={handleArchive} 
+            <SubscriptionCardList
+              data={paginatedData}
+              onEdit={handleEdit}
+              onArchive={handleArchive}
             />
           </div>
 
           {totalPages > 1 && (
             <div className="pt-4 pb-8">
-               <Pagination>
+              <Pagination>
                 <PaginationContent>
                   <PaginationItem>
-                    <PaginationPrevious 
-                      onClick={() => handlePageChange(currentPage - 1)} 
-                      className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                    <PaginationPrevious
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      className={
+                        currentPage === 1
+                          ? "pointer-events-none opacity-50"
+                          : ""
+                      }
                     />
                   </PaginationItem>
 
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                     if (
-                       totalPages > 7 && 
-                       page !== 1 && 
-                       page !== totalPages && 
-                       (page < currentPage - 1 || page > currentPage + 1)
-                     ) {
-                       if (page === 2 || page === totalPages - 1) return <PaginationItem key={page}><PaginationEllipsis /></PaginationItem>;
-                       return null;
-                     }
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => {
+                      if (
+                        totalPages > 7 &&
+                        page !== 1 &&
+                        page !== totalPages &&
+                        (page < currentPage - 1 || page > currentPage + 1)
+                      ) {
+                        if (page === 2 || page === totalPages - 1)
+                          return (
+                            <PaginationItem key={page}>
+                              <PaginationEllipsis />
+                            </PaginationItem>
+                          );
+                        return null;
+                      }
 
-                     return (
-                      <PaginationItem key={page}>
-                        <PaginationLink 
-                          isActive={currentPage === page}
-                          onClick={() => handlePageChange(page)}
-                        >
-                          {page}
-                        </PaginationLink>
-                      </PaginationItem>
-                     );
-                  })}
+                      return (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            isActive={currentPage === page}
+                            onClick={() => handlePageChange(page)}
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    }
+                  )}
 
                   <PaginationItem>
-                    <PaginationNext 
+                    <PaginationNext
                       onClick={() => handlePageChange(currentPage + 1)}
-                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                      className={
+                        currentPage === totalPages
+                          ? "pointer-events-none opacity-50"
+                          : ""
+                      }
                     />
                   </PaginationItem>
                 </PaginationContent>
@@ -235,10 +262,11 @@ export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
         </>
       )}
 
-      <SubscriptionModal 
-        opened={modalOpen} 
-        close={() => setModalOpen(false)} 
-        subToEdit={editingSub} 
+      <SubscriptionModal
+        opened={modalOpen}
+        close={() => setModalOpen(false)}
+        subToEdit={editingSub}
+        addOptimisticSub={addOptimisticSub} // Pass the optimistic handler
       />
     </div>
   );

@@ -21,11 +21,19 @@ interface CardListProps {
   onArchive: (id: string) => void;
 }
 
-export function SubscriptionCardList({ data, onEdit, onArchive }: CardListProps) {
+export function SubscriptionCardList({
+  data,
+  onEdit,
+  onArchive,
+}: CardListProps) {
   const router = useRouter();
 
   if (data.length === 0) {
-    return <div className="text-center py-10 text-muted-foreground">No subscriptions found.</div>;
+    return (
+      <div className="text-center py-10 text-muted-foreground">
+        No subscriptions found.
+      </div>
+    );
   }
 
   return (
@@ -34,10 +42,15 @@ export function SubscriptionCardList({ data, onEdit, onArchive }: CardListProps)
         const isTrial = sub.isTrial;
         const daysLeft = dayjs(sub.nextRenewalDate).diff(dayjs(), "day");
 
+        // Sanitize vendor name for test ID
+        const testId = `sub-card-${sub.vendor.name
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "-")}`;
+
         return (
-          <Card 
-            key={sub.id} 
-            // 👇 FIX: Whole card is clickable
+          <Card
+            key={sub.id}
+            data-testid={testId} // Task 2: Added ID
             onClick={() => router.push(`/subscriptions/${sub.id}`)}
             className="group border-border bg-card shadow-sm active:scale-[0.99] transition-all cursor-pointer hover:border-primary/30"
           >
@@ -51,20 +64,20 @@ export function SubscriptionCardList({ data, onEdit, onArchive }: CardListProps)
                   <div className="min-w-0">
                     <h3 className="font-bold text-foreground truncate pr-2 flex items-center gap-2">
                       {sub.vendor.name}
-                      {/* 👇 FIX: Subtle Chevron indicates navigation */}
                       <ChevronRight className="h-3 w-3 text-muted-foreground opacity-50" />
                     </h3>
-                    <p className="text-xs text-muted-foreground truncate">{sub.category}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {sub.category}
+                    </p>
                   </div>
                 </div>
 
                 {/* Right: Actions */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      // 👇 FIX: Stop propagation here too
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={(e) => e.stopPropagation()}
                       className="h-8 w-8 -mr-2 text-muted-foreground hover:text-foreground cursor-pointer"
                     >
@@ -72,10 +85,22 @@ export function SubscriptionCardList({ data, onEdit, onArchive }: CardListProps)
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(sub); }} className="cursor-pointer">
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(sub);
+                      }}
+                      className="cursor-pointer"
+                    >
                       <Edit className="mr-2 h-4 w-4" /> Edit
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onArchive(sub.id); }} className="text-destructive cursor-pointer">
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onArchive(sub.id);
+                      }}
+                      className="text-destructive cursor-pointer"
+                    >
                       <Archive className="mr-2 h-4 w-4" /> Archive
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -85,16 +110,23 @@ export function SubscriptionCardList({ data, onEdit, onArchive }: CardListProps)
               <div className="flex items-end justify-between mt-auto">
                 {/* Cost */}
                 <div>
-                   <p className="text-xs text-muted-foreground uppercase font-semibold">Cost</p>
-                   <p className="text-xl font-bold text-foreground">
-                     {formatCurrency(sub.cost, sub.currency)}
-                     <span className="text-xs font-normal text-muted-foreground">/{sub.frequency === "MONTHLY" ? "mo" : "yr"}</span>
-                   </p>
+                  <p className="text-xs text-muted-foreground uppercase font-semibold">
+                    Cost
+                  </p>
+                  <p className="text-xl font-bold text-foreground">
+                    {formatCurrency(sub.cost, sub.currency)}
+                    <span className="text-xs font-normal text-muted-foreground">
+                      /{sub.frequency === "MONTHLY" ? "mo" : "yr"}
+                    </span>
+                  </p>
                 </div>
 
                 {/* Status / Due Date */}
                 <div className="text-right">
-                  <Badge variant={isTrial ? "secondary" : "outline"} className="mb-1">
+                  <Badge
+                    variant={isTrial ? "secondary" : "outline"}
+                    className="mb-1"
+                  >
                     {isTrial ? "Trial" : "Active"}
                   </Badge>
                   <p className="text-xs text-muted-foreground whitespace-nowrap">
