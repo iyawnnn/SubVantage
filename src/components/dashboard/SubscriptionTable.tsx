@@ -68,10 +68,26 @@ export function SubscriptionTable({ data, rates, baseCurrency, onEdit, onArchive
 
           const badgeVariant = sub.isTrial ? "secondary" : "outline";
 
+          // 👇 FIX START: Logic to handle stale dates (same as Detail View)
+          let nextRenewal = dayjs(sub.nextRenewalDate);
+          const today = dayjs();
+          const cycleUnit = sub.frequency === "MONTHLY" ? "month" : "year";
+
+          // If renewal date is in the past, project it forward
+          if (nextRenewal.isBefore(today, "day")) {
+            const diff = today.diff(nextRenewal, cycleUnit);
+            nextRenewal = nextRenewal.add(diff, cycleUnit);
+            
+            // If still before today (due to exact match or flooring), add one more period
+            if (nextRenewal.isBefore(today, "day")) {
+              nextRenewal = nextRenewal.add(1, cycleUnit);
+            }
+          }
+          // FIX END
+
           return (
             <TableRow
               key={sub.id}
-              // 👇 FIX: Whole row is clickable
               onClick={() => router.push(`/subscriptions/${sub.id}`)}
               className="group border-b border-border hover:bg-muted/50 transition-all cursor-pointer relative"
             >
@@ -108,9 +124,11 @@ export function SubscriptionTable({ data, rates, baseCurrency, onEdit, onArchive
               </TableCell>
               
               <TableCell className="text-muted-foreground text-sm">
-                  {dayjs(sub.nextRenewalDate).format("MMM D, YYYY")}
+                  {/* 👇 Display the CALCULATED date, not the raw DB date */}
+                  {nextRenewal.format("MMM D, YYYY")}
                   <div className="text-[10px] opacity-70">
-                    {dayjs(sub.nextRenewalDate).diff(dayjs(), "day")} days left
+                    {/* 👇 Display the CALCULATED diff */}
+                    {nextRenewal.diff(today, "day")} days left
                   </div>
               </TableCell>
               
@@ -122,7 +140,6 @@ export function SubscriptionTable({ data, rates, baseCurrency, onEdit, onArchive
               
               <TableCell className="text-right">
                 <div className="flex items-center justify-end gap-2">
-                  {/* 👇 FIX: Chevron appears on hover to indicate 'Click me' */}
                   <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
 
                   <DropdownMenu>
@@ -130,7 +147,6 @@ export function SubscriptionTable({ data, rates, baseCurrency, onEdit, onArchive
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        // 👇 FIX: stopPropagation prevents row click when opening menu
                         onClick={(e) => e.stopPropagation()} 
                         className="h-8 w-8 text-muted-foreground hover:text-foreground cursor-pointer"
                       >
