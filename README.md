@@ -1,5 +1,7 @@
 # SubVantage | Intelligent Subscription Manager
 
+![CI/CD Pipeline](https://github.com/iyawnnn/SubVantage/actions/workflows/playwright.yml/badge.svg)
+
 SubVantage is a specialized financial dashboard designed to centralize the management of recurring digital expenses. The primary objective of the platform is to provide users with a granular view of their financial footprint, eliminating "vampire costs" through automated tracking, renewal forecasting, and spending analytics. It is built to transform chaotic bank statement data into a streamlined, visual command center.
 
 

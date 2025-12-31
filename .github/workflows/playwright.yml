@@ -1,0 +1,60 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  test:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+
+    - name: Install dependencies
+      run: |
+        npm install -g pnpm
+        pnpm install
+        pnpm exec playwright install --with-deps
+
+    - name: Setup Database and Client
+      run: |
+        pnpm prisma generate
+        pnpm prisma db push --accept-data-loss
+      env:
+        DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+        DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
+
+    # 👇 BUILD the app so it's fast for the robot
+    - name: Build Next.js
+      run: pnpm build
+      env:
+        DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+        DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
+        AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+
+    - name: Run Playwright Tests
+      run: pnpm exec playwright test
+      env:
+        DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+        DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
+        AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+        AUTH_URL: "http://localhost:3000"
+        AUTH_TRUST_HOST: "true"
+        RESEND_API_KEY: "re_mock_key"
+        AUTH_GOOGLE_ID: "mock_id"
+        AUTH_GOOGLE_SECRET: "mock_secret"
+        CRON_SECRET: "mock_cron"
+
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report
+        path: playwright-report/
+        retention-days: 30

@@ -30,6 +30,17 @@ import { toast } from "sonner";
 
 const ITEMS_PER_PAGE = 6;
 
+// Define default categories to always show (optional)
+const DEFAULT_CATEGORIES = [
+  "Entertainment",
+  "Personal",
+  "Work",
+  "Utilities",
+  "Health",
+  "Education",
+  "Dev Tools",
+];
+
 export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("ALL");
@@ -48,6 +59,22 @@ export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
   useEffect(() => {
     setCurrentPage(1);
   }, [search, category, sort]);
+
+  // 👇 FIX: Dynamically calculate unique categories from data
+  const uniqueCategories = React.useMemo(() => {
+    // Start with defaults
+    const categories = new Set(DEFAULT_CATEGORIES);
+
+    // Add any category found in the actual data (e.g., "Gaming")
+    optimisticSubs.forEach((sub: any) => {
+      if (sub.category) {
+        categories.add(sub.category);
+      }
+    });
+
+    // Return sorted list
+    return Array.from(categories).sort();
+  }, [optimisticSubs]);
 
   const handleEdit = (sub: any) => {
     setEditingSub(sub);
@@ -68,7 +95,6 @@ export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
   };
 
   const filteredData = React.useMemo(() => {
-    // Use optimisticSubs instead of initialData
     let result = [...optimisticSubs];
 
     if (search) {
@@ -118,7 +144,6 @@ export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
     <div className="space-y-8">
       <SubscriptionsHeader onAdd={handleAdd} />
 
-      {/* Use optimisticSubs for stats as well */}
       <SubscriptionStats
         subs={optimisticSubs}
         rates={rates}
@@ -138,6 +163,8 @@ export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            
+            {/* 👇 FIX: Use the dynamic uniqueCategories list */}
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger className="w-full sm:w-[180px] bg-secondary/30 border-transparent focus:ring-0 cursor-pointer">
                 <div className="flex items-center gap-2 truncate">
@@ -149,13 +176,11 @@ export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">All Categories</SelectItem>
-                <SelectItem value="Entertainment">Entertainment</SelectItem>
-                <SelectItem value="Personal">Personal</SelectItem>
-                <SelectItem value="Work">Work</SelectItem>
-                <SelectItem value="Utilities">Utilities</SelectItem>
-                <SelectItem value="Health">Health</SelectItem>
-                <SelectItem value="Education">Education</SelectItem>
-                <SelectItem value="Dev Tools">Dev Tools</SelectItem>
+                {uniqueCategories.map((cat) => (
+                  <SelectItem key={cat} value={cat}>
+                    {cat}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
@@ -266,7 +291,7 @@ export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
         opened={modalOpen}
         close={() => setModalOpen(false)}
         subToEdit={editingSub}
-        addOptimisticSub={addOptimisticSub} // Pass the optimistic handler
+        addOptimisticSub={addOptimisticSub}
       />
     </div>
   );

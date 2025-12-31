@@ -14,6 +14,8 @@ import {
   ChevronDown,
   ChevronUp,
   Sparkles,
+  Check,
+  ChevronsUpDown,
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -48,6 +50,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import {
   createSubscription,
@@ -61,11 +71,27 @@ const formSchema = z.object({
   splitCost: z.coerce.number().min(0).optional(),
   currency: z.string(),
   frequency: z.enum(["MONTHLY", "YEARLY"]),
-  category: z.string(),
+  category: z.string().min(1, "Category is required"),
   status: z.enum(["ACTIVE", "PAUSED", "CANCELLED"]),
   startDate: z.date(),
   isTrial: z.boolean().default(false),
 });
+
+const PRESET_CATEGORIES = [
+  "Entertainment",
+  "Personal",
+  "Work",
+  "Utilities",
+  "Health",
+  "Education",
+  "Dev Tools",
+  "Finance",
+  "Fitness",
+  "Social",
+  "Software",
+  "Transportation",
+  "Housing",
+];
 
 export function SubscriptionModal({
   opened,
@@ -81,28 +107,41 @@ export function SubscriptionModal({
   const router = useRouter();
   const [loading, setLoading] = React.useState(false);
   const [showAdvanced, setShowAdvanced] = React.useState(false);
+  
+  // Combobox State
+  const [openCombobox, setOpenCombobox] = React.useState(false);
+  const [searchValue, setSearchValue] = React.useState("");
 
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       vendorName: "",
-      cost: 0,
-      splitCost: 0,
+      // 👇 FIX: Initialize as empty string to show placeholder
+      cost: "" as unknown as number,
+      splitCost: "" as unknown as number,
       currency: "PHP",
       frequency: "MONTHLY",
       category: "Personal",
       status: "ACTIVE",
-      startDate: new Date(),
+      // 👇 FIX: Initialize as undefined to prevent Hydration Mismatch
+      startDate: undefined as unknown as Date,
       isTrial: false,
     },
   });
+
+  // 👇 FIX: Set default date on client-side only to fix hydration error
+  React.useEffect(() => {
+    if (!subToEdit && !form.getValues("startDate")) {
+      form.setValue("startDate", new Date());
+    }
+  }, [subToEdit, form]);
 
   React.useEffect(() => {
     if (subToEdit) {
       // @ts-ignore
       form.reset({
         vendorName: subToEdit.vendor.name,
-        cost: Number(subToEdit.cost),
+        cost: Number(subToEdit.cost), // Keep existing value for edit
         splitCost: subToEdit.splitCost ? Number(subToEdit.splitCost) : 0,
         currency: subToEdit.currency,
         frequency: subToEdit.frequency,
@@ -122,16 +161,21 @@ export function SubscriptionModal({
       // @ts-ignore
       form.reset({
         vendorName: "",
-        cost: 0,
-        splitCost: 0,
+        // 👇 FIX: Reset to empty string for new entries
+        cost: "" as unknown as number,
+        splitCost: "" as unknown as number,
         currency: "PHP",
         frequency: "MONTHLY",
         category: "Personal",
         status: "ACTIVE",
-        startDate: new Date(),
+        // 👇 FIX: Keep date handling safe
+        startDate: undefined as unknown as Date,
         isTrial: false,
       });
       setShowAdvanced(false);
+      setSearchValue("");
+      // Re-trigger date set for new form
+      setTimeout(() => form.setValue("startDate", new Date()), 0);
     }
   }, [subToEdit, opened, form]);
 
@@ -176,7 +220,7 @@ export function SubscriptionModal({
           : await createSubscription(payload);
 
         if (result.success) {
-          // 3. Fallback: If we didn't do the optimistic close (e.g. Editing or addOptimisticSub missing), do it now.
+          // 3. Fallback: If we didn't do the optimistic close
           if (!canRunOptimistic) {
             toast.success(
               subToEdit ? "Subscription Updated" : "Subscription Added"
@@ -257,7 +301,7 @@ export function SubscriptionModal({
                               type="number"
                               step="0.01"
                               {...field}
-                              value={field.value as number}
+                              value={field.value as any} // Use raw value to allow empty string
                               className="border-0 focus-visible:ring-0 shadow-none h-10 rounded-r-none pr-1 bg-transparent"
                               placeholder="0.00"
                             />
@@ -330,39 +374,88 @@ export function SubscriptionModal({
                   control={form.control}
                   name="category"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="flex flex-col">
                       <FormLabel className="flex items-center gap-1.5 text-xs text-muted-foreground uppercase tracking-wider font-semibold">
                         Category
                       </FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="bg-background/50 border-input h-10">
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {[
-                            "Entertainment",
-                            "Personal",
-                            "Work",
-                            "Utilities",
-                            "Health",
-                            "Education",
-                            "Dev Tools",
-                          ].map((c) => (
-                            <SelectItem key={c} value={c}>
-                              <div className="flex items-center gap-2">
-                                <Tag className="h-3 w-3 opacity-50" />
-                                {c}
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={openCombobox}
+                              className={cn(
+                                "w-full justify-between bg-background/50 border-input h-10 font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                <span className="flex items-center gap-2 truncate">
+                                  <Tag className="h-3 w-3 opacity-50 shrink-0" />
+                                  {field.value}
+                                </span>
+                              ) : (
+                                "Select category"
+                              )}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[200px] p-0" align="start">
+                          <Command>
+                            <CommandInput 
+                              placeholder="Search or create..." 
+                              value={searchValue}
+                              onValueChange={setSearchValue}
+                            />
+                            <CommandList>
+                              <CommandEmpty>
+                                <div 
+                                  className="py-3 px-3 text-sm text-foreground cursor-pointer hover:bg-accent flex items-center gap-2"
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                  }}
+                                  onClick={() => {
+                                    if (searchValue.trim()) {
+                                      form.setValue("category", searchValue.trim());
+                                      setOpenCombobox(false);
+                                      setSearchValue("");
+                                    }
+                                  }}
+                                >
+                                  <Sparkles className="h-3 w-3 text-primary" />
+                                  Create "{searchValue}"
+                                </div>
+                              </CommandEmpty>
+                              <CommandGroup>
+                                {PRESET_CATEGORIES.map((category) => (
+                                  <CommandItem
+                                    key={category}
+                                    value={category}
+                                    onSelect={(currentValue) => {
+                                      form.setValue("category", category);
+                                      setOpenCombobox(false);
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        field.value === category
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                    {category}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -446,7 +539,7 @@ export function SubscriptionModal({
                                 type="number"
                                 step="0.01"
                                 {...field}
-                                value={field.value as number}
+                                value={field.value as any} // Allow empty string here too
                                 className="bg-background h-9 border-input"
                                 placeholder="0.00"
                               />

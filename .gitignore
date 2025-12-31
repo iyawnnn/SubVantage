@@ -51,3 +51,7 @@ playwright-report/
 blob-report/
 playwright/.cache/
 coverage/
+
+# Logs
+npm-debug.log*
+pnpm-debug.log*
