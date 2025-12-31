@@ -301,7 +301,7 @@ export function SubscriptionModal({
                               type="number"
                               step="0.01"
                               {...field}
-                              value={field.value} // Use raw value to allow empty string
+                              value={field.value as any} // Use raw value to allow empty string
                               className="border-0 focus-visible:ring-0 shadow-none h-10 rounded-r-none pr-1 bg-transparent"
                               placeholder="0.00"
                             />
@@ -539,7 +539,7 @@ export function SubscriptionModal({
                                 type="number"
                                 step="0.01"
                                 {...field}
-                                value={field.value} // Allow empty string here too
+                                value={field.value as any} // Allow empty string here too
                                 className="bg-background h-9 border-input"
                                 placeholder="0.00"
                               />
