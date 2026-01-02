@@ -26,12 +26,25 @@ export function UpcomingBills({ data }: UpcomingBillsProps) {
     
     return data
       .map((sub) => {
-        // Calculate the NEXT renewal date relative to today
+        // Handle Future Start Dates
+        const startDate = dayjs(sub.startDate).startOf("day");
         let nextDate = dayjs(sub.nextRenewalDate).startOf("day");
+        const cycleUnit = sub.frequency === "MONTHLY" ? "month" : "year";
         
-        // If the stored date is in the past, project it forward
-        while (nextDate.isBefore(today)) {
-           nextDate = nextDate.add(sub.frequency === "MONTHLY" ? 1 : 12, 'month');
+        if (startDate.isAfter(today)) {
+             // If sub starts in future, that IS the next bill
+             nextDate = startDate;
+        } else {
+             // 👇 FIX: Use "Diff" logic instead of "Loop" to avoid February clamping
+             if (nextDate.isBefore(today)) {
+               const diff = today.diff(nextDate, cycleUnit);
+               nextDate = nextDate.add(diff, cycleUnit);
+               
+               // If still before today (due to exact match or flooring), add one more period
+               if (nextDate.isBefore(today)) {
+                 nextDate = nextDate.add(1, cycleUnit);
+               }
+             }
         }
 
         const daysLeft = nextDate.diff(today, "day");
@@ -73,8 +86,6 @@ export function UpcomingBills({ data }: UpcomingBillsProps) {
           <div className="pt-2 flex flex-col h-full">
             {upcoming.map((sub) => {
               const rawCost = Number(sub.splitCost) > 0 ? Number(sub.splitCost) : Number(sub.cost);
-              
-              // 👇 FIX: STRICTLY usage of sub.currency (No conversion)
               const displayCost = formatCurrency(rawCost, sub.currency);
               
               return (
@@ -103,7 +114,6 @@ export function UpcomingBills({ data }: UpcomingBillsProps) {
                       </div>
                     </div>
                     <div className="text-right">
-                      {/* 👇 FIX: Display Original Price */}
                       <p className="font-bold text-sm">{displayCost}</p>
                     </div>
                   </div>

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useOptimistic } from "react";
 import { Search, Filter, ArrowUpDown } from "lucide-react";
+import dayjs from "dayjs"; // 👈 Added dayjs import
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -30,7 +31,6 @@ import { toast } from "sonner";
 
 const ITEMS_PER_PAGE = 6;
 
-// Define default categories to always show (optional)
 const DEFAULT_CATEGORIES = [
   "Entertainment",
   "Personal",
@@ -50,7 +50,6 @@ export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSub, setEditingSub] = useState(null);
 
-  // OPTIMISTIC UI: Manage the state of subscriptions locally
   const [optimisticSubs, addOptimisticSub] = useOptimistic(
     initialData,
     (state: any[], newSub: any) => [newSub, ...state]
@@ -60,19 +59,13 @@ export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
     setCurrentPage(1);
   }, [search, category, sort]);
 
-  // 👇 FIX: Dynamically calculate unique categories from data
   const uniqueCategories = React.useMemo(() => {
-    // Start with defaults
     const categories = new Set(DEFAULT_CATEGORIES);
-
-    // Add any category found in the actual data (e.g., "Gaming")
     optimisticSubs.forEach((sub: any) => {
       if (sub.category) {
         categories.add(sub.category);
       }
     });
-
-    // Return sorted list
     return Array.from(categories).sort();
   }, [optimisticSubs]);
 
@@ -107,14 +100,34 @@ export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
       result = result.filter((s) => s.category === category);
     }
 
+    // 👇 FIX: Use "Effective Date" for sorting, not the stale DB date
     result.sort((a, b) => {
       if (sort === "COST") {
         return b.cost - a.cost;
       }
-      return (
-        new Date(a.nextRenewalDate).getTime() -
-        new Date(b.nextRenewalDate).getTime()
-      );
+
+      // Helper to calculate the REAL next date (Same logic as Table)
+      const getEffectiveDate = (sub: any) => {
+        const today = dayjs().startOf('day');
+        const startDate = dayjs(sub.startDate).startOf('day');
+        let nextRenewal = dayjs(sub.nextRenewalDate).startOf('day');
+        const cycleUnit = sub.frequency === "MONTHLY" ? "month" : "year";
+
+        // 1. If Future Start, use Start Date
+        if (startDate.isAfter(today)) return startDate.valueOf();
+
+        // 2. If Past, Project Forward
+        if (nextRenewal.isBefore(today)) {
+            const diff = today.diff(nextRenewal, cycleUnit);
+            nextRenewal = nextRenewal.add(diff, cycleUnit);
+            if (nextRenewal.isBefore(today)) {
+                nextRenewal = nextRenewal.add(1, cycleUnit);
+            }
+        }
+        return nextRenewal.valueOf();
+      };
+
+      return getEffectiveDate(a) - getEffectiveDate(b);
     });
 
     return result;
@@ -164,7 +177,6 @@ export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
 
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             
-            {/* 👇 FIX: Use the dynamic uniqueCategories list */}
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger className="w-full sm:w-[180px] bg-secondary/30 border-transparent focus:ring-0 cursor-pointer">
                 <div className="flex items-center gap-2 truncate">

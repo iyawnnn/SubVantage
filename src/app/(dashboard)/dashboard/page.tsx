@@ -6,7 +6,8 @@ import { SpendingChart } from "@/components/dashboard/SpendingChart";
 import { UpcomingBills } from "@/components/dashboard/UpcomingBills";
 import { SubscriptionCarousel } from "@/components/dashboard/SubscriptionCarousel";
 import { InsightsCard } from "@/components/dashboard/Insights";
-import { getLiveRates } from "@/lib/exchange-rates";
+// 👇 FIX: Use the same helper as Subscriptions Page
+import { getExchangeRates } from "@/lib/currency-helper"; 
 import { processSubscriptionData } from "@/lib/calculations";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
@@ -41,8 +42,8 @@ export default async function DashboardPage() {
 
   const baseCurrency = user?.preferredCurrency || "USD";
 
-  // Fetch rates based on the fetched user currency
-  const rates = await getLiveRates(baseCurrency);
+  // 👇 FIX: Unified Rate Fetching
+  const rates = await getExchangeRates(baseCurrency);
 
   const subs = rawSubs.map((sub) => ({
     ...sub,
