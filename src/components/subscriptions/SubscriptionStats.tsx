@@ -13,23 +13,33 @@ export function SubscriptionStats({ subs, rates, baseCurrency }: any) {
     const todayStart = today.startOf("day");
 
     // 1. Calculate Monthly Burn
+    // FIX: Exclude Trials from Monthly Burn
     const monthlyTotal = subs.reduce((acc: number, sub: any) => {
+      if (sub.isTrial) return acc; // 👈 Skip trials
+
       const realCost = sub.splitCost > 0 ? sub.splitCost : sub.cost;
       const costInBase = convertTo(realCost, sub.currency, baseCurrency, rates);
       const monthly = sub.frequency === "YEARLY" ? costInBase / 12 : costInBase;
       return acc + monthly;
     }, 0);
 
-    // 2. Map subs to their *real* next renewal date (handling past dates)
+    // 2. Map subs to their *real* next renewal date
     const activeSubsWithProjectedDates = subs.map((sub: any) => {
+      const startDate = dayjs(sub.startDate);
+      const isFuture = startDate.isAfter(todayStart, "day");
       let nextRenewal = dayjs(sub.nextRenewalDate);
       const cycleUnit = sub.frequency === "MONTHLY" ? "month" : "year";
 
-      if (nextRenewal.isBefore(todayStart, "day")) {
-        const diff = todayStart.diff(nextRenewal, cycleUnit);
-        nextRenewal = nextRenewal.add(diff, cycleUnit);
+      if (isFuture) {
+        // FIX: If future, the next bill is the Start Date
+        nextRenewal = startDate;
+      } else {
         if (nextRenewal.isBefore(todayStart, "day")) {
-          nextRenewal = nextRenewal.add(1, cycleUnit);
+          const diff = todayStart.diff(nextRenewal, cycleUnit);
+          nextRenewal = nextRenewal.add(diff, cycleUnit);
+          if (nextRenewal.isBefore(todayStart, "day")) {
+            nextRenewal = nextRenewal.add(1, cycleUnit);
+          }
         }
       }
 
@@ -39,11 +49,14 @@ export function SubscriptionStats({ subs, rates, baseCurrency }: any) {
       };
     });
 
-    // 3. Sort by date, BUT filter out 0-cost items for "Next Bill"
+    // 3. Sort by date
     const nextBill = activeSubsWithProjectedDates
       .filter(
         (s: any) =>
-          s.effectiveRenewalDate.diff(todayStart, "day") >= 0 && s.cost > 0 // 👈 FIX: Only show paid items as "Next Bill"
+          s.effectiveRenewalDate.diff(todayStart, "day") >= 0 && 
+          s.cost > 0 &&
+          !s.isTrial // 👈 Optionally exclude trials from "Next Bill" alert? Or keep them.
+          // If you want to see Trial Expiry in "Next Bill", remove "!s.isTrial".
       )
       .sort(
         (a: any, b: any) =>

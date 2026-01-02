@@ -68,20 +68,28 @@ export function SubscriptionTable({ data, rates, baseCurrency, onEdit, onArchive
 
           const badgeVariant = sub.isTrial ? "secondary" : "outline";
 
-          // 👇 FIX START: Logic to handle stale dates (same as Detail View)
-          let nextRenewal = dayjs(sub.nextRenewalDate);
-          const today = dayjs();
+          // 👇 FIX START: Consistent Date Logic
+          const startDate = dayjs(sub.startDate);
+          // Use startOf('day') to avoid "27 vs 28" day mismatch due to time
+          const today = dayjs().startOf('day'); 
+          const isFuture = startDate.isAfter(today);
+
+          let nextRenewal = dayjs(sub.nextRenewalDate).startOf('day');
           const cycleUnit = sub.frequency === "MONTHLY" ? "month" : "year";
 
-          // If renewal date is in the past, project it forward
-          if (nextRenewal.isBefore(today, "day")) {
-            const diff = today.diff(nextRenewal, cycleUnit);
-            nextRenewal = nextRenewal.add(diff, cycleUnit);
-            
-            // If still before today (due to exact match or flooring), add one more period
-            if (nextRenewal.isBefore(today, "day")) {
-              nextRenewal = nextRenewal.add(1, cycleUnit);
-            }
+          if (isFuture) {
+             // If sub hasn't started, the next bill is the Start Date
+             nextRenewal = startDate;
+          } else {
+             // Project forward if date is in the past
+             if (nextRenewal.isBefore(today)) {
+                const diff = today.diff(nextRenewal, cycleUnit);
+                nextRenewal = nextRenewal.add(diff, cycleUnit);
+                
+                if (nextRenewal.isBefore(today)) {
+                  nextRenewal = nextRenewal.add(1, cycleUnit);
+                }
+             }
           }
           // FIX END
 
@@ -124,10 +132,9 @@ export function SubscriptionTable({ data, rates, baseCurrency, onEdit, onArchive
               </TableCell>
               
               <TableCell className="text-muted-foreground text-sm">
-                  {/* 👇 Display the CALCULATED date, not the raw DB date */}
                   {nextRenewal.format("MMM D, YYYY")}
                   <div className="text-[10px] opacity-70">
-                    {/* 👇 Display the CALCULATED diff */}
+                    {/* Now this will accurately show 28 days */}
                     {nextRenewal.diff(today, "day")} days left
                   </div>
               </TableCell>

@@ -36,43 +36,58 @@ export default function SubscriptionDetailView({
   const router = useRouter();
   const [editModalOpen, setEditModalOpen] = React.useState(false);
 
-  // 1. Calculate Stats
-  const startDate = dayjs(sub.startDate);
-  const today = dayjs();
+  // 1. Date Calculations
+  const startDate = dayjs(sub.startDate).startOf('day');
+  const today = dayjs().startOf('day'); // 👈 FIX: Ignore time components
+  const isFuture = startDate.isAfter(today);
 
-  // FIX: Handle stale nextRenewalDate (e.g., if app missed a cron job or user hasn't visited)
-  let nextRenewal = dayjs(sub.nextRenewalDate);
+  // Calculate Next Renewal
+  let nextRenewal = dayjs(sub.nextRenewalDate).startOf('day');
   const cycleUnit = sub.frequency === "MONTHLY" ? "month" : "year";
 
-  // If renewal date is in the past, project it forward to the next future date
-  if (nextRenewal.isBefore(today, "day")) {
-    const diff = today.diff(nextRenewal, cycleUnit);
-    nextRenewal = nextRenewal.add(diff, cycleUnit);
+  if (isFuture) {
+    nextRenewal = startDate;
+  } else {
+    if (nextRenewal.isBefore(today)) {
+      const diff = today.diff(nextRenewal, cycleUnit);
+      nextRenewal = nextRenewal.add(diff, cycleUnit);
 
-    // If still before or equal to today (due to exact match or diff flooring), add one more period
-    if (nextRenewal.isBefore(today, "day")) {
-      nextRenewal = nextRenewal.add(1, cycleUnit);
+      if (nextRenewal.isBefore(today)) {
+        nextRenewal = nextRenewal.add(1, cycleUnit);
+      }
     }
   }
 
   // Cycle Progress
-  // We calculate the start of the *current* virtual cycle to get accurate progress
-  const currentCycleStart = nextRenewal.clone().subtract(1, cycleUnit);
-  const totalDaysInCycle = nextRenewal.diff(currentCycleStart, "day");
-  const daysUntilRenewal = nextRenewal.diff(today, "day");
+  const currentCycleStart = isFuture 
+    ? startDate 
+    : nextRenewal.clone().subtract(1, cycleUnit);
 
-  // Calculate usage based on days passed in this specific cycle
-  const daysUsed = totalDaysInCycle - daysUntilRenewal;
+  const totalDaysInCycle = nextRenewal.diff(currentCycleStart, "day") || 1; 
+  const daysUntilRenewal = nextRenewal.diff(today, "day"); // 👈 Now accurate (e.g. 28 days)
+
+  const daysUsed = isFuture ? 0 : totalDaysInCycle - daysUntilRenewal;
   const progressValue = Math.min(
     100,
     Math.max(0, (daysUsed / totalDaysInCycle) * 100)
   );
 
-  // Costs (Original Currency)
-  const monthsActive = today.diff(startDate, "month") + 1;
-  const lifetimeSpend =
-    sub.cost * (sub.frequency === "MONTHLY" ? monthsActive : monthsActive / 12);
+  // 2. Cost Calculations
   const yearlyCost = sub.frequency === "MONTHLY" ? sub.cost * 12 : sub.cost;
+  
+  // 👇 FIX: Lifetime Spend Logic
+  // We want to count "How many times has the billing cycle triggered?"
+  let paymentsMade = 0;
+
+  if (!isFuture && !sub.isTrial) {
+    // If Yearly: Simple year diff + 1 (for the initial payment)
+    // If Monthly: Simple month diff + 1
+    const diffUnit = sub.frequency === "MONTHLY" ? "month" : "year";
+    paymentsMade = today.diff(startDate, diffUnit) + 1;
+  }
+
+  // Calculate Spend based on PAYMENTS, not time passed
+  const lifetimeSpend = paymentsMade * sub.cost;
 
   // Conversion Logic
   const isDiffCurrency = sub.currency !== baseCurrency;
@@ -211,10 +226,13 @@ export default function SubscriptionDetailView({
             <div className="flex justify-between items-end mb-4">
               <div>
                 <p className="text-2xl font-bold text-foreground">
-                  {daysUntilRenewal} days left
+                  {isFuture 
+                    ? `Starts in ${Math.abs(daysUntilRenewal)} days`
+                    : `${daysUntilRenewal} days left`
+                  }
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Resets on {nextRenewal.format("MMMM D, YYYY")}
+                  {isFuture ? "Starts on" : "Resets on"} {nextRenewal.format("MMMM D, YYYY")}
                 </p>
               </div>
               <Badge variant="outline" className="bg-background">

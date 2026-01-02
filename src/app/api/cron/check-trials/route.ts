@@ -16,13 +16,26 @@ export async function GET(req: Request) {
     const now = dayjs();
     const twoDaysFromNow = now.add(2, "day").toDate();
 
+    // 👇 UPDATE 1: Check BOTH startDate and nextRenewalDate
     const expiringTrials = await prisma.subscription.findMany({
       where: {
         isTrial: true,
-        nextRenewalDate: {
-          gte: now.toDate(),
-          lte: twoDaysFromNow,
-        },
+        OR: [
+          // Case A: Standard Trial (Renewal is approaching)
+          { 
+            nextRenewalDate: { 
+              gte: now.toDate(), 
+              lte: twoDaysFromNow 
+            } 
+          },
+          // Case B: Future Start Trial (Start Date IS the trial end)
+          { 
+            startDate: { 
+              gte: now.toDate(), 
+              lte: twoDaysFromNow 
+            } 
+          }
+        ]
       },
       include: { user: true, vendor: true },
     });
@@ -33,21 +46,24 @@ export async function GET(req: Request) {
 
     const emailPromises = expiringTrials.map(async (sub) => {
       if (!sub.user.email) return null;
-      const daysLeft = dayjs(sub.nextRenewalDate).diff(now, "day");
+
+      // 👇 UPDATE 2: Calculate correct target date
+      // If the subscription hasn't technically started yet, the "End Date" is the Start Date.
+      const startDate = dayjs(sub.startDate);
+      const isFutureStart = startDate.isAfter(now);
+      
+      const targetDate = isFutureStart ? startDate : dayjs(sub.nextRenewalDate);
+      const daysLeft = targetDate.diff(now, "day");
 
       const { data, error } = await resend.emails.send({
-        // 👇 UPDATE 1: Use your new verified domain & Brand Name
         from: "SubVantage <updates@subvantage.iansebastian.dev>",
-        
-        // 👇 UPDATE 2: Send to the ACTUAL user (since you are now verified)
-        to: sub.user.email, 
-        
+        to: sub.user.email,
         subject: `⚠️ Action Required: ${sub.vendor.name} trial ending`,
         react: TrialReminderEmail({
           userName: sub.user.name || "User",
           vendorName: sub.vendor.name,
           daysLeft: Math.max(0, daysLeft),
-          renewalCost: `$${Number(sub.cost).toFixed(2)}`,
+          renewalCost: formatCurrency(Number(sub.cost), sub.currency), // Helper for nice currency
         }),
       });
 
@@ -65,4 +81,12 @@ export async function GET(req: Request) {
     console.error("Cron Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+}
+
+// Simple helper to format currency inside the cron job
+function formatCurrency(amount: number, currency: string) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: currency,
+  }).format(amount);
 }
