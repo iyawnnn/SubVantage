@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image"; // 👈 Added Import
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -73,24 +74,15 @@ export function DashboardShell({
           {/* LEFT: Logo & Desktop Nav */}
           <div className="flex items-center gap-4 lg:gap-8">
             <Link href="/dashboard" className="flex items-center gap-2 group">
-              <div className="rounded-lg bg-gradient-to-tr from-primary to-blue-600 p-2 text-white shadow-lg shadow-primary/20 transition-all group-hover:shadow-primary/40 group-hover:scale-105">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  className="h-5 w-5"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path
-                    d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
-                    className="opacity-70"
-                  />
-                  <path d="M8 11h8" />
-                  <path d="M8 15h8" />
-                  <path d="M12 7v1" />
-                </svg>
+              {/* 👇 FIX: Replaced SVG with logo.png */}
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-tr from-primary to-blue-600 shadow-lg shadow-primary/20 transition-all group-hover:shadow-primary/40 group-hover:scale-105 overflow-hidden">
+                <Image 
+                  src="/logo.png" 
+                  alt="SubVantage Logo" 
+                  width={36} 
+                  height={36} 
+                  className="object-cover"
+                />
               </div>
               <span className="text-xl font-bold tracking-tight text-foreground">
                 SubVantage
@@ -169,7 +161,6 @@ export function DashboardShell({
             {/* Mobile Menu Trigger */}
             <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
               <SheetTrigger asChild>
-                {/* 👇 FIX: Added suppressHydrationWarning here too */}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -185,24 +176,15 @@ export function DashboardShell({
                 className="bg-background/95 backdrop-blur-2xl border-l border-border/50 w-[300px] sm:w-[400px]"
               >
                 <SheetTitle className="flex items-center gap-2 text-lg font-bold text-foreground pb-4 border-b border-border/50">
-                  <div className="rounded-lg bg-gradient-to-tr from-primary to-blue-600 p-1.5 text-white shadow-md">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      className="h-4 w-4"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path
-                        d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
-                        className="opacity-70"
-                      />
-                      <path d="M8 11h8" />
-                      <path d="M8 15h8" />
-                      <path d="M12 7v1" />
-                    </svg>
+                  {/* 👇 FIX: Replaced SVG in Mobile Menu with logo.png */}
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-primary to-blue-600 shadow-md overflow-hidden">
+                    <Image 
+                      src="/logo.png" 
+                      alt="SubVantage Logo" 
+                      width={32} 
+                      height={32} 
+                      className="object-cover"
+                    />
                   </div>
                   Navigation
                 </SheetTitle>

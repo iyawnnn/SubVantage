@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image"; // 👈 Added Import
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -13,8 +14,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-// Removed unused Alert imports
-// import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // Form Validation Schema
 const loginSchema = z.object({
@@ -88,13 +87,15 @@ export default function LoginPage() {
         <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_100%_100%,_#6366f1_0%,_transparent_40%)] opacity-20" />
         
         <div className="relative z-10 flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-primary to-blue-600 shadow-lg shadow-primary/20">
-               <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5 text-white" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" className="opacity-50" />
-                  <path d="M8 11h8" />
-                  <path d="M8 15h8" />
-                  <path d="M12 7v1" />
-               </svg>
+            {/* 👇 FIX: Replaced SVG with logo.png */}
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-tr from-primary to-blue-600 shadow-lg shadow-primary/20 overflow-hidden">
+               <Image 
+                 src="/logo.png" 
+                 alt="SubVantage" 
+                 width={40} 
+                 height={40} 
+                 className="object-cover"
+               />
             </div>
             <span className="text-xl font-bold tracking-tight">SubVantage</span>
         </div>

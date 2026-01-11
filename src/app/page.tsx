@@ -1,220 +1,302 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import {
-  BarChart3,
-  Bell,
-  ShieldCheck,
-  CheckCircle2,
-  LayoutDashboard,
-  Zap,
-  ArrowRight,
-  Lock,
-  Search,
-  AlertTriangle,
-  Globe,
-  Fingerprint,
-} from "lucide-react";
+"use client";
 
-export const metadata = {
-  title: "SubVantage - Master Your Subscriptions",
-  description:
-    "The intelligent way to track, manage, and optimize your recurring expenses.",
-};
+import Link from "next/link";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+import {
+  CheckCircle2,
+  Zap,
+  Shield,
+  LayoutDashboard,
+  AlertTriangle,
+  CreditCard,
+  Lock,
+  Sparkles,
+  BarChart3,
+  Globe,
+  Mail,
+  Plus,
+  Minus,
+  TrendingUp,
+} from "lucide-react";
+import { useState } from "react";
 
 export default function LandingPage() {
+  // 🚀 SEO: Structured Data for Google Rich Results
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "SubVantage",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Web",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "description": "A free financial dashboard to track recurring expenses, manage subscriptions, and receive billing alerts.",
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "ratingCount": "1024"
+    },
+    "featureList": "Subscription tracking, Renewal alerts, Currency conversion, Spending analytics"
+  };
+
   return (
-    <div className="min-h-screen bg-[#050505] text-white font-satoshi selection:bg-violet-600/30 overflow-x-hidden">
+    <div className="min-h-screen bg-[#020202] text-white font-satoshi selection:bg-violet-500/30 overflow-x-hidden">
       
-      {/* 🟢 Premium Floating Navbar */}
-      <header className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4">
-        <nav className="w-full max-w-5xl rounded-full border border-white/10 bg-black/60 px-4 md:px-6 py-3 shadow-2xl backdrop-blur-xl transition-all hover:border-white/20">
+      {/* 👇 SEO: Inject JSON-LD Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
+      {/* -----------------------------------------------------------------------------------------
+          NAVIGATION
+      ----------------------------------------------------------------------------------------- */}
+      <header className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-4 md:pt-6">
+        <motion.nav
+          initial={{ y: -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          // 👇 OPTIMIZATION: Solid background, no backdrop-blur for 60fps
+          className="w-full max-w-4xl rounded-2xl border border-white/10 bg-[#0A0A0A] px-4 md:px-6 py-3 shadow-2xl transition-colors mx-4"
+        >
           <div className="flex items-center justify-between">
-            {/* ✨ Custom Brand Logo */}
-            <div className="flex items-center gap-3 group cursor-pointer">
-              <div className="relative flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-tr from-violet-600 to-fuchsia-600 shadow-lg shadow-violet-600/20 transition-transform group-hover:scale-110 group-hover:shadow-violet-600/40">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  className="h-5 w-5 text-white"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path
-                    d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
-                    className="opacity-50"
-                  />
-                  <path d="M8 11h8" />
-                  <path d="M8 15h8" />
-                  <path d="M12 7v1" />
-                </svg>
+            {/* Logo Section */}
+            <div className="flex items-center gap-3 cursor-pointer group">
+              <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 shadow-inner border border-white/5 overflow-hidden group-hover:bg-white/10 transition-colors">
+                <Image
+                  src="/logo.png"
+                  alt="SubVantage Logo"
+                  width={32}
+                  height={32}
+                  className="object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                />
               </div>
-              <span className="hidden md:block text-lg font-bold tracking-tight text-white group-hover:text-violet-500 transition-colors">
+              <span className="hidden sm:block font-bold tracking-tight text-white/90">
                 SubVantage
               </span>
             </div>
 
             {/* Auth Buttons */}
-            <div className="flex items-center gap-2 md:gap-4">
-              <Link href="/auth/login">
-                <Button
-                  variant="ghost"
-                  className="text-sm font-medium text-zinc-400 hover:text-white cursor-pointer hover:bg-white/5 rounded-full px-3 md:px-4"
-                >
-                  Log in
-                </Button>
+            <div className="flex items-center gap-3 md:gap-4">
+              <Link
+                href="/auth/login"
+                className="text-xs font-medium text-zinc-400 hover:text-white transition-colors uppercase tracking-wider"
+              >
+                Log in
               </Link>
               <Link href="/auth/signup">
-                <Button className="bg-violet-600 hover:bg-violet-700 text-white rounded-full px-4 md:px-6 h-9 text-xs md:text-sm transition-colors cursor-pointer font-bold shadow-[0_0_20px_-5px_rgba(124,58,237,0.5)]">
+                <Button className="bg-white text-black hover:bg-zinc-200 rounded-lg px-4 md:px-5 h-8 md:h-9 text-[10px] md:text-xs font-bold uppercase tracking-wide transition-transform hover:scale-105">
                   Get Started
                 </Button>
               </Link>
             </div>
           </div>
-        </nav>
+        </motion.nav>
       </header>
 
       <main>
-        {/* ⚡ Hero Section */}
-        <section className="relative pt-40 pb-20 md:pt-48 md:pb-32 overflow-hidden">
-          {/* Background Effects */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-violet-600/10 blur-[130px] rounded-full pointer-events-none opacity-40" />
-          <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-fuchsia-600/5 blur-[120px] rounded-full pointer-events-none" />
+        {/* -----------------------------------------------------------------------------------------
+            HERO SECTION: "THE MONOLITH"
+        ----------------------------------------------------------------------------------------- */}
+        <section className="relative min-h-screen flex flex-col justify-center md:justify-end items-center text-center overflow-hidden">
+          {/* Dynamic Grid Background */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
 
-          <div className="container mx-auto max-w-6xl px-6 relative z-10 text-center">
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-1000">
-              <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-white mb-8 leading-[1.1]">
-                Stop paying for <br />
-                <span className="bg-gradient-to-r from-violet-500 via-fuchsia-400 to-white bg-clip-text text-transparent animate-gradient-x">
-                  forgotten subscriptions.
-                </span>
+          {/* Ambient Glows */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] md:w-[800px] h-[500px] bg-violet-600/10 blur-[120px] rounded-full pointer-events-none" />
+
+          {/* Content Container */}
+          <div className="relative z-10 w-full max-w-7xl px-4 md:px-6 pb-0 pt-5 md:pt-48 flex flex-col items-center">
+            {/* Massive Typography */}
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, ease: "easeOut" }}
+              className="relative mb-6 md:mb-10"
+            >
+              <h1 className="text-5xl sm:text-[11vw] md:text-[10vw] leading-[0.9] font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-zinc-600 select-none">
+                RECURRING
               </h1>
-            </div>
+              <h1 className="text-5xl sm:text-[11vw] md:text-[10vw] leading-[0.9] font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-zinc-400 to-zinc-800 select-none opacity-90">
+                CHAOS.
+              </h1>
 
-            <p className="mx-auto max-w-2xl text-lg md:text-xl text-zinc-400 leading-relaxed mb-10 animate-in fade-in slide-in-from-bottom-5 duration-1000 delay-100">
-              The average person wastes <strong>$500/year</strong> on unused
-              subscriptions. SubVantage helps you find, track, and cancel the
-              noise.
-            </p>
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full">
+                <p className="text-xs md:text-xl font-medium text-violet-500 tracking-[0.3em] md:tracking-[0.5em] uppercase mix-blend-difference">
+                  Terminated
+                </p>
+              </div>
+            </motion.div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-200">
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1, delay: 0.4 }}
+              className="max-w-xl text-zinc-400 text-sm md:text-xl leading-relaxed mb-8 md:mb-12 px-4"
+            >
+              Your subscriptions are bleeding you dry.{" "}
+              <br className="hidden md:block" />
+              <strong className="text-white">SubVantage</strong> is the
+              intelligent dashboard to track, manage, and cancel unwanted
+              expenses.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.6 }}
+              className="flex flex-col sm:flex-row items-center gap-6 mb-12 md:mb-24 w-full justify-center px-6"
+            >
               <Link href="/auth/signup" className="w-full sm:w-auto">
-                 {/* 👇 FIX: Button is PURPLE, Standard Size, No Scaling Effect */}
-                <Button 
-                  size="lg"
-                  className="w-full rounded-full bg-violet-600 text-white hover:bg-violet-700 cursor-pointer h-12 px-10 font-bold transition-colors shadow-lg shadow-violet-600/20"
-                >
-                  Get Started
+                <Button className="w-full sm:w-auto h-12 md:h-14 px-8 md:px-10 rounded-full bg-violet-600 hover:bg-violet-500 text-white font-bold text-sm md:text-base shadow-xl transition-all hover:scale-105">
+                  Take Control - It's Free
                 </Button>
               </Link>
-              <Link href="#how-it-works" className="w-full sm:w-auto">
-                {/* 👇 FIX: Secondary Button matches Primary Size (h-12 px-10), No complex effects */}
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="w-full rounded-full border-white/10 bg-white/5 text-white hover:bg-white/10 cursor-pointer h-12 px-10 backdrop-blur-sm transition-colors"
-                >
-                  How it works
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </section>
+            </motion.div>
 
-        {/* 🛡️ Trust & Impact Strip */}
-        <section className="py-10 border-y border-white/5 bg-white/[0.02]">
-          <div className="container mx-auto max-w-6xl px-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              <TrustItem
-                icon={ShieldCheck}
-                title="Bank-Grade Security"
-                desc="AES-256 Encryption"
-              />
-              <TrustItem
-                icon={Fingerprint}
-                title="Privacy First"
-                desc="No Data Selling"
-              />
-              <TrustItem
-                icon={Globe}
-                title="Global Support"
-                desc="150+ Currencies"
-              />
-              <TrustItem
-                icon={Zap}
-                title="Instant Setup"
-                desc="No Bank Login Needed"
-              />
-            </div>
-          </div>
-        </section>
+            {/* THE MONOLITH DASHBOARD IMAGE */}
+            <motion.div
+              initial={{ y: 200, opacity: 0, rotateX: 20 }}
+              animate={{ y: 0, opacity: 1, rotateX: 0 }}
+              transition={{ duration: 1.2, delay: 0.2, ease: "circOut" }}
+              className="relative w-full perspective-[1000px] group"
+            >
+              <div className="relative rounded-t-2xl md:rounded-t-3xl border-t border-x border-white/10 bg-[#050505] shadow-2xl overflow-hidden transform-gpu transition-all duration-1000 group-hover:border-violet-500/20">
+                {/* Glass Reflection */}
+                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
-        {/* ⚠️ The Problem Section */}
-        <section className="py-24 relative">
-          <div className="container mx-auto max-w-6xl px-6">
-            <div className="grid md:grid-cols-2 gap-16 items-center">
-              <div>
-                <div className="inline-flex items-center justify-center p-3 rounded-xl bg-red-500/10 text-red-500 mb-6 shadow-inner shadow-red-500/10">
-                  <AlertTriangle className="h-6 w-6" />
+                <div className="relative aspect-video w-full bg-[#0A0A0A]">
+                  <Image
+                    src="/3d-dashboard.png"
+                    alt="SubVantage Dashboard Interface"
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
+                    className="object-cover object-top opacity-90 group-hover:opacity-100 transition-opacity duration-700"
+                    priority
+                    unoptimized
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#020202] z-10" />
                 </div>
-                <h2 className="text-3xl md:text-4xl font-bold text-white mb-6 leading-tight">
+              </div>
+
+              {/* Bottom Glow */}
+              <div className="absolute -bottom-20 left-1/2 -translate-x-1/2 w-[80%] h-[100px] bg-violet-600/30 blur-[100px] rounded-full pointer-events-none" />
+            </motion.div>
+          </div>
+        </section>
+
+        {/* -----------------------------------------------------------------------------------------
+            SOCIAL PROOF
+        ----------------------------------------------------------------------------------------- */}
+        <section className="py-12 border-y border-white/5 bg-[#050505]">
+          <div className="container mx-auto px-6 text-center">
+            <p className="text-xs md:text-sm font-medium text-zinc-500 mb-8 uppercase tracking-widest">
+              Compatible with 150+ Services & Currencies
+            </p>
+            <div className="flex flex-wrap justify-center gap-8 md:gap-20 opacity-40 grayscale mix-blend-screen">
+              <span className="text-lg md:text-xl font-bold font-mono">
+                NETFLIX
+              </span>
+              <span className="text-lg md:text-xl font-bold font-mono">
+                SPOTIFY
+              </span>
+              <span className="text-lg md:text-xl font-bold font-mono">
+                ADOBE
+              </span>
+              <span className="text-lg md:text-xl font-bold font-mono">
+                AWS
+              </span>
+              <span className="text-lg md:text-xl font-bold font-mono">
+                OPENAI
+              </span>
+              <span className="text-lg md:text-xl font-bold font-mono">
+                VERCEL
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* -----------------------------------------------------------------------------------------
+            THE TRAP SECTION
+        ----------------------------------------------------------------------------------------- */}
+        <section id="problem" className="py-20 md:py-32 relative bg-[#020202]">
+          <div className="container mx-auto max-w-6xl px-6">
+            <div className="grid md:grid-cols-2 gap-12 md:gap-20 items-center">
+              <div>
+                <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-red-500/10 text-red-500 mb-6 md:mb-8 shadow-inner shadow-red-500/10 border border-red-500/20">
+                  <AlertTriangle className="h-6 w-6 md:h-8 md:w-8" />
+                </div>
+                <h2 className="text-3xl md:text-5xl font-black text-white mb-6 md:mb-8 leading-[1.1]">
                   The "Free Trial" <br />
-                  Trap is Real.
+                  <span className="text-red-500">Trap is Real.</span>
                 </h2>
-                <p className="text-lg text-zinc-400 leading-relaxed mb-6">
+                <p className="text-lg md:text-xl text-zinc-400 leading-relaxed mb-8 md:mb-10">
                   Companies bank on you forgetting. That 7-day trial turns into
                   a $50 monthly charge, and before you know it, you've paid for
                   a year of service you never used.
                 </p>
-                <ul className="space-y-4">
-                  <li className="flex items-center gap-3 text-zinc-400">
-                    <CheckCircle2 className="h-5 w-5 text-violet-500" />
+                <ul className="space-y-4 md:space-y-6">
+                  <li className="flex items-center gap-4 text-base md:text-lg text-zinc-300">
+                    <CheckCircle2 className="h-5 w-5 md:h-6 md:w-6 text-violet-500 shrink-0" />
                     <span>Forgot to cancel free trials</span>
                   </li>
-                  <li className="flex items-center gap-3 text-zinc-400">
-                    <CheckCircle2 className="h-5 w-5 text-violet-500" />
+                  <li className="flex items-center gap-4 text-base md:text-lg text-zinc-300">
+                    <CheckCircle2 className="h-5 w-5 md:h-6 md:w-6 text-violet-500 shrink-0" />
                     <span>Duplicate subscriptions (Spotify + Apple Music)</span>
                   </li>
-                  <li className="flex items-center gap-3 text-zinc-400">
-                    <CheckCircle2 className="h-5 w-5 text-violet-500" />
+                  <li className="flex items-center gap-4 text-base md:text-lg text-zinc-300">
+                    <CheckCircle2 className="h-5 w-5 md:h-6 md:w-6 text-violet-500 shrink-0" />
                     <span>Mystery charges on your bank statement</span>
                   </li>
                 </ul>
               </div>
+
               {/* Visual Mockup */}
               <div className="relative group cursor-default">
-                <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 to-orange-500/20 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                <div className="relative rounded-2xl border border-white/10 bg-zinc-900/60 backdrop-blur-xl p-8 shadow-2xl space-y-4 transform rotate-3 group-hover:rotate-0 transition-transform duration-500">
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-red-500/10 border border-red-500/20">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded bg-red-500/20 flex items-center justify-center">
-                        <span className="font-bold text-red-500">N</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-red-900/20 to-orange-900/20 blur-[80px] rounded-full opacity-60 group-hover:opacity-100 transition-opacity duration-700" />
+                <div className="relative rounded-3xl border border-white/10 bg-[#0A0A0A] p-6 md:p-10 shadow-2xl space-y-6 transform rotate-3 group-hover:rotate-0 transition-transform duration-500 hover:scale-105">
+                  <div className="flex items-center justify-between p-4 md:p-5 rounded-2xl bg-red-900/10 border border-red-500/20">
+                    <div className="flex items-center gap-4">
+                      <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-red-500/20 flex items-center justify-center shadow-inner shadow-red-500/10">
+                        <span className="font-black text-lg md:text-xl text-red-500">
+                          N
+                        </span>
                       </div>
                       <div>
-                        <p className="font-bold text-white">Netflix Premium</p>
-                        <p className="text-xs text-red-400">
+                        <p className="font-bold text-base md:text-lg text-white">
+                          Netflix Premium
+                        </p>
+                        <p className="text-xs md:text-sm text-red-400 font-medium">
                           Charged yesterday
                         </p>
                       </div>
                     </div>
-                    <p className="font-bold text-white">-$19.99</p>
+                    <p className="font-bold text-lg md:text-xl text-white">
+                      -$19.99
+                    </p>
                   </div>
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 opacity-50">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded bg-white/10 flex items-center justify-center text-white">
+                  <div className="flex items-center justify-between p-4 md:p-5 rounded-2xl bg-white/5 border border-white/5 opacity-60">
+                    <div className="flex items-center gap-4">
+                      <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-white/10 flex items-center justify-center text-white text-lg md:text-xl font-bold">
                         A
                       </div>
                       <div>
-                        <p className="font-bold text-white">
+                        <p className="font-bold text-base md:text-lg text-white">
                           Adobe Creative Cloud
                         </p>
-                        <p className="text-xs text-zinc-500">
+                        <p className="text-xs md:text-sm text-zinc-500">
                           Charged 2 days ago
                         </p>
                       </div>
                     </div>
-                    <p className="font-bold text-white">-$54.99</p>
+                    <p className="font-bold text-lg md:text-xl text-white">
+                      -$54.99
+                    </p>
                   </div>
                 </div>
               </div>
@@ -222,215 +304,223 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 🍱 Features Grid */}
-        <section
-          id="features"
-          className="py-24 bg-white/[0.02] border-y border-white/5"
-        >
-          <div className="container mx-auto max-w-6xl px-6">
-            <div className="mb-16 text-center max-w-2xl mx-auto">
-              <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl mb-4">
-                Everything you need to <br />
-                <span className="text-violet-500">
-                  master your monthly spend.
-                </span>
+        {/* -----------------------------------------------------------------------------------------
+            HOW IT WORKS
+        ----------------------------------------------------------------------------------------- */}
+        <section className="py-20 md:py-32 bg-[#050505] border-y border-white/5">
+          <div className="container mx-auto max-w-7xl px-6">
+            <div className="text-center mb-16 md:mb-20">
+              <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
+                Master your finances in 3 steps
               </h2>
               <p className="text-zinc-400 text-lg">
-                We've packed SubVantage with power-user features without the
-                clutter.
+                No bank connection required. Privacy first.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Large Card 1 */}
-              <div className="md:col-span-2 group relative overflow-hidden rounded-3xl border border-white/10 bg-zinc-900/30 p-8 transition-all hover:border-violet-500/30 hover:bg-white/[0.03] cursor-default">
-                <div className="relative z-10">
-                  <div className="mb-6 inline-flex rounded-xl bg-violet-500/10 p-3 text-violet-500 ring-1 ring-inset ring-violet-500/20">
-                    <LayoutDashboard className="h-6 w-6" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-white mb-3">
-                    Centralized Command Center
-                  </h3>
-                  <p className="text-zinc-400 max-w-md leading-relaxed">
-                    Get a bird's eye view of your financial health. Track
-                    monthly burns, yearly forecasts, and upcoming bills in one
-                    cohesive interface.
-                  </p>
+            <div className="grid md:grid-cols-3 gap-12 relative">
+              {/* Connecting Line (Hidden on Mobile) */}
+              <div className="hidden md:block absolute top-12 left-[20%] right-[20%] h-px bg-gradient-to-r from-transparent via-violet-500/30 to-transparent border-t border-dashed border-white/20" />
+
+              <div className="relative flex flex-col items-center text-center group">
+                <div className="h-20 w-20 md:h-24 md:w-24 rounded-3xl bg-[#0A0A0A] border border-white/10 flex items-center justify-center z-10 mb-6 md:mb-8 shadow-2xl group-hover:border-violet-500/50 transition-colors">
+                  <LayoutDashboard className="h-8 w-8 md:h-10 md:w-10 text-white" />
                 </div>
-                <div className="absolute top-1/2 right-0 -translate-y-1/2 w-64 h-64 bg-violet-500/10 blur-[80px] rounded-full pointer-events-none group-hover:bg-violet-500/20 transition-all" />
+                <h3 className="text-lg md:text-xl font-bold text-white mb-3">
+                  1. Add Subscriptions
+                </h3>
+                <p className="text-zinc-400 leading-relaxed max-w-xs text-sm md:text-base">
+                  Manually input your active subscriptions. Netflix, Spotify,
+                  Gym, SaaS tools - track it all in one place.
+                </p>
               </div>
 
-              {/* Tall Card */}
-              <div className="md:row-span-2 group relative overflow-hidden rounded-3xl border border-white/10 bg-zinc-900/30 p-8 transition-all hover:border-emerald-500/30 hover:bg-white/[0.03] cursor-default">
-                <div className="relative z-10 h-full flex flex-col">
-                  <div className="mb-6 inline-flex w-fit rounded-xl bg-emerald-500/10 p-3 text-emerald-500 ring-1 ring-inset ring-emerald-500/20">
-                    <Bell className="h-6 w-6" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-white mb-3">
-                    Smart Alerts
-                  </h3>
-                  <p className="text-zinc-400 mb-8 leading-relaxed">
-                    Never get caught off guard by an auto-renewal again. Get
-                    notified via email 3 days before a charge hits your card.
-                  </p>
-                  <div className="mt-auto rounded-xl bg-black/40 border border-white/5 p-4 space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-red-500/20 flex items-center justify-center text-red-500 text-xs font-bold">
-                        N
-                      </div>
-                      <div className="flex-1">
-                        <div className="h-2 w-24 bg-white/10 rounded mb-1.5" />
-                        <div className="h-1.5 w-12 bg-white/5 rounded" />
-                      </div>
-                    </div>
-                  </div>
+              <div className="relative flex flex-col items-center text-center group">
+                <div className="h-20 w-20 md:h-24 md:w-24 rounded-3xl bg-[#0A0A0A] border border-white/10 flex items-center justify-center z-10 mb-6 md:mb-8 shadow-2xl group-hover:border-violet-500/50 transition-colors">
+                  <Zap className="h-8 w-8 md:h-10 md:w-10 text-white" />
                 </div>
+                <h3 className="text-lg md:text-xl font-bold text-white mb-3">
+                  2. Set Alerts
+                </h3>
+                <p className="text-zinc-400 leading-relaxed max-w-xs text-sm md:text-base">
+                  Configure renewal notifications. We'll email you before a
+                  payment happens so you can decide to keep or cancel.
+                </p>
               </div>
 
-              {/* Small Card 2 */}
-              <div className="group relative overflow-hidden rounded-3xl border border-white/10 bg-zinc-900/30 p-8 transition-all hover:border-fuchsia-500/30 hover:bg-white/[0.03] cursor-default">
-                <div className="relative z-10">
-                  <div className="mb-6 inline-flex rounded-xl bg-fuchsia-500/10 p-3 text-fuchsia-500 ring-1 ring-inset ring-fuchsia-500/20">
-                    <BarChart3 className="h-6 w-6" />
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-2">
-                    Spending Velocity
-                  </h3>
-                  <p className="text-zinc-400 text-sm leading-relaxed">
-                    Visualizes your projected spending for the next 6 months so
-                    you can plan ahead.
-                  </p>
+              <div className="relative flex flex-col items-center text-center group">
+                <div className="h-20 w-20 md:h-24 md:w-24 rounded-3xl bg-[#0A0A0A] border border-white/10 flex items-center justify-center z-10 mb-6 md:mb-8 shadow-2xl group-hover:border-violet-500/50 transition-colors">
+                  <BarChart3 className="h-8 w-8 md:h-10 md:w-10 text-white" />
                 </div>
-              </div>
-
-              {/* Small Card 3 */}
-              <div className="group relative overflow-hidden rounded-3xl border border-white/10 bg-zinc-900/30 p-8 transition-all hover:border-amber-500/30 hover:bg-white/[0.03] cursor-default">
-                <div className="relative z-10">
-                  <div className="mb-6 inline-flex rounded-xl bg-amber-500/10 p-3 text-amber-500 ring-1 ring-inset ring-amber-500/20">
-                    <ShieldCheck className="h-6 w-6" />
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-2">
-                    Private & Secure
-                  </h3>
-                  <p className="text-zinc-400 text-sm leading-relaxed">
-                    We don't sell your data to advertisers. Your financial
-                    privacy is our top priority.
-                  </p>
-                </div>
+                <h3 className="text-lg md:text-xl font-bold text-white mb-3">
+                  3. Analyze & Optimize
+                </h3>
+                <p className="text-zinc-400 leading-relaxed max-w-xs text-sm md:text-base">
+                  See your monthly burn rate. Identify duplicate costs. Optimize
+                  your spending velocity and save money.
+                </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* 🚀 How it Works */}
-        <section id="how-it-works" className="py-24">
-          <div className="container mx-auto max-w-6xl px-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-              <div>
-                <h2 className="text-3xl md:text-4xl font-bold text-white mb-8">
-                  Simple, powerful, and effective.
-                </h2>
-                <div className="space-y-10">
-                  <StepItem
-                    icon={Search}
-                    title="Add your subscriptions"
-                    desc="Manually input your recurring services. We support 150+ currencies so you can track global spend."
-                  />
-                  <StepItem
-                    icon={Zap}
-                    title="Set your preferences"
-                    desc="Choose your preferred display currency. We automatically convert foreign costs to your home currency."
-                  />
-                  <StepItem
-                    icon={Lock}
-                    title="Stay in control"
-                    desc="Get insights, alerts, and weekly digests to keep your budget lean and your wallet happy."
-                  />
+        {/* -----------------------------------------------------------------------------------------
+            DETAILED FEATURES
+        ----------------------------------------------------------------------------------------- */}
+        <section className="py-20 md:py-32 px-6 bg-[#020202]">
+          <div className="container mx-auto max-w-7xl">
+            <div className="text-center mb-16 md:mb-24">
+              <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
+                Your Financial Defense System
+              </h2>
+              <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto">
+                We replaced the spreadsheet clutter with high-definition
+                clarity.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+              <div className="p-6 md:p-8 rounded-3xl bg-[#0A0A0A] border border-white/5 hover:border-violet-500/30 transition-all group">
+                <div className="h-12 w-12 rounded-xl bg-violet-500/10 flex items-center justify-center mb-6 border border-violet-500/20 group-hover:bg-violet-500/20 transition-colors">
+                  <Globe className="h-6 w-6 text-violet-400" />
                 </div>
+                <h3 className="text-xl md:text-2xl font-bold text-white mb-4">
+                  Multi-Currency Support
+                </h3>
+                <p className="text-zinc-400 leading-relaxed text-sm md:text-base">
+                  Pay in USD, EUR, JPY, or PHP? We automatically convert
+                  everything to your base currency using real-time exchange
+                  rates.
+                </p>
               </div>
-              <div className="relative cursor-default">
-                <div className="absolute inset-0 bg-gradient-to-tr from-violet-600/20 to-fuchsia-600/20 blur-[80px] rounded-full" />
-                <div className="relative rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-8 shadow-2xl">
-                  {/* Abstract UI representation */}
-                  <div className="space-y-4 opacity-90">
-                    <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:border-violet-500/30 transition-colors">
-                      <div className="flex items-center gap-4">
-                        <div className="h-10 w-10 rounded-full bg-violet-500/20" />
-                        <div className="space-y-2">
-                          <div className="h-2 w-32 bg-white/20 rounded" />
-                          <div className="h-2 w-20 bg-white/10 rounded" />
-                        </div>
-                      </div>
-                      <div className="h-8 w-20 bg-white/5 rounded" />
-                    </div>
-                  </div>
+
+              <div className="p-6 md:p-8 rounded-3xl bg-[#0A0A0A] border border-white/5 hover:border-emerald-500/30 transition-all group">
+                <div className="h-12 w-12 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-6 border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-colors">
+                  <Mail className="h-6 w-6 text-emerald-400" />
                 </div>
+                <h3 className="text-xl md:text-2xl font-bold text-white mb-4">
+                  Email Notifications
+                </h3>
+                <p className="text-zinc-400 leading-relaxed text-sm md:text-base">
+                  Receive a digest of upcoming bills straight to your inbox.
+                  Never get hit with a surprise overdraft fee again.
+                </p>
+              </div>
+
+              <div className="p-6 md:p-8 rounded-3xl bg-[#0A0A0A] border border-white/5 hover:border-indigo-500/30 transition-all group">
+                <div className="h-12 w-12 rounded-xl bg-indigo-500/10 flex items-center justify-center mb-6 border border-indigo-500/20 group-hover:bg-indigo-500/20 transition-colors">
+                  <Shield className="h-6 w-6 text-indigo-400" />
+                </div>
+                <h3 className="text-xl md:text-2xl font-bold text-white mb-4">
+                  Zero-Knowledge Privacy
+                </h3>
+                <p className="text-zinc-400 leading-relaxed text-sm md:text-base">
+                  We don't sell your data. We don't connect to your bank
+                  account. Your financial credentials stay 100% offline and
+                  secure.
+                </p>
+              </div>
+
+              <div className="p-6 md:p-8 rounded-3xl bg-[#0A0A0A] border border-white/5 hover:border-pink-500/30 transition-all group">
+                <div className="h-12 w-12 rounded-xl bg-pink-500/10 flex items-center justify-center mb-6 border border-pink-500/20 group-hover:bg-pink-500/20 transition-colors">
+                  <TrendingUp className="h-6 w-6 text-pink-400" />
+                </div>
+                <h3 className="text-xl md:text-2xl font-bold text-white mb-4">
+                  Velocity Charts
+                </h3>
+                <p className="text-zinc-400 leading-relaxed text-sm md:text-base">
+                  Visualize your spending trends over 6 months. See if you are
+                  cutting costs or inflating your lifestyle.
+                </p>
+              </div>
+
+              <div className="p-6 md:p-8 rounded-3xl bg-[#0A0A0A] border border-white/5 hover:border-orange-500/30 transition-all group">
+                <div className="h-12 w-12 rounded-xl bg-orange-500/10 flex items-center justify-center mb-6 border border-orange-500/20 group-hover:bg-orange-500/20 transition-colors">
+                  <Sparkles className="h-6 w-6 text-orange-400" />
+                </div>
+                <h3 className="text-xl md:text-2xl font-bold text-white mb-4">
+                  Smart Sorting
+                </h3>
+                <p className="text-zinc-400 leading-relaxed text-sm md:text-base">
+                  Sort by cost, name, category, or renewal date. Filter by
+                  active or paused subscriptions instantly.
+                </p>
+              </div>
+
+              <div className="p-6 md:p-8 rounded-3xl bg-[#0A0A0A] border border-white/5 hover:border-cyan-500/30 transition-all group">
+                <div className="h-12 w-12 rounded-xl bg-cyan-500/10 flex items-center justify-center mb-6 border border-cyan-500/20 group-hover:bg-cyan-500/20 transition-colors">
+                  <CreditCard className="h-6 w-6 text-cyan-400" />
+                </div>
+                <h3 className="text-xl md:text-2xl font-bold text-white mb-4">
+                  Manual Control
+                </h3>
+                <p className="text-zinc-400 leading-relaxed text-sm md:text-base">
+                  Perfect for cash payments, shared plans, or irregular bills
+                  that bank connectors usually miss.
+                </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ❓ FAQ Section */}
-        <section className="py-24 bg-white/[0.02] border-t border-white/5">
+        {/* -----------------------------------------------------------------------------------------
+            FAQ SECTION
+        ----------------------------------------------------------------------------------------- */}
+        <section className="py-20 md:py-24 bg-[#050505] border-t border-white/5">
           <div className="container mx-auto max-w-4xl px-6">
-            <h2 className="text-3xl font-bold text-center text-white mb-12">
+            <h2 className="text-3xl font-bold text-white mb-12 text-center">
               Frequently Asked Questions
             </h2>
             <div className="space-y-4">
-              <FaqItem
+              <FAQItem
                 question="Is SubVantage really free?"
-                answer="Yes! Our Free Tier gives you unlimited subscriptions and manual tracking. We believe financial health should be accessible to everyone."
+                answer="Yes, SubVantage is 100% free for individual use. You can track unlimited subscriptions, set up email alerts, and access all dashboard features without paying a dime."
               />
-              <FaqItem
-                question="Do you connect to my bank account?"
-                answer="No. SubVantage is a manual tracking tool. We prioritize privacy and security, meaning we never ask for your bank login credentials."
+              <FAQItem
+                question="Is it safe? Do you connect to my bank?"
+                answer="SubVantage is built with a 'Privacy-First' architecture. We do NOT connect to your bank account or read your credit card statements. You manually input the data you want to track, meaning your sensitive banking credentials remain completely offline and untouched."
               />
-              <FaqItem
-                question="Does it support different currencies?"
-                answer="Absolutely. You can add subscriptions in any currency (USD, EUR, PHP, JPY, etc.) and we'll automatically convert them to your preferred base currency for reporting."
+              <FAQItem
+                question="Can I track international subscriptions?"
+                answer="Absolutely. We support over 150 currencies. You can enter a subscription in JPY, EUR, or GBP, and we will automatically convert it to your main currency (like USD) using real-time exchange rates for accurate totals."
               />
-              <FaqItem
-                question="Can I export my data?"
-                answer="Yes. You can export your entire subscription history to CSV at any time from the Settings page."
+              <FAQItem
+                question="How do the email alerts work?"
+                answer="Once you set a renewal date for a subscription, our system monitors it. 3 days before the billing cycle hits, we send a notification to your email, giving you time to cancel if you no longer need the service."
               />
             </div>
           </div>
         </section>
 
-        {/* 📢 CTA Section */}
-        <section className="py-24">
-          <div className="container mx-auto max-w-5xl px-6">
-            <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-gradient-to-b from-violet-900/20 via-black to-black p-12 md:p-20 text-center">
-              <div className="relative z-10 max-w-2xl mx-auto space-y-8">
-                <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight">
-                  Take back control of your wallet.
-                </h2>
-                <p className="text-zinc-400 text-lg md:text-xl">
-                  Join smart spenders who are saving money every month with
-                  SubVantage. It takes less than 2 minutes to set up.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-                  <Link href="/auth/signup">
-                    <Button
-                      size="lg"
-                      className="w-full sm:w-auto rounded-full bg-white text-black hover:bg-zinc-200 text-base cursor-pointer px-10 h-12 shadow-2xl hover:scale-105 transition-transform font-bold"
-                    >
-                      Start Tracking Now
-                    </Button>
-                  </Link>
-                </div>
-                <div className="flex items-center justify-center gap-6 text-sm text-zinc-500 pt-4">
-                  <span className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-violet-500" /> No credit
-                    card needed
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-violet-500" /> Free
-                    forever
-                  </span>
-                </div>
+        {/* -----------------------------------------------------------------------------------------
+            CTA: "Bottom Line"
+        ----------------------------------------------------------------------------------------- */}
+        <section className="py-20 md:py-32 px-6 text-center relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-violet-900/10 pointer-events-none" />
+
+          <div className="container mx-auto max-w-4xl relative z-10">
+            <h2 className="text-5xl md:text-7xl font-black text-white mb-6 md:mb-8 tracking-tighter leading-tight">
+              Stop the bleeding. <br /> Start saving.
+            </h2>
+            <p className="text-lg md:text-xl text-zinc-400 mb-10 md:mb-12 max-w-2xl mx-auto">
+              Join smart users who are saving an average of{" "}
+              <strong>$460/year</strong> just by organizing their subscriptions.
+            </p>
+
+            <div className="flex flex-col items-center gap-8">
+              <Link href="/auth/signup">
+                <Button className="h-14 md:h-16 px-12 md:px-16 rounded-full bg-white text-black hover:bg-zinc-200 text-lg md:text-xl font-bold shadow-xl transition-transform hover:scale-105">
+                  Create Free Account
+                </Button>
+              </Link>
+              <div className="flex items-center gap-8 text-xs md:text-sm text-zinc-500 font-medium">
+                <span className="flex items-center gap-2">
+                  <CreditCard className="h-4 w-4" /> No credit card needed
+                </span>
+                <span className="flex items-center gap-2">
+                  <Lock className="h-4 w-4" /> Private & Secure
+                </span>
               </div>
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-violet-500/5 blur-[100px] pointer-events-none" />
             </div>
           </div>
         </section>
@@ -439,66 +529,30 @@ export default function LandingPage() {
   );
 }
 
-// ---------------- Helper Components ----------------
+// Helper Component for FAQ Accordion
+function FAQItem({ question, answer }: { question: string; answer: string }) {
+  const [isOpen, setIsOpen] = useState(false);
 
-function StepItem({
-  icon: Icon,
-  title,
-  desc,
-}: {
-  icon: any;
-  title: string;
-  desc: string;
-}) {
   return (
-    <div className="flex gap-5 group cursor-default">
-      <div className="mt-1 h-12 w-12 rounded-xl bg-white/5 flex items-center justify-center border border-white/5 group-hover:border-violet-500/20 group-hover:bg-violet-500/10 transition-colors shrink-0">
-        <Icon className="h-6 w-6 text-zinc-400 group-hover:text-violet-500 transition-colors" />
-      </div>
-      <div>
-        <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
-        <p className="text-zinc-400 leading-relaxed">{desc}</p>
-      </div>
-    </div>
-  );
-}
-
-function FaqItem({ question, answer }: { question: string; answer: string }) {
-  return (
-    <div className="rounded-xl border border-white/5 bg-white/[0.02] overflow-hidden">
-      <details className="group">
-        <summary className="flex cursor-pointer items-center justify-between p-6 font-medium text-white hover:bg-white/5 transition-colors list-none">
+    <div className="border border-white/5 rounded-2xl bg-[#0A0A0A] overflow-hidden">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center justify-between w-full p-5 md:p-6 text-left hover:bg-white/5 transition-colors"
+      >
+        <span className="font-bold text-white text-base md:text-lg">
           {question}
-          <span className="transition group-open:rotate-180">
-            <ArrowRight className="h-4 w-4 rotate-90 text-zinc-500" />
-          </span>
-        </summary>
-        <div className="px-6 pb-6 text-zinc-400 leading-relaxed border-t border-white/5 pt-4">
+        </span>
+        {isOpen ? (
+          <Minus className="h-5 w-5 text-zinc-500 shrink-0 ml-4" />
+        ) : (
+          <Plus className="h-5 w-5 text-zinc-500 shrink-0 ml-4" />
+        )}
+      </button>
+      {isOpen && (
+        <div className="px-5 md:px-6 pb-6 pt-0 text-zinc-400 leading-relaxed border-t border-white/5 pt-4 text-sm md:text-base animate-in fade-in slide-in-from-top-2">
           {answer}
         </div>
-      </details>
-    </div>
-  );
-}
-
-function TrustItem({
-  icon: Icon,
-  title,
-  desc,
-}: {
-  icon: any;
-  title: string;
-  desc: string;
-}) {
-  return (
-    <div className="flex flex-col items-center text-center gap-3 p-4 rounded-2xl hover:bg-white/5 transition-colors cursor-default">
-      <div className="p-3 rounded-full bg-violet-500/10 text-violet-500 ring-1 ring-inset ring-violet-500/20">
-        <Icon className="h-6 w-6" />
-      </div>
-      <div>
-        <h3 className="text-lg font-bold text-white">{title}</h3>
-        <p className="text-sm text-zinc-500">{desc}</p>
-      </div>
+      )}
     </div>
   );
 }
