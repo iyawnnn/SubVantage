@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import ArchiveView from "@/components/archive/ArchiveView";
 
 export const metadata = {
-  title: "Archive | SubVantage",
+  title: "Archive",
 };
 
 export default async function ArchivePage() {

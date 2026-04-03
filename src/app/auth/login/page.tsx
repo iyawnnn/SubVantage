@@ -87,14 +87,15 @@ export default function LoginPage() {
         <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_100%_100%,_#6366f1_0%,_transparent_40%)] opacity-20" />
         
         <div className="relative z-10 flex items-center gap-2">
-            {/* 👇 FIX: Replaced SVG with logo.png */}
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-tr from-primary to-blue-600 shadow-lg shadow-primary/20 overflow-hidden">
+            {/* Transparent and larger logo container */}
+            <div className="flex h-12 w-12 items-center justify-center bg-transparent overflow-hidden">
                <Image 
                  src="/logo.png" 
                  alt="SubVantage" 
-                 width={40} 
-                 height={40} 
+                 width={48} 
+                 height={48} 
                  className="object-cover"
+                 priority
                />
             </div>
             <span className="text-xl font-bold tracking-tight">SubVantage</span>

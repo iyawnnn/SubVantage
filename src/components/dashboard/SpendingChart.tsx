@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -15,7 +16,7 @@ import {
 } from "@/components/ui/chart";
 import dayjs from "dayjs";
 import { BarChart3 } from "lucide-react";
-import { formatCurrency, convertTo } from "@/lib/currency-helper"; // 👈 Added convertTo
+import { formatCurrency, convertTo } from "@/lib/currency-helper";
 
 const PREDEFINED_COLORS = [
   "hsl(263.4, 70%, 50.4%)", // Vivid Purple
@@ -25,7 +26,6 @@ const PREDEFINED_COLORS = [
   "hsl(330, 80%, 60%)",      // Pink
 ];
 
-// 👇 Updated Tooltip to accept 'currency' prop
 const CustomTooltip = ({ active, payload, currency }: any) => {
   if (active && payload && payload.length) {
     const total = payload.reduce((sum: number, entry: any) => sum + entry.value, 0);
@@ -36,7 +36,6 @@ const CustomTooltip = ({ active, payload, currency }: any) => {
         </p>
         <div className="space-y-1 mb-3">
           {payload.map((entry: any, index: number) => (
-            // Only show categories with value > 0 for this month
             entry.value > 0 && (
               <div key={index} className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
@@ -46,7 +45,6 @@ const CustomTooltip = ({ active, payload, currency }: any) => {
                   </span>
                 </div>
                 <span className="text-xs font-mono font-medium text-popover-foreground">
-                  {/* 👇 FIX: Use dynamic currency */}
                   {formatCurrency(entry.value, currency)}
                 </span>
               </div>
@@ -56,7 +54,6 @@ const CustomTooltip = ({ active, payload, currency }: any) => {
         <div className="pt-2 border-t border-border flex items-center justify-between">
           <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Total</span>
           <span className="text-sm font-bold text-primary">
-            {/* 👇 FIX: Use dynamic currency */}
             {formatCurrency(total, currency)}
           </span>
         </div>
@@ -66,7 +63,6 @@ const CustomTooltip = ({ active, payload, currency }: any) => {
   return null;
 };
 
-// 👇 Updated Props Interface
 interface ChartProps {
   data: any[];
   rates: Record<string, number>;
@@ -74,6 +70,20 @@ interface ChartProps {
 }
 
 export function SpendingChart({ data, rates, currency }: ChartProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="flex h-[250px] w-full items-center justify-center rounded-xl bg-muted/20 animate-pulse">
+        <span className="text-sm font-medium text-muted-foreground">Loading chart...</span>
+      </div>
+    );
+  }
+
   if (data.length === 0) {
     return (
       <div className="flex h-[250px] flex-col items-center justify-center gap-2 text-muted-foreground">
@@ -97,7 +107,6 @@ export function SpendingChart({ data, rates, currency }: ChartProps) {
 
   const currentMonth = dayjs();
   
-  // Prepare Monthly Data
   const chartData = Array.from({ length: 6 }).map((_, i) => {
     const monthDate = currentMonth.add(i, "month");
     const monthName = monthDate.format("MMM");
@@ -120,7 +129,6 @@ export function SpendingChart({ data, rates, currency }: ChartProps) {
       }
 
       if (applies) {
-         // 👇 FIX: Convert cost to User's Currency
          const rawCost = Number(sub.splitCost) > 0 ? Number(sub.splitCost) : Number(sub.cost);
          const convertedCost = convertTo(rawCost, sub.currency, currency, rates);
          
@@ -156,11 +164,10 @@ export function SpendingChart({ data, rates, currency }: ChartProps) {
             />
 
             <Tooltip 
-              content={<CustomTooltip currency={currency} />} // 👇 Pass currency prop
+              content={<CustomTooltip currency={currency} />}
               cursor={{ fill: "var(--muted)", opacity: 0.2 }} 
             />
             
-            {/* Stacked Bars */}
             {categories.map((category, index) => {
               const isLast = index === categories.length - 1;
               const radius: [number, number, number, number] = isLast ? [4, 4, 0, 0] : [0, 0, 0, 0];

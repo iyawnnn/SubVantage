@@ -81,7 +81,7 @@ export default function ArchiveView({ initialData, currency }: ArchiveViewProps)
     <div className="space-y-8">
       <ArchiveHeader />
 
-      <div className="sticky top-16 z-40 bg-background/95 backdrop-blur-xl py-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-border/40 transition-all">
+      <div className="sticky top-16 z-40 bg-background py-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-border/40 transition-all">
         <div className="relative w-full max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input 
@@ -97,7 +97,7 @@ export default function ArchiveView({ initialData, currency }: ArchiveViewProps)
         <EmptyArchiveState />
       ) : (
         <>
-          <div className="hidden md:block rounded-xl border border-border/60 bg-card/50 shadow-sm overflow-hidden">
+          <div className="hidden md:block rounded-xl border border-border/60 bg-card overflow-hidden">
             <ArchiveTable 
               data={paginatedData} 
               onRestore={handleRestore} 
