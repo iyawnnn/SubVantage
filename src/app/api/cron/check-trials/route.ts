@@ -56,7 +56,7 @@ export async function GET(req: Request) {
       const daysLeft = targetDate.diff(now, "day");
 
       const { data, error } = await resend.emails.send({
-        from: "SubVantage <updates@subvantage.iansebastian.dev>",
+        from: "SubVantage <subvantage@iansebastian.dev>",
         to: sub.user.email,
         subject: `⚠️ Action Required: ${sub.vendor.name} trial ending`,
         react: TrialReminderEmail({
