@@ -24,7 +24,7 @@ export function DashboardHeader({ user }: { user: any }) {
     <>
       <div className="relative overflow-hidden flex flex-col items-center text-center gap-6 md:flex-row md:items-end md:justify-between md:text-left border-b border-border/40 pb-8 pt-2">
         
-        <div className="absolute right-0 top-0 -z-10 h-32 w-96 -translate-y-10 translate-x-10 bg-primary/20 blur-[100px] opacity-50 pointer-events-none transform-gpu" />
+        <div className="absolute right-0 top-0 -z-10 h-64 w-96 -translate-y-10 translate-x-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/30 via-primary/5 to-transparent opacity-60 pointer-events-none" />
 
         <div className="space-y-2 relative z-10 w-full md:w-auto">
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-5xl">

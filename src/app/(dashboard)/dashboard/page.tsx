@@ -6,7 +6,6 @@ import { SpendingChart } from "@/components/dashboard/SpendingChart";
 import { UpcomingBills } from "@/components/dashboard/UpcomingBills";
 import { SubscriptionCarousel } from "@/components/dashboard/SubscriptionCarousel";
 import { InsightsCard } from "@/components/dashboard/Insights";
-// 👇 FIX: Use the same helper as Subscriptions Page
 import { getExchangeRates } from "@/lib/currency-helper"; 
 import { processSubscriptionData } from "@/lib/calculations";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -20,7 +19,7 @@ import { Info } from "lucide-react";
 import { OnboardingFlow } from "@/components/dashboard/OnboardingFlow";
 
 export const metadata = {
-  title: "Dashboard | SubVantage",
+  title: "Dashboard",
   description: "Your financial pulse at a glance.",
 };
 
@@ -28,7 +27,6 @@ export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user?.id) return null;
 
-  // ✅ PARALLEL FETCH: Fetch User and Subscriptions at the same time
   const [user, rawSubs] = await Promise.all([
     prisma.user.findUnique({
       where: { id: session.user.id },
@@ -42,7 +40,6 @@ export default async function DashboardPage() {
 
   const baseCurrency = user?.preferredCurrency || "USD";
 
-  // 👇 FIX: Unified Rate Fetching
   const rates = await getExchangeRates(baseCurrency);
 
   const subs = rawSubs.map((sub) => ({

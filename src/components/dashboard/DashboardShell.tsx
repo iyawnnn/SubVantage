@@ -64,23 +64,22 @@ export function DashboardShell({
       <header
         className={cn(
           "sticky top-0 z-50 w-full transition-all duration-300",
-          "bg-background/60 backdrop-blur-md supports-[backdrop-filter]:bg-background/60",
+          "transform-gpu translate-z-0",
           scrolled
-            ? "border-b border-border/40 shadow-sm"
-            : "border-b border-transparent"
+            ? "bg-background/80 backdrop-blur-md border-b border-border/40 shadow-sm"
+            : "bg-background/40 backdrop-blur-sm border-b border-transparent",
         )}
       >
         <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* LEFT: Logo & Desktop Nav */}
           <div className="flex items-center gap-4 lg:gap-8">
             <Link href="/dashboard" className="flex items-center gap-2 group">
-              {/* 👇 FIX: Replaced SVG with logo.png */}
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-tr from-primary to-blue-600 shadow-lg shadow-primary/20 transition-all group-hover:shadow-primary/40 group-hover:scale-105 overflow-hidden">
-                <Image 
-                  src="/logo.png" 
-                  alt="SubVantage Logo" 
-                  width={36} 
-                  height={36} 
+              <div className="flex h-9 w-9 items-center justify-center bg-transparent transition-all group-hover:scale-105 overflow-hidden">
+                <Image
+                  src="/logo.png"
+                  alt="SubVantage Logo"
+                  width={36}
+                  height={36}
                   className="object-cover"
                 />
               </div>
@@ -101,7 +100,7 @@ export function DashboardShell({
                       "relative px-4 py-1.5 text-sm font-medium transition-colors z-10",
                       isActive
                         ? "text-primary"
-                        : "text-muted-foreground hover:text-foreground"
+                        : "text-muted-foreground hover:text-foreground",
                     )}
                   >
                     {isActive && (
@@ -176,13 +175,12 @@ export function DashboardShell({
                 className="bg-background/95 backdrop-blur-md border-l border-border/50 w-[300px] sm:w-[400px]"
               >
                 <SheetTitle className="flex items-center gap-2 text-lg font-bold text-foreground pb-4 border-b border-border/50">
-                  {/* 👇 FIX: Replaced SVG in Mobile Menu with logo.png */}
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-primary to-blue-600 shadow-md overflow-hidden">
-                    <Image 
-                      src="/logo.png" 
-                      alt="SubVantage Logo" 
-                      width={32} 
-                      height={32} 
+                  <div className="flex h-8 w-8 items-center justify-center bg-transparent overflow-hidden">
+                    <Image
+                      src="/logo.png"
+                      alt="SubVantage Logo"
+                      width={32}
+                      height={32}
                       className="object-cover"
                     />
                   </div>
@@ -205,7 +203,7 @@ export function DashboardShell({
                           "flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium transition-all duration-200",
                           isActive
                             ? "bg-primary/10 text-primary shadow-sm"
-                            : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+                            : "hover:bg-muted/50 text-muted-foreground hover:text-foreground",
                         )}
                       >
                         <item.icon className="h-5 w-5" />
