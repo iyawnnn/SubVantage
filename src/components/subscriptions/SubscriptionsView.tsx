@@ -52,7 +52,7 @@ export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
 
   const [optimisticSubs, addOptimisticSub] = useOptimistic(
     initialData,
-    (state: any[], newSub: any) => [newSub, ...state]
+    (state: any[], newSub: any) => [newSub, ...state],
   );
 
   useEffect(() => {
@@ -92,7 +92,7 @@ export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
 
     if (search) {
       result = result.filter((s) =>
-        s.vendor.name.toLowerCase().includes(search.toLowerCase())
+        s.vendor.name.toLowerCase().includes(search.toLowerCase()),
       );
     }
 
@@ -108,9 +108,9 @@ export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
 
       // Helper to calculate the REAL next date (Same logic as Table)
       const getEffectiveDate = (sub: any) => {
-        const today = dayjs().startOf('day');
-        const startDate = dayjs(sub.startDate).startOf('day');
-        let nextRenewal = dayjs(sub.nextRenewalDate).startOf('day');
+        const today = dayjs().startOf("day");
+        const startDate = dayjs(sub.startDate).startOf("day");
+        let nextRenewal = dayjs(sub.nextRenewalDate).startOf("day");
         const cycleUnit = sub.frequency === "MONTHLY" ? "month" : "year";
 
         // 1. If Future Start, use Start Date
@@ -118,11 +118,11 @@ export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
 
         // 2. If Past, Project Forward
         if (nextRenewal.isBefore(today)) {
-            const diff = today.diff(nextRenewal, cycleUnit);
-            nextRenewal = nextRenewal.add(diff, cycleUnit);
-            if (nextRenewal.isBefore(today)) {
-                nextRenewal = nextRenewal.add(1, cycleUnit);
-            }
+          const diff = today.diff(nextRenewal, cycleUnit);
+          nextRenewal = nextRenewal.add(diff, cycleUnit);
+          if (nextRenewal.isBefore(today)) {
+            nextRenewal = nextRenewal.add(1, cycleUnit);
+          }
         }
         return nextRenewal.valueOf();
       };
@@ -143,7 +143,7 @@ export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
   const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
   const paginatedData = filteredData.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+    currentPage * ITEMS_PER_PAGE,
   );
 
   const handlePageChange = (page: number) => {
@@ -163,7 +163,7 @@ export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
         baseCurrency={baseCurrency}
       />
 
-      <div className="sticky top-16 z-40 bg-background/95 backdrop-blur-xl py-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-border/40 transition-all">
+      <div className="sticky top-16 z-40 bg-background py-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-border/40 transition-all">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative w-full sm:flex-1 sm:max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -176,7 +176,6 @@ export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger className="w-full sm:w-[180px] bg-secondary/30 border-transparent focus:ring-0 cursor-pointer">
                 <div className="flex items-center gap-2 truncate">
@@ -219,7 +218,7 @@ export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
         />
       ) : (
         <>
-          <div className="hidden md:block rounded-xl border border-border/60 bg-card/50 shadow-sm overflow-hidden">
+          <div className="hidden md:block rounded-xl border border-border/60 bg-card overflow-hidden">
             <SubscriptionTable
               data={paginatedData}
               rates={rates}
@@ -279,7 +278,7 @@ export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
                           </PaginationLink>
                         </PaginationItem>
                       );
-                    }
+                    },
                   )}
 
                   <PaginationItem>

@@ -130,7 +130,7 @@ export default function SettingsView({ user }: { user: any }) {
             <div className="flex gap-2 mt-3">
               <Badge
                 variant="outline"
-                className="bg-background/50 backdrop-blur"
+                className="bg-background/50"
               >
                 Free Tier
               </Badge>
@@ -158,7 +158,7 @@ export default function SettingsView({ user }: { user: any }) {
       {/* Grid stretches items by default, so cards will be equal height */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* 1. General Preferences */}
-        <Card className="border-border/50 bg-card/50 backdrop-blur flex flex-col h-full">
+        <Card className="border-border/50 bg-card/50 flex flex-col h-full">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5 text-primary" /> General
@@ -230,7 +230,7 @@ export default function SettingsView({ user }: { user: any }) {
         </Card>
 
         {/* 2. Notifications */}
-        <Card className="border-border/50 bg-card/50 backdrop-blur flex flex-col h-full">
+        <Card className="border-border/50 bg-card/50 flex flex-col h-full">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Bell className="h-5 w-5 text-amber-500" /> Notifications
@@ -262,7 +262,7 @@ export default function SettingsView({ user }: { user: any }) {
         </Card>
 
         {/* 3. Data & Privacy */}
-        <Card className="border-border/50 bg-card/50 backdrop-blur flex flex-col h-full">
+        <Card className="border-border/50 bg-card/50 flex flex-col h-full">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5 text-emerald-500" /> Data & Privacy
@@ -290,7 +290,7 @@ export default function SettingsView({ user }: { user: any }) {
         </Card>
 
         {/* 4. Plan Info */}
-        <Card className="border-border/50 bg-card/50 backdrop-blur flex flex-col h-full">
+        <Card className="border-border/50 bg-card/50 flex flex-col h-full">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-violet-600 dark:text-violet-400">
               <CreditCard className="h-5 w-5" /> Current Plan

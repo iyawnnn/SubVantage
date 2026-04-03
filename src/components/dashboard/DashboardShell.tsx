@@ -63,11 +63,10 @@ export function DashboardShell({
     <div className="flex min-h-screen flex-col bg-background text-foreground selection:bg-primary/20">
       <header
         className={cn(
-          "sticky top-0 z-50 w-full transition-all duration-300",
-          "transform-gpu translate-z-0",
+          "sticky top-0 z-50 w-full transition-all duration-200",
           scrolled
-            ? "bg-background/80 backdrop-blur-md border-b border-border/40 shadow-sm"
-            : "bg-background/40 backdrop-blur-sm border-b border-transparent",
+            ? "bg-background border-b border-border shadow-sm"
+            : "bg-background border-b border-transparent",
         )}
       >
         <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -172,7 +171,7 @@ export function DashboardShell({
               </SheetTrigger>
               <SheetContent
                 side="right"
-                className="bg-background/95 backdrop-blur-md border-l border-border/50 w-[300px] sm:w-[400px]"
+                className="bg-background border-l border-border/50 w-[300px] sm:w-[400px]"
               >
                 <SheetTitle className="flex items-center gap-2 text-lg font-bold text-foreground pb-4 border-b border-border/50">
                   <div className="flex h-8 w-8 items-center justify-center bg-transparent overflow-hidden">

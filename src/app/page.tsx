@@ -27,26 +27,27 @@ export default function LandingPage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "name": "SubVantage",
-    "applicationCategory": "FinanceApplication",
-    "operatingSystem": "Web",
-    "offers": {
+    name: "SubVantage",
+    applicationCategory: "FinanceApplication",
+    operatingSystem: "Web",
+    offers: {
       "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD"
+      price: "0",
+      priceCurrency: "USD",
     },
-    "description": "A free financial dashboard to track recurring expenses, manage subscriptions, and receive billing alerts.",
-    "aggregateRating": {
+    description:
+      "A free financial dashboard to track recurring expenses, manage subscriptions, and receive billing alerts.",
+    aggregateRating: {
       "@type": "AggregateRating",
-      "ratingValue": "4.8",
-      "ratingCount": "1024"
+      ratingValue: "4.8",
+      ratingCount: "1024",
     },
-    "featureList": "Subscription tracking, Renewal alerts, Currency conversion, Spending analytics"
+    featureList:
+      "Subscription tracking, Renewal alerts, Currency conversion, Spending analytics",
   };
 
   return (
     <div className="min-h-screen bg-[#020202] text-white font-satoshi selection:bg-violet-500/30 overflow-x-hidden">
-      
       {/* 👇 SEO: Inject JSON-LD Schema */}
       <script
         type="application/ld+json"
@@ -61,22 +62,22 @@ export default function LandingPage() {
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          // 👇 OPTIMIZATION: Solid background, no backdrop-blur for 60fps
           className="w-full max-w-4xl rounded-2xl border border-white/10 bg-[#0A0A0A] px-4 md:px-6 py-3 shadow-2xl transition-colors mx-4"
         >
           <div className="flex items-center justify-between">
             {/* Logo Section */}
             <div className="flex items-center gap-3 cursor-pointer group">
-              <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 shadow-inner border border-white/5 overflow-hidden group-hover:bg-white/10 transition-colors">
+              <div className="relative flex items-center justify-center bg-transparent overflow-hidden transition-transform group-hover:scale-105">
                 <Image
                   src="/logo.png"
                   alt="SubVantage Logo"
-                  width={32}
-                  height={32}
-                  className="object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                  width={44}
+                  height={44}
+                  className="object-cover"
+                  priority
                 />
               </div>
-              <span className="hidden sm:block font-bold tracking-tight text-white/90">
+              <span className="hidden sm:block font-bold tracking-tight text-white/90 text-lg">
                 SubVantage
               </span>
             </div>
