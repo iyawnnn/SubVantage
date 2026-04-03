@@ -38,7 +38,10 @@ export async function GET(req: Request) {
     });
 
     if (subsToNotify.length === 0) {
-      return NextResponse.json({ message: "No notifications needed", count: 0 });
+      return NextResponse.json({
+        message: "No notifications needed",
+        count: 0,
+      });
     }
 
     const results = [];
@@ -53,10 +56,10 @@ export async function GET(req: Request) {
       // Logic: Different email for Trial vs Regular Bill
       if (sub.isTrial) {
         const daysLeft = dayjs(sub.nextRenewalDate).diff(now, "day");
-        
+
         // 👇 UPDATE 1: Neutral Subject Line (Higher Deliverability)
         subject = `Trial ending soon for ${sub.vendor.name}`;
-        
+
         emailComponent = TrialReminderEmail({
           userName: sub.user.name || "User",
           vendorName: sub.vendor.name,
@@ -66,7 +69,7 @@ export async function GET(req: Request) {
       } else {
         // 👇 UPDATE 2: Neutral Subject Line
         subject = `Upcoming renewal for ${sub.vendor.name}`;
-        
+
         emailComponent = UpcomingBillEmail({
           userName: sub.user.name || "User",
           vendorName: sub.vendor.name,
@@ -77,8 +80,7 @@ export async function GET(req: Request) {
 
       // Send Email
       const { error } = await resend.emails.send({
-        // 👇 UPDATE 3: "SubVantage Support" sounds more human/safe than just the brand name
-        from: "SubVantage Support <updates@subvantage.iansebastian.dev>",
+        from: "SubVantage Support <subvantage@iansebastian.dev>",
         to: sub.user.email,
         subject: subject,
         react: emailComponent,
