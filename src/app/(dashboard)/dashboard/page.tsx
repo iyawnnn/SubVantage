@@ -2,13 +2,13 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { StatsGrid } from "@/components/dashboard/DashboardWidgets";
-import { SpendingChart } from "@/components/dashboard/SpendingChart";
 import { UpcomingBills } from "@/components/dashboard/UpcomingBills";
 import { SubscriptionCarousel } from "@/components/dashboard/SubscriptionCarousel";
 import { InsightsCard } from "@/components/dashboard/Insights";
 import { getExchangeRates } from "@/lib/currency-helper"; 
 import { processSubscriptionData } from "@/lib/calculations";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { SpendingChart } from "@/components/dashboard/SpendingChart"; // 👈 FIX: Restored normal static import
 import {
   Tooltip,
   TooltipContent,

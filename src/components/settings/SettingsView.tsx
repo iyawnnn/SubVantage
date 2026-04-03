@@ -43,6 +43,12 @@ export default function SettingsView({ user }: { user: any }) {
   const [currency, setCurrency] = useState(user?.preferredCurrency || "USD");
   const [loadingCurrency, setLoadingCurrency] = useState(false);
   const [exporting, setExporting] = useState(false);
+  
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (user?.preferredCurrency) {
@@ -204,21 +210,21 @@ export default function SettingsView({ user }: { user: any }) {
               <Label>Appearance</Label>
               <div className="grid grid-cols-3 gap-2">
                 <Button
-                  variant={theme === "light" ? "default" : "outline"}
+                  variant={mounted && theme === "light" ? "default" : "outline"}
                   onClick={() => setTheme("light")}
                   className="justify-start gap-2 h-auto py-3 cursor-pointer"
                 >
                   <Sun className="h-4 w-4" /> Light
                 </Button>
                 <Button
-                  variant={theme === "dark" ? "default" : "outline"}
+                  variant={mounted && theme === "dark" ? "default" : "outline"}
                   onClick={() => setTheme("dark")}
                   className="justify-start gap-2 h-auto py-3 cursor-pointer"
                 >
                   <Moon className="h-4 w-4" /> Dark
                 </Button>
                 <Button
-                  variant={theme === "system" ? "default" : "outline"}
+                  variant={mounted && theme === "system" ? "default" : "outline"}
                   onClick={() => setTheme("system")}
                   className="justify-start gap-2 h-auto py-3 cursor-pointer"
                 >
