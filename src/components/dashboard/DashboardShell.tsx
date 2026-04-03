@@ -64,7 +64,7 @@ export function DashboardShell({
       <header
         className={cn(
           "sticky top-0 z-50 w-full transition-all duration-300",
-          "bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60",
+          "bg-background/60 backdrop-blur-md supports-[backdrop-filter]:bg-background/60",
           scrolled
             ? "border-b border-border/40 shadow-sm"
             : "border-b border-transparent"
@@ -173,7 +173,7 @@ export function DashboardShell({
               </SheetTrigger>
               <SheetContent
                 side="right"
-                className="bg-background/95 backdrop-blur-2xl border-l border-border/50 w-[300px] sm:w-[400px]"
+                className="bg-background/95 backdrop-blur-md border-l border-border/50 w-[300px] sm:w-[400px]"
               >
                 <SheetTitle className="flex items-center gap-2 text-lg font-bold text-foreground pb-4 border-b border-border/50">
                   {/* 👇 FIX: Replaced SVG in Mobile Menu with logo.png */}
