@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import SettingsView from "@/components/settings/SettingsView";
 
 export const metadata = {
-  title: "Settings | SubVantage",
+  title: "Settings",
 };
 
 export default async function SettingsPage() {

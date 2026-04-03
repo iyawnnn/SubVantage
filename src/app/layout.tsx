@@ -94,7 +94,7 @@ export default function RootLayout({
             {/* Global Footer */}
             <Footer />
             
-            <Toaster position="top-right" richColors closeButton />
+            <Toaster position="bottom-right" richColors closeButton />
           </ThemeProvider>
         </SessionProvider>
       </body>

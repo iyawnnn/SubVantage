@@ -16,19 +16,16 @@ export async function GET(req: Request) {
     const now = dayjs();
     const twoDaysFromNow = now.add(2, "day").toDate();
 
-    // 👇 UPDATE 1: Check BOTH startDate and nextRenewalDate
     const expiringTrials = await prisma.subscription.findMany({
       where: {
         isTrial: true,
         OR: [
-          // Case A: Standard Trial (Renewal is approaching)
           { 
             nextRenewalDate: { 
               gte: now.toDate(), 
               lte: twoDaysFromNow 
             } 
           },
-          // Case B: Future Start Trial (Start Date IS the trial end)
           { 
             startDate: { 
               gte: now.toDate(), 
@@ -47,13 +44,14 @@ export async function GET(req: Request) {
     const emailPromises = expiringTrials.map(async (sub) => {
       if (!sub.user.email) return null;
 
-      // 👇 UPDATE 2: Calculate correct target date
-      // If the subscription hasn't technically started yet, the "End Date" is the Start Date.
       const startDate = dayjs(sub.startDate);
       const isFutureStart = startDate.isAfter(now);
-      
       const targetDate = isFutureStart ? startDate : dayjs(sub.nextRenewalDate);
-      const daysLeft = targetDate.diff(now, "day");
+
+      // Compare exact calendar days
+      const today = dayjs().startOf("day");
+      const target = targetDate.startOf("day");
+      const daysLeft = target.diff(today, "day");
 
       const { data, error } = await resend.emails.send({
         from: "SubVantage <subvantage@iansebastian.dev>",
@@ -63,7 +61,7 @@ export async function GET(req: Request) {
           userName: sub.user.name || "User",
           vendorName: sub.vendor.name,
           daysLeft: Math.max(0, daysLeft),
-          renewalCost: formatCurrency(Number(sub.cost), sub.currency), // Helper for nice currency
+          renewalCost: formatCurrency(Number(sub.cost), sub.currency),
         }),
       });
 
@@ -83,7 +81,6 @@ export async function GET(req: Request) {
   }
 }
 
-// Simple helper to format currency inside the cron job
 function formatCurrency(amount: number, currency: string) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",

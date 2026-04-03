@@ -5,7 +5,7 @@ import { SubscriptionsView } from "@/components/subscriptions/SubscriptionsView"
 import { getExchangeRates } from "@/lib/currency-helper"; 
 
 export const metadata = {
-  title: "Subscriptions | SubVantage",
+  title: "Subscriptions",
 };
 
 export default async function SubscriptionsPage() {
