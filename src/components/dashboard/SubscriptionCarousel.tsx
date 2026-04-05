@@ -30,7 +30,8 @@ export function SubscriptionCarousel({
     .slice(0, 8);
 
   return (
-    <div className="w-full space-y-4 font-sans">
+    // 👇 Added mt-10 here to create a clear section break below the charts
+    <div className="w-full space-y-4 font-sans mt-10">
       <div className="flex items-center justify-between px-1">
         <h3 className="text-xl font-bold tracking-tight text-foreground">Top Subscriptions</h3>
         {data.length > 0 && (
