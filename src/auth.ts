@@ -31,7 +31,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             where: { email },
           });
 
-          // Prevent login if user does not exist or signed up via Google exclusively
           if (!user || !user.password) return null;
 
           const passwordsMatch = await bcrypt.compare(password, user.password);
@@ -44,14 +43,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   callbacks: {
     ...authConfig.callbacks, 
+    async jwt({ token, user, trigger, session }) {
+      if (user) {
+        token.id = user.id;
+        token.picture = user.image;
+      }
+      if (trigger === "update" && session?.user) {
+        token.picture = session.user.image;
+      }
+      return token;
+    },
     async session({ session, token }) {
-      if (token.sub && session.user) {
-        session.user.id = token.sub;
+      if (token && session.user) {
+        session.user.id = token.id as string || token.sub as string;
+        if (token.picture) {
+          session.user.image = token.picture as string;
+        }
       }
       return session;
-    },
-    async jwt({ token }) {
-      return token;
     },
   },
 });

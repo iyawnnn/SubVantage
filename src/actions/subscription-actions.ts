@@ -26,7 +26,7 @@ export async function createSubscription(
   // 1. Validate Input
   const validated = subscriptionSchema.safeParse(data);
   if (!validated.success) {
-    console.error("❌ Validation Errors:", validated.error.flatten().fieldErrors);
+    console.error("Validation Errors:", validated.error.flatten().fieldErrors);
     return {
       success: false,
       message: "Validation failed",
@@ -36,12 +36,12 @@ export async function createSubscription(
 
   const { name, website, ...subData } = validated.data;
   
-  // Handle fields that might be optional/missing in older schemas
+  // Handle fields that might be optional or missing in older schemas
   const status = (subData as any).status || "ACTIVE"; 
-  const splitCost = (subData as any).splitCost || 0; // 👈 NEW: Capture Split Cost
+  const splitCost = (subData as any).splitCost || 0;
 
   try {
-    // 2. Find or Create Vendor
+    // 2. Find or Create Vendor with Strict User Isolation
     let vendor = await prisma.vendor.findFirst({
       where: {
         name: { equals: name, mode: "insensitive" },
@@ -68,7 +68,7 @@ export async function createSubscription(
     await prisma.subscription.create({
       data: {
         cost: subData.cost,
-        splitCost: splitCost, // 👈 SAVING SPLIT COST TO DB
+        splitCost: splitCost,
         currency: subData.currency,
         frequency: subData.frequency,
         startDate: subData.startDate,
@@ -108,19 +108,22 @@ export async function updateSubscription(
 
   const { name, ...subData } = validated.data;
   const status = (subData as any).status || "ACTIVE";
-  const splitCost = (subData as any).splitCost || 0; // 👈 NEW: Capture Split Cost
+  const splitCost = (subData as any).splitCost || 0;
 
   try {
-    // 1. Check Ownership
-    const existingSub = await prisma.subscription.findUnique({
-      where: { id },
+    // 1. Check Ownership Securely
+    const existingSub = await prisma.subscription.findFirst({
+      where: { 
+        id: id,
+        userId: session.user.id 
+      },
     });
 
-    if (!existingSub || existingSub.userId !== session.user.id) {
-      return { success: false, message: "Subscription not found" };
+    if (!existingSub) {
+      return { success: false, message: "Subscription not found or unauthorized" };
     }
 
-    // 2. Handle Vendor Change
+    // 2. Handle Vendor Change Securely
     let vendorId = existingSub.vendorId;
     let vendor = await prisma.vendor.findFirst({
       where: {
@@ -142,13 +145,16 @@ export async function updateSubscription(
       subData.frequency
     );
 
-    // 4. Update Database
-    await prisma.subscription.update({
-      where: { id },
+    // 4. Update Database using updateMany for Guaranteed Isolation
+    const result = await prisma.subscription.updateMany({
+      where: { 
+        id: id,
+        userId: session.user.id 
+      },
       data: {
         vendorId: vendorId,
         cost: subData.cost,
-        splitCost: splitCost, // 👈 UPDATING SPLIT COST
+        splitCost: splitCost,
         currency: subData.currency,
         frequency: subData.frequency,
         startDate: subData.startDate,
@@ -158,6 +164,10 @@ export async function updateSubscription(
         status: status,
       },
     });
+
+    if (result.count === 0) {
+      return { success: false, message: "Failed to update record" };
+    }
 
     revalidatePath("/dashboard");
     return { success: true, message: "Subscription updated" };
@@ -173,15 +183,18 @@ export async function deleteSubscription(id: string): Promise<ActionResponse> {
   if (!session?.user?.id) return { success: false, message: "Unauthorized" };
 
   try {
-    const sub = await prisma.subscription.findUnique({
-      where: { id },
+    // deleteMany enforces user isolation at the database level
+    const result = await prisma.subscription.deleteMany({
+      where: { 
+        id: id,
+        userId: session.user.id 
+      },
     });
 
-    if (!sub || sub.userId !== session.user.id) {
-      return { success: false, message: "Not found" };
+    if (result.count === 0) {
+      return { success: false, message: "Not found or unauthorized" };
     }
 
-    await prisma.subscription.delete({ where: { id } });
     revalidatePath("/dashboard");
     return { success: true, message: "Subscription deleted." };
   } catch (error) {
@@ -206,10 +219,18 @@ export async function archiveSubscription(id: string): Promise<ActionResponse> {
   if (!session?.user?.id) return { success: false, message: "Unauthorized" };
 
   try {
-    await prisma.subscription.update({
-      where: { id },
+    const result = await prisma.subscription.updateMany({
+      where: { 
+        id: id,
+        userId: session.user.id 
+      },
       data: { status: "CANCELLED" },
     });
+
+    if (result.count === 0) {
+      return { success: false, message: "Not found or unauthorized" };
+    }
+
     revalidatePath("/dashboard");
     revalidatePath("/archive");
     return { success: true, message: "Subscription archived." };
@@ -224,10 +245,18 @@ export async function restoreSubscription(id: string): Promise<ActionResponse> {
   if (!session?.user?.id) return { success: false, message: "Unauthorized" };
 
   try {
-    await prisma.subscription.update({
-      where: { id },
+    const result = await prisma.subscription.updateMany({
+      where: { 
+        id: id,
+        userId: session.user.id 
+      },
       data: { status: "ACTIVE" },
     });
+
+    if (result.count === 0) {
+      return { success: false, message: "Not found or unauthorized" };
+    }
+
     revalidatePath("/dashboard");
     revalidatePath("/archive");
     return { success: true, message: "Subscription restored." };
