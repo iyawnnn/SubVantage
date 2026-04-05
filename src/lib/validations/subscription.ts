@@ -26,7 +26,7 @@ export const subscriptionSchema = z.object({
     .length(3, "Currency must be exactly 3 letters")
     .toUpperCase(),
   frequency: z.enum(["MONTHLY", "YEARLY"], {
-    required_error: "Please select a billing cycle",
+    message: "Please select a billing cycle",
   }),
   category: z
     .string()
@@ -35,13 +35,12 @@ export const subscriptionSchema = z.object({
     .trim(),
   status: z.enum(["ACTIVE", "PAUSED", "CANCELLED"]).default("ACTIVE"),
   startDate: z.date({
-    required_error: "A start date is required",
-    invalid_type_error: "Invalid date format",
+    message: "A valid start date is required", // Fixed this to only use 'message'
   }),
   isTrial: z.boolean().default(false),
 }).refine((data) => (data.splitCost || 0) <= data.cost, {
   message: "Your split share cannot be greater than the total cost",
-  path: ["splitCost"], // This maps the error directly to the splitCost input field in the UI
+  path: ["splitCost"],
 });
 
 export type SubscriptionFormData = z.infer<typeof subscriptionSchema>;

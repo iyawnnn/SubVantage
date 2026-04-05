@@ -102,11 +102,11 @@ export function SubscriptionModal({
   const [searchValue, setSearchValue] = React.useState("");
 
   const form = useForm<z.infer<typeof subscriptionSchema>>({
-    resolver: zodResolver(subscriptionSchema),
+    resolver: zodResolver(subscriptionSchema) as any, 
     defaultValues: {
       name: "",
-      cost: 0, // FIX: Set to 0 instead of empty string
-      splitCost: 0, // FIX: Set to 0 instead of empty string
+      cost: 0, 
+      splitCost: 0, 
       currency: "PHP",
       frequency: "MONTHLY",
       category: "Personal",
