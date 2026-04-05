@@ -33,6 +33,7 @@ describe('Cron Job: Trial Check', () => {
       isTrial: true,
       nextRenewalDate: dayjs().add(1, 'day').toDate(), // Expiring tomorrow
       cost: 10,
+      currency: 'USD',
       user: { email: 'test@example.com', name: 'Test User' },
       vendor: { name: 'Netflix' },
     };
@@ -48,25 +49,29 @@ describe('Cron Job: Trial Check', () => {
     // 3. Run the Function
     await GET(req);
 
-    // 4. Verify Resend was called
+    // 4. Verify Resend was called EXACTLY ONCE with the correct mock email
     expect(resend.emails.send).toHaveBeenCalledTimes(1);
     expect(resend.emails.send).toHaveBeenCalledWith(
       expect.objectContaining({
-        to: 'substrack.dev@gmail.com', // As hardcoded in your route
+        to: 'test@example.com', 
         subject: '⚠️ Action Required: Netflix trial ending',
       })
     );
   });
 
   it('does not send emails if no trials are expiring', async () => {
+    // 1. Setup empty mock data (no expiring trials)
     (prisma.subscription.findMany as any).mockResolvedValue([]);
 
+    // 2. Mock Request
     const req = new Request('http://localhost:3000/api/cron/check-trials', {
       headers: { authorization: `Bearer ${process.env.CRON_SECRET}` },
     });
 
+    // 3. Run the Function
     await GET(req);
 
-    expect(resend.emails.send).not.toHaveBeenCalled();
+    // 4. Verify Resend was NEVER called
+    expect(resend.emails.send).not.toHaveBeenCalled(); 
   });
 });

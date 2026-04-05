@@ -21,7 +21,12 @@ const signupSchema = z
   .object({
     name: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().email("Please enter a valid email address"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+      .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+      .regex(/[0-9]/, "Password must contain at least one number"),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -57,6 +62,17 @@ function SignupForm() {
       confirmPassword: "",
     },
   });
+
+  // Watch the password field in real-time
+  const currentPassword = form.watch("password") || "";
+
+  // Define the validation criteria
+  const passwordCriteria = [
+    { label: "At least 8 characters", met: currentPassword.length >= 8 },
+    { label: "At least 1 uppercase letter", met: /[A-Z]/.test(currentPassword) },
+    { label: "At least 1 lowercase letter", met: /[a-z]/.test(currentPassword) },
+    { label: "At least 1 number", met: /[0-9]/.test(currentPassword) },
+  ];
 
   const onSubmit = async (values: z.infer<typeof signupSchema>) => {
     setLoading(true);
@@ -118,6 +134,7 @@ function SignupForm() {
 
       <div className="grid gap-6">
         <Button
+          type="button"
           variant="outline"
           className="w-full h-11 gap-3 bg-white/5 text-white border-white/10 hover:bg-white/10 hover:text-white hover:border-white/20 font-medium cursor-pointer transition-all active:scale-[0.98]"
           onClick={handleGoogleLogin}
@@ -195,6 +212,24 @@ function SignupForm() {
                 )}
               </button>
             </div>
+            
+            {/* Real-time Password Criteria Indicator */}
+            {currentPassword.length > 0 && (
+              <div className="flex flex-col gap-1.5 pt-2 text-xs">
+                {passwordCriteria.map((criterion, index) => (
+                  <div key={index} className="flex items-center gap-2 transition-colors duration-300">
+                    {criterion.met ? (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500 transition-all duration-300 scale-100" />
+                    ) : (
+                      <div className="h-4 w-4 rounded-full border border-white/20 flex shrink-0 transition-all duration-300 scale-90" />
+                    )}
+                    <span className={criterion.met ? "text-emerald-500 transition-colors duration-300" : "text-muted-foreground transition-colors duration-300"}>
+                      {criterion.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -226,7 +261,7 @@ function SignupForm() {
 
           <Button
             type="submit"
-            className="w-full h-11 text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full h-11 text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] mt-2"
             disabled={loading}
           >
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
