@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import dayjs from "dayjs";
 import { motion } from "framer-motion";
-import { ArrowRight, CreditCard, Plus } from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency, convertTo } from "@/lib/currency-helper";
 
@@ -17,9 +17,8 @@ export function SubscriptionCarousel({
   currency: string, 
   rates: any 
 }) {
-  // 👇 UPDATED: Filter out Trials first, then Sort by Normalized Monthly Cost
   const sorted = [...data]
-    .filter(sub => !sub.isTrial) // 👈 HIDE TRIALS from Top List
+    .filter(sub => !sub.isTrial)
     .sort((a, b) => {
       const getMonthlyVal = (sub: any) => {
          const amount = Number(sub.cost);
@@ -31,30 +30,29 @@ export function SubscriptionCarousel({
     .slice(0, 8);
 
   return (
-    <div className="w-full space-y-2">
+    <div className="w-full space-y-4 font-sans">
       <div className="flex items-center justify-between px-1">
-        <h3 className="text-lg font-bold text-foreground">Top Subscriptions</h3>
+        <h3 className="text-xl font-bold tracking-tight text-foreground">Top Subscriptions</h3>
         {data.length > 0 && (
           <Link 
             href="/subscriptions" 
-            className="group flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+            className="group flex items-center gap-1.5 text-sm font-bold text-muted-foreground hover:text-primary transition-colors"
           >
             View All <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Link>
         )}
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pt-4 pb-6 px-1 snap-x snap-mandatory [scrollbar-width:'none'] [&::-webkit-scrollbar]:hidden">
+      <div className="flex gap-4 overflow-x-auto pt-2 pb-8 px-1 snap-x snap-mandatory [scrollbar-width:'none'] [&::-webkit-scrollbar]:hidden">
         
-        {/* EMPTY STATE (If no paid subs exist) */}
         {sorted.length === 0 && (
            <Link href="#" className="w-full sm:w-auto min-w-[300px] snap-center">
-             <Card className="h-full border-dashed border-border bg-card/30 hover:border-primary/50 hover:bg-card/50 transition-all cursor-pointer group">
-               <CardContent className="p-6 flex flex-col items-center justify-center h-[160px] gap-3 text-muted-foreground group-hover:text-primary">
-                 <div className="rounded-full bg-primary/10 p-4 transition-transform group-hover:scale-110">
+             <Card className="group relative h-full overflow-hidden border border-dashed border-primary/30 bg-primary/5 hover:border-primary/50 hover:bg-primary/10 transition-all duration-300 cursor-pointer">
+               <CardContent className="p-6 flex flex-col items-center justify-center h-[180px] gap-4 text-primary/70 group-hover:text-primary">
+                 <div className="rounded-full bg-background p-4 shadow-sm border border-primary/20 transition-transform duration-300 group-hover:scale-110 group-hover:shadow-[0_0_15px_rgba(var(--primary),0.3)]">
                    <Plus className="h-6 w-6" />
                  </div>
-                 <span className="font-medium">
+                 <span className="font-semibold tracking-wide text-sm">
                    {data.length > 0 ? "No active paid subscriptions" : "Add your first subscription"}
                  </span>
                </CardContent>
@@ -62,7 +60,6 @@ export function SubscriptionCarousel({
            </Link>
         )}
 
-        {/* CARDS */}
         {sorted.map((sub, i) => {
           const startDate = dayjs(sub.startDate);
           const today = dayjs();
@@ -84,41 +81,39 @@ export function SubscriptionCarousel({
           }
 
           return (
-            <Link href={`/subscriptions/${sub.id}`} key={sub.id} className="min-w-[240px] sm:min-w-[280px] snap-center">
+            <Link href={`/subscriptions/${sub.id}`} key={sub.id} className="min-w-[250px] sm:min-w-[280px] snap-center">
               <motion.div 
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.05 }}
-                whileHover={{ y: -8 }}
+                whileHover={{ y: -6 }}
                 className="h-full"
               >
-                <Card className="h-full border-border bg-card shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:border-primary/50 transition-all cursor-pointer">
-                  <CardContent className="p-5 flex flex-col justify-between h-[170px]">
-                    <div className="flex items-start justify-between">
-                      <div className="rounded-xl bg-primary/10 p-2.5 text-primary">
-                        <CreditCard className="h-5 w-5" />
-                      </div>
-                      {/* Badge Removed: Since we filter trials, we don't need the trial badge here anymore */}
-                    </div>
+                <Card className="group relative h-full overflow-hidden border border-border/60 bg-gradient-to-br from-background to-secondary/10 shadow-sm transition-all duration-300 hover:shadow-[0_0_25px_-5px_rgba(var(--primary),0.2)] hover:border-primary/50 cursor-pointer">
+                  
+                  <CardContent className="p-7 flex flex-col justify-between h-[180px]">
                     
                     <div>
-                      <h4 className="font-bold text-foreground truncate text-lg mb-1">{sub.vendor.name}</h4>
+                      <h4 className="font-extrabold text-foreground tracking-tight truncate text-xl mb-3 transition-colors duration-300 group-hover:text-primary">
+                        {sub.vendor.name}
+                      </h4>
                       <div className="flex items-baseline gap-1.5">
-                        <span className="text-2xl font-extrabold text-foreground">
+                        <span className="text-4xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-foreground to-foreground/60">
                           {formatCurrency(sub.cost, sub.currency)}
                         </span>
-                        <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                        <span className="text-xs text-muted-foreground font-bold uppercase tracking-widest">
                           {sub.frequency === "MONTHLY" ? "/mo" : "/yr"}
                         </span>
                       </div>
-                      
-                      <div className="mt-4 flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">Renewal</span>
-                        <span className="font-semibold text-foreground bg-secondary/50 px-2 py-1 rounded-md">
-                          {nextRenewal.format("MMM D")}
-                        </span>
-                      </div>
                     </div>
+                    
+                    <div className="mt-4 flex items-center justify-between text-xs font-semibold border-t border-border/50 pt-4">
+                      <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Next Renewal</span>
+                      <span className="text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20 shadow-[0_0_10px_rgba(var(--primary),0.1)]">
+                        {nextRenewal.format("MMM D")}
+                      </span>
+                    </div>
+
                   </CardContent>
                 </Card>
               </motion.div>
@@ -126,13 +121,12 @@ export function SubscriptionCarousel({
           );
         })}
         
-        {/* VIEW ALL BUTTON */}
         {sorted.length > 0 && (
           <Link href="/subscriptions" className="min-w-[80px] flex items-center justify-center snap-center px-2">
              <motion.div 
                whileHover={{ scale: 1.1 }} 
                whileTap={{ scale: 0.95 }}
-               className="flex h-14 w-14 items-center justify-center rounded-full border border-border bg-card hover:bg-primary hover:border-primary hover:text-white text-muted-foreground transition-all shadow-sm"
+               className="flex h-14 w-14 items-center justify-center rounded-full border border-border bg-card hover:bg-primary hover:border-transparent hover:text-primary-foreground text-muted-foreground transition-colors duration-300 shadow-sm hover:shadow-[0_0_15px_rgba(var(--primary),0.4)]"
              >
                 <ArrowRight className="h-6 w-6" />
              </motion.div>
