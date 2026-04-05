@@ -16,24 +16,23 @@ interface StatCardProps {
   value: string;
   icon: React.ReactNode;
   colorClass: string;
-  tooltipText?: string; // 👈 New Prop
+  tooltipText?: string;
 }
 
 export function StatCard({ title, value, icon, colorClass, tooltipText }: StatCardProps) {
   return (
     <Card className="border-border bg-card shadow-sm transition-all hover:shadow-md h-full">
-      <CardContent className="p-6 flex items-center justify-between">
-        <div>
+      <CardContent className="p-6 flex items-center justify-between gap-4">
+        <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-1">
-            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground truncate">
               {title}
             </p>
-            {/* Tooltip Implementation */}
             {tooltipText && (
               <TooltipProvider>
                 <Tooltip delayDuration={300}>
                   <TooltipTrigger asChild>
-                    <Info className="h-3.5 w-3.5 text-muted-foreground/50 cursor-help hover:text-primary transition-colors" />
+                    <Info className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50 cursor-help hover:text-primary transition-colors" />
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="max-w-[200px] text-center">{tooltipText}</p>
@@ -42,9 +41,14 @@ export function StatCard({ title, value, icon, colorClass, tooltipText }: StatCa
               </TooltipProvider>
             )}
           </div>
-          <h3 className="text-2xl font-bold text-foreground tracking-tight">{value}</h3>
+          <h3 
+            className="text-2xl lg:text-xl xl:text-2xl font-bold text-foreground tracking-tight truncate"
+            title={value}
+          >
+            {value}
+          </h3>
         </div>
-        <div className={`rounded-xl p-3 ${colorClass}`}>
+        <div className={`rounded-xl p-3 shrink-0 ${colorClass}`}>
           {icon}
         </div>
       </CardContent>

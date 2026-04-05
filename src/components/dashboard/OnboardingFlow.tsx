@@ -9,14 +9,14 @@ import {
   Moon, 
   Sun, 
   Bell, 
-  Sparkles 
+  Rocket 
 } from "lucide-react";
 import { toast } from "sonner";
 
 import {
   Dialog,
   DialogContent,
-  DialogTitle, // 👈 Added Import
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,7 +29,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { finishOnboarding } from "@/actions/onboarding-actions";
-import { cn } from "@/lib/utils"; // Ensure cn is imported if not already
+import { cn } from "@/lib/utils";
 
 export function OnboardingFlow({ isOpen }: { isOpen: boolean }) {
   const [step, setStep] = useState(1);
@@ -37,7 +37,6 @@ export function OnboardingFlow({ isOpen }: { isOpen: boolean }) {
   const { setTheme, theme } = useTheme();
   const [loading, setLoading] = useState(false);
 
-  // Form State
   const [currency, setCurrency] = useState("USD");
   const [notifications, setNotifications] = useState(true);
 
@@ -48,7 +47,7 @@ export function OnboardingFlow({ isOpen }: { isOpen: boolean }) {
     const result = await finishOnboarding({ currency, notifications });
     
     if (result.success) {
-      toast.success("All set! Welcome to SubTrack.");
+      toast.success("All set! Welcome to SubVantage.");
       setOpen(false);
     } else {
       toast.error("Something went wrong saving your settings.");
@@ -57,8 +56,8 @@ export function OnboardingFlow({ isOpen }: { isOpen: boolean }) {
   };
 
   const nextStep = () => setStep((prev) => Math.min(prev + 1, totalSteps));
+  const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
 
-  // Slide Animation Variants
   const variants = {
     enter: (direction: number) => ({
       x: direction > 0 ? 50 : -50,
@@ -76,14 +75,12 @@ export function OnboardingFlow({ isOpen }: { isOpen: boolean }) {
 
   return (
     <Dialog open={open} onOpenChange={() => {}}>
-      {/* preventDefault blocks closing by clicking outside or pressing Escape */}
       <DialogContent 
-        className="sm:max-w-[500px] p-0 overflow-hidden bg-background/80 backdrop-blur-2xl border-primary/20"
+        className="[&>button]:hidden sm:max-w-[500px] p-0 overflow-hidden bg-background border-primary/20 shadow-xl"
         onInteractOutside={(e) => e.preventDefault()} 
         onEscapeKeyDown={(e) => e.preventDefault()}
-        aria-describedby="onboarding-description" // Good practice
+        aria-describedby="onboarding-description"
       >
-        {/* 👇 FIX: Added Hidden DialogTitle for Accessibility */}
         <DialogTitle className="sr-only">Welcome to SubTrack Onboarding</DialogTitle>
         <div id="onboarding-description" className="sr-only">
           Set up your currency and theme preferences.
@@ -91,12 +88,16 @@ export function OnboardingFlow({ isOpen }: { isOpen: boolean }) {
 
         <div className="relative p-8 min-h-[400px] flex flex-col">
           
-          {/* Progress Bar */}
-          <div className="absolute top-0 left-0 h-1 bg-primary/20 w-full">
-            <div 
-              className="h-full bg-primary transition-all duration-500 ease-in-out" 
-              style={{ width: `${(step / totalSteps) * 100}%` }} 
-            />
+          <div className="absolute top-0 left-0 w-full flex gap-1 px-2 pt-2">
+            {Array.from({ length: totalSteps }).map((_, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "h-1.5 flex-1 rounded-full transition-all duration-300",
+                  step >= i + 1 ? "bg-primary" : "bg-primary/20"
+                )}
+              />
+            ))}
           </div>
 
           <AnimatePresence mode="wait" initial={false}>
@@ -108,15 +109,15 @@ export function OnboardingFlow({ isOpen }: { isOpen: boolean }) {
                 animate="center"
                 exit="exit"
                 transition={{ duration: 0.3 }}
-                className="flex-1 flex flex-col gap-6"
+                className="flex-1 flex flex-col gap-6 mt-4"
               >
                 <div className="space-y-2">
-                  <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-primary to-violet-600 flex items-center justify-center shadow-lg shadow-primary/20 mb-4">
-                    <Sparkles className="h-6 w-6 text-white" />
+                  <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 mb-4">
+                    <Rocket className="h-6 w-6 text-primary" />
                   </div>
                   <h2 className="text-2xl font-bold tracking-tight">Welcome to SubTrack</h2>
                   <p className="text-muted-foreground">
-                    Let's personalize your experience in just a few seconds.
+                    Let us personalize your experience in just a few seconds.
                   </p>
                 </div>
 
@@ -127,15 +128,15 @@ export function OnboardingFlow({ isOpen }: { isOpen: boolean }) {
                       <SelectValue placeholder="Select currency" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="USD" className="cursor-pointer">🇺🇸 USD - US Dollar</SelectItem>
-                      <SelectItem value="EUR" className="cursor-pointer">🇪🇺 EUR - Euro</SelectItem>
-                      <SelectItem value="GBP" className="cursor-pointer">🇬🇧 GBP - British Pound</SelectItem>
-                      <SelectItem value="JPY" className="cursor-pointer">🇯🇵 JPY - Japanese Yen</SelectItem>
-                      <SelectItem value="PHP" className="cursor-pointer">🇵🇭 PHP - Philippine Peso</SelectItem>
+                      <SelectItem value="USD" className="cursor-pointer">USD - US Dollar</SelectItem>
+                      <SelectItem value="EUR" className="cursor-pointer">EUR - Euro</SelectItem>
+                      <SelectItem value="GBP" className="cursor-pointer">GBP - British Pound</SelectItem>
+                      <SelectItem value="JPY" className="cursor-pointer">JPY - Japanese Yen</SelectItem>
+                      <SelectItem value="PHP" className="cursor-pointer">PHP - Philippine Peso</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    We'll automatically convert other currencies to this one.
+                    We will automatically convert other currencies to this one.
                   </p>
                 </div>
               </motion.div>
@@ -149,7 +150,7 @@ export function OnboardingFlow({ isOpen }: { isOpen: boolean }) {
                 animate="center"
                 exit="exit"
                 transition={{ duration: 0.3 }}
-                className="flex-1 flex flex-col gap-6"
+                className="flex-1 flex flex-col gap-6 mt-4"
               >
                 <div className="space-y-2">
                   <h2 className="text-2xl font-bold">Choose your vibe</h2>
@@ -206,12 +207,12 @@ export function OnboardingFlow({ isOpen }: { isOpen: boolean }) {
                 animate="center"
                 exit="exit"
                 transition={{ duration: 0.3 }}
-                className="flex-1 flex flex-col gap-6"
+                className="flex-1 flex flex-col gap-6 mt-4"
               >
                 <div className="space-y-2">
                   <h2 className="text-2xl font-bold">Stay in the loop</h2>
                   <p className="text-muted-foreground">
-                    Get notified before your subscriptions renew so you're never charged unexpectedly.
+                    Get notified before your subscriptions renew so you are never charged unexpectedly.
                   </p>
                 </div>
 
@@ -237,19 +238,19 @@ export function OnboardingFlow({ isOpen }: { isOpen: boolean }) {
             )}
           </AnimatePresence>
 
-          {/* Footer Buttons */}
           <div className="flex items-center justify-between pt-6 mt-auto">
-            <div className="flex gap-1">
-              {/* Pagination Dots */}
-              {[1, 2, 3].map((i) => (
-                <div 
-                  key={i} 
-                  className={`h-2 w-2 rounded-full transition-colors ${
-                    step === i ? "bg-primary" : "bg-secondary"
-                  }`} 
-                />
-              ))}
-            </div>
+            {step > 1 ? (
+              <Button 
+                variant="outline"
+                onClick={prevStep}
+                disabled={loading}
+                className="rounded-full px-6 cursor-pointer"
+              >
+                Previous
+              </Button>
+            ) : (
+              <div />
+            )}
 
             <Button 
               onClick={step === totalSteps ? handleFinish : nextStep}
@@ -259,7 +260,7 @@ export function OnboardingFlow({ isOpen }: { isOpen: boolean }) {
               {loading ? (
                 "Setting up..."
               ) : step === totalSteps ? (
-                <>Get Started <Sparkles className="h-4 w-4" /></>
+                <>Get Started <Rocket className="h-4 w-4" /></>
               ) : (
                 <>Next <ArrowRight className="h-4 w-4" /></>
               )}

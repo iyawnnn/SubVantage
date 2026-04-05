@@ -4,7 +4,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-satoshi: var(--font-satoshi), ui-sans-serif, system-ui;
+  --font-sans: var(--font-satoshi), ui-sans-serif, system-ui, sans-serif;
 
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
@@ -59,12 +59,20 @@
   --animate-accordion-up: accordion-up 0.2s ease-out;
 
   @keyframes accordion-down {
-    from { height: 0; }
-    to { height: var(--radix-accordion-content-height); }
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
   }
   @keyframes accordion-up {
-    from { height: var(--radix-accordion-content-height); }
-    to { height: 0; }
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
   }
 }
 
@@ -74,7 +82,7 @@
 @layer base {
   :root {
     --radius: 0.65rem;
-    
+
     /* Light Mode */
     --background: oklch(1 0 0);
     --foreground: oklch(0.141 0.005 285.823);
@@ -95,13 +103,13 @@
     --border: oklch(0.92 0.004 286.32);
     --input: oklch(0.92 0.004 286.32);
     --ring: oklch(0.702 0.183 293.541);
-    
+
     --chart-1: oklch(0.811 0.111 293.571);
     --chart-2: oklch(0.606 0.25 292.717);
     --chart-3: oklch(0.541 0.281 293.009);
     --chart-4: oklch(0.491 0.27 292.581);
     --chart-5: oklch(0.432 0.232 292.759);
-    
+
     --sidebar: oklch(0.985 0 0);
     --sidebar-foreground: oklch(0.141 0.005 285.823);
     --sidebar-primary: oklch(0.541 0.281 293.009);
@@ -133,13 +141,13 @@
     --border: oklch(1 0 0 / 10%);
     --input: oklch(1 0 0 / 15%);
     --ring: oklch(0.38 0.189 293.745);
-    
+
     --chart-1: oklch(0.811 0.111 293.571);
     --chart-2: oklch(0.606 0.25 292.717);
     --chart-3: oklch(0.541 0.281 293.009);
     --chart-4: oklch(0.491 0.27 292.581);
     --chart-5: oklch(0.432 0.232 292.759);
-    
+
     --sidebar: oklch(0.21 0.006 285.885);
     --sidebar-foreground: oklch(0.985 0 0);
     --sidebar-primary: oklch(0.606 0.25 292.717);

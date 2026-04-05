@@ -2,12 +2,14 @@ import type { NextAuthConfig } from "next-auth";
 
 export const authConfig = {
   pages: {
-    signIn: "/auth/login", // Redirect here if not logged in
-    error: "/auth/error",  // Redirect here on auth errors
+    signIn: "/auth/login",
+    error: "/auth/error",
   },
-  session: { strategy: "jwt" },
+  session: {
+    strategy: "jwt",
+    maxAge: process.env.SESSION_MAX_AGE ? parseInt(process.env.SESSION_MAX_AGE, 10) : 30 * 24 * 60 * 60,
+  },
   callbacks: {
-    // This logic runs in Middleware to protect routes
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
 
@@ -17,25 +19,20 @@ export const authConfig = {
 
       const isAuthRoute = nextUrl.pathname.startsWith("/auth");
 
-      // 1. If user is on an Auth page (Login/Signup) but is already logged in:
-      // Redirect them to Dashboard.
       if (isAuthRoute) {
         if (isLoggedIn) {
           return Response.redirect(new URL("/dashboard", nextUrl));
         }
-        return true; // Allow access to auth pages if not logged in
+        return true;
       }
 
-      // 2. If user is on a Protected Route (Dashboard, etc) but NOT logged in:
-      // Redirect to Login.
       if (isOnDashboard) {
         if (isLoggedIn) return true;
-        return false; // Triggers redirect to /auth/login
+        return false;
       }
 
-      // 3. Allow access to public pages (Landing page /)
       return true;
     },
   },
-  providers: [], // Providers are configured in auth.ts to avoid Edge errors
+  providers: [],
 } satisfies NextAuthConfig;
