@@ -26,15 +26,13 @@ export function DashboardHeader({ user }: { user: any }) {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between border-b border-border/40 pb-8 pt-4 font-satoshi"
+        className="flex flex-col items-center text-center gap-6 md:flex-row md:items-end md:justify-between md:text-left border-b border-border/40 pb-8 pt-4 font-satoshi"
       >
-        <div className="space-y-4 w-full md:w-auto">
+        <div className="space-y-4 w-full md:w-auto flex flex-col items-center md:items-start">
           
           <div className="inline-flex items-center gap-2.5 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-sm font-semibold text-primary backdrop-blur-md shadow-[0_0_15px_rgba(var(--primary),0.15)]">
             <CalendarDays className="h-4 w-4" />
             <span className="tracking-wide">{dayjs().format("MMMM D, YYYY")}</span>
-            <span className="text-primary/40">•</span>
-            <span className="text-foreground/80 font-medium tracking-wide">Your active subscriptions</span>
           </div>
           
           <h1 className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
@@ -42,7 +40,7 @@ export function DashboardHeader({ user }: { user: any }) {
           </h1>
         </div>
 
-        <div className="w-full md:w-auto mt-4 md:mt-0 p-2 -m-2">
+        <div className="w-full md:w-auto mt-4 md:mt-0 p-2 -m-2 flex justify-center md:block">
            <Button 
              onClick={() => setOpen(true)} 
              className="group relative h-12 w-full overflow-hidden rounded-full bg-primary px-8 text-[15px] font-bold text-primary-foreground shadow-[0_0_20px_-5px_rgba(var(--primary),0.5)] transition-all duration-300 hover:shadow-[0_0_35px_-5px_rgba(var(--primary),0.7)] active:scale-95 md:w-auto cursor-pointer"
