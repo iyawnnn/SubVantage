@@ -1,65 +1,53 @@
-import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 Starting clean reset for test user...");
-
-  const TEST_EMAIL = "test@example.com";
-  const TEST_PASSWORD = "password123";
-
-  // 1. Find the test user
-  const existingUser = await prisma.user.findUnique({
-    where: { email: TEST_EMAIL },
-  });
-
-  // 2. If they exist, WIPE their associated data (Subscriptions & Vendors)
-  if (existingUser) {
-    console.log(`🧹 Wiping subscriptions for ${TEST_EMAIL}...`);
-
-    // Delete Subscriptions first (because they rely on Vendors)
-    await prisma.subscription.deleteMany({
-      where: { userId: existingUser.id },
-    });
-
-    // Delete Vendors
-    await prisma.vendor.deleteMany({
-      where: { userId: existingUser.id },
-    });
-  }
-
-  // 3. Ensure the User Account itself exists (Create if missing, Update if exists)
-  // We DO NOT recreate the subscriptions here anymore.
-  const hashedPassword = await bcrypt.hash(TEST_PASSWORD, 10);
-
   const user = await prisma.user.upsert({
-    where: { email: TEST_EMAIL },
-    update: {
-      password: hashedPassword,
-      name: "Test User",
-      hasCompletedOnboarding: true, // Important for tests to skip modals
-    },
+    where: { email: 'test@example.com' },
+    update: {},
     create: {
-      email: TEST_EMAIL,
-      password: hashedPassword,
-      name: "Test User",
-      image: "https://ui.shadcn.com/avatars/02.png",
-      hasCompletedOnboarding: true,
-      emailNotifications: false,
-      preferredCurrency: "USD",
+      email: 'test@example.com',
+      name: 'Test User',
+      preferredCurrency: 'USD',
     },
   });
 
-  console.log(`✅ User ${user.email} is ready with 0 subscriptions.`);
+  const vendor = await prisma.vendor.upsert({
+    where: {
+      userId_name: {
+        userId: user.id,
+        name: 'Netflix',
+      },
+    },
+    update: {},
+    create: {
+      name: 'Netflix',
+      website: 'https://netflix.com',
+      userId: user.id,
+    },
+  });
+
+  await prisma.subscription.create({
+    data: {
+      userId: user.id,
+      vendorId: vendor.id,
+      cost: 15.99,
+      currency: 'USD',
+      frequency: 'MONTHLY',
+      startDate: new Date(),
+      nextRenewalDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),
+      category: 'Entertainment',
+      status: 'ACTIVE',
+    },
+  });
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (e) => {
-    console.error(e);
-    await prisma.$disconnect();
+  .catch((error) => {
+    console.error(error);
     process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
   });

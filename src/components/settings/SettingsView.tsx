@@ -36,7 +36,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { updateCurrency, getExportData } from "@/actions/settings-actions";
+import { updateCurrency, getExportData, updateNotificationSettings } from "@/actions/settings-actions";
 
 export default function SettingsView({ user }: { user: any }) {
   const { setTheme, theme } = useTheme();
@@ -45,6 +45,8 @@ export default function SettingsView({ user }: { user: any }) {
   const [exporting, setExporting] = useState(false);
   
   const [mounted, setMounted] = useState(false);
+  const [notifications, setNotifications] = useState(user?.emailNotifications ?? true);
+  const [loadingNotifications, setLoadingNotifications] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -53,6 +55,9 @@ export default function SettingsView({ user }: { user: any }) {
   useEffect(() => {
     if (user?.preferredCurrency) {
       setCurrency(user.preferredCurrency);
+    }
+    if (user?.emailNotifications !== undefined) {
+      setNotifications(user.emailNotifications);
     }
   }, [user]);
 
@@ -109,10 +114,23 @@ export default function SettingsView({ user }: { user: any }) {
     }
   };
 
+  const handleToggleNotifications = async (checked: boolean) => {
+    setNotifications(checked);
+    setLoadingNotifications(true);
+    try {
+      await updateNotificationSettings(checked);
+      toast.success(checked ? "Renewal alerts enabled" : "Renewal alerts disabled");
+    } catch (error) {
+      toast.error("Failed to update preferences");
+      setNotifications(!checked);
+    } finally {
+      setLoadingNotifications(false);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10 font-sans">
       
-      {/* Profile Hero with perfect mobile centering */}
       <div className="rounded-3xl border border-border/40 bg-secondary/30 p-8 shadow-sm">
         <div className="flex flex-col md:flex-row items-center md:items-center gap-6 text-center md:text-left">
           
@@ -165,7 +183,6 @@ export default function SettingsView({ user }: { user: any }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
-        {/* General Preferences */}
         <Card className="border-border/50 bg-card/50 flex flex-col h-full shadow-sm">
           <CardHeader className="pb-5">
             <CardTitle className="flex items-center gap-2 text-xl">
@@ -175,7 +192,6 @@ export default function SettingsView({ user }: { user: any }) {
               Customize your workspace experience.
             </CardDescription>
           </CardHeader>
-          {/* 👇 FIX: Swapped space-y-8 for flex flex-col gap-5 to fix massive spacing */}
           <CardContent className="flex flex-col gap-5">
             <div className="space-y-2.5">
               <Label className="text-xs font-bold text-muted-foreground tracking-wider uppercase">Preferred Currency</Label>
@@ -228,7 +244,6 @@ export default function SettingsView({ user }: { user: any }) {
           </CardContent>
         </Card>
 
-        {/* Notifications */}
         <Card className="border-border/50 bg-card/50 flex flex-col h-full shadow-sm">
           <CardHeader className="pb-5">
             <CardTitle className="flex items-center gap-2 text-xl">
@@ -236,7 +251,6 @@ export default function SettingsView({ user }: { user: any }) {
             </CardTitle>
             <CardDescription className="text-sm">Manage how you receive updates.</CardDescription>
           </CardHeader>
-          {/* 👇 FIX: Swapped space-y-8 for flex flex-col gap-5 */}
           <CardContent className="flex flex-col gap-5">
             <div className="flex items-center justify-between space-x-2">
               <div className="space-y-1">
@@ -245,7 +259,12 @@ export default function SettingsView({ user }: { user: any }) {
                   Get notified via email when a bill is due.
                 </p>
               </div>
-              <Switch defaultChecked className="cursor-pointer data-[state=checked]:bg-primary" />
+              <Switch
+                checked={notifications}
+                onCheckedChange={handleToggleNotifications}
+                disabled={loadingNotifications}
+                className="cursor-pointer data-[state=checked]:bg-primary"
+              />
             </div>
 
             <Separator className="bg-border/50" />
@@ -260,7 +279,6 @@ export default function SettingsView({ user }: { user: any }) {
           </CardContent>
         </Card>
 
-        {/* Data & Privacy */}
         <Card className="border-border/50 bg-card/50 flex flex-col h-full shadow-sm">
           <CardHeader className="pb-5">
             <CardTitle className="flex items-center gap-2 text-xl">
@@ -286,7 +304,6 @@ export default function SettingsView({ user }: { user: any }) {
           </CardContent>
         </Card>
 
-        {/* Plan Info */}
         <Card className="border-border/50 bg-card/50 flex flex-col h-full shadow-sm">
           <CardHeader className="pb-5">
             <CardTitle className="flex items-center gap-2 text-xl text-primary">
