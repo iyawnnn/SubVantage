@@ -98,18 +98,17 @@ model Vendor {
   name      String
   website   String?
   logoUrl   String?
-   
-  // Relation to User (Multi-tenant security)
+  
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Relation to Subscriptions
   subscriptions Subscription[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+  @@unique([userId, name])
 }
 
 model Subscription {

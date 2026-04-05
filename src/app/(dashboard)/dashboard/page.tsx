@@ -8,7 +8,7 @@ import { InsightsCard } from "@/components/dashboard/Insights";
 import { getExchangeRates } from "@/lib/currency-helper"; 
 import { processSubscriptionData } from "@/lib/calculations";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { SpendingChart } from "@/components/dashboard/SpendingChart"; // 👈 FIX: Restored normal static import
+import { SpendingChart } from "@/components/dashboard/SpendingChart";
 import {
   Tooltip,
   TooltipContent,
@@ -31,30 +31,34 @@ export default async function DashboardPage() {
     prisma.user.findUnique({
       where: { id: session.user.id },
     }),
+    // 👇 FIX 1: Removed 'status: "ACTIVE"' so we fetch the graveyard stats too
     prisma.subscription.findMany({
-      where: { userId: session.user.id, status: "ACTIVE" },
+      where: { userId: session.user.id },
       include: { vendor: true },
       orderBy: { cost: "desc" },
     }),
   ]);
 
   const baseCurrency = user?.preferredCurrency || "USD";
-
   const rates = await getExchangeRates(baseCurrency);
 
-  const subs = rawSubs.map((sub) => ({
+  const allSubs = rawSubs.map((sub) => ({
     ...sub,
     cost: Number(sub.cost),
     splitCost: sub.splitCost ? Number(sub.splitCost) : 0,
   }));
 
+  // 👇 We pass ALL subs to the calculator so it can calculate the Graveyard/Total Saved
   const {
     monthlyBurn,
     annualProjection,
     activeTrials,
     graveyardStats,
     redundancyInsights,
-  } = processSubscriptionData(subs, rates, baseCurrency);
+  } = processSubscriptionData(allSubs, rates, baseCurrency);
+
+  // 👇 FIX 2: We filter the active ones exclusively for the UI charts and carousels
+  const activeSubs = allSubs.filter(sub => sub.status === "ACTIVE");
 
   return (
     <div className="mx-auto max-w-[1600px] space-y-6 animate-in fade-in duration-500 pb-0 overflow-x-hidden">
@@ -106,8 +110,9 @@ export default async function DashboardPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="flex-1 min-h-0">
+              {/* Passed activeSubs here */}
               <SpendingChart
-                data={subs}
+                data={activeSubs}
                 rates={rates}
                 currency={baseCurrency}
               />
@@ -117,13 +122,15 @@ export default async function DashboardPage() {
 
         {/* Side Widget */}
         <div className="lg:col-span-1 xl:col-span-1 h-auto lg:h-full">
-          <UpcomingBills data={subs} rates={rates} currency={baseCurrency} />
+          {/* Passed activeSubs here */}
+          <UpcomingBills data={activeSubs} rates={rates} currency={baseCurrency} />
         </div>
       </div>
 
       <div className="pt-5">
+        {/* Passed activeSubs here */}
         <SubscriptionCarousel
-          data={subs}
+          data={activeSubs}
           currency={baseCurrency}
           rates={rates}
         />

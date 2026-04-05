@@ -14,16 +14,23 @@ import {
   ChartConfig,
   ChartContainer,
 } from "@/components/ui/chart";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import dayjs from "dayjs";
 import { BarChart3 } from "lucide-react";
 import { formatCurrency, convertTo } from "@/lib/currency-helper";
 
 const PREDEFINED_COLORS = [
-  "hsl(263.4, 70%, 50.4%)", // Vivid Purple
-  "hsl(217.2, 91.2%, 59.8%)", // Blue
-  "hsl(190, 90%, 50%)",      // Cyan
-  "hsl(280, 85%, 60%)",      // Violet
-  "hsl(330, 80%, 60%)",      // Pink
+  "hsl(263.4, 70%, 50.4%)", 
+  "hsl(217.2, 91.2%, 59.8%)", 
+  "hsl(190, 90%, 50%)",      
+  "hsl(280, 85%, 60%)",      
+  "hsl(330, 80%, 60%)",      
 ];
 
 const CustomTooltip = ({ active, payload, currency }: any) => {
@@ -71,6 +78,7 @@ interface ChartProps {
 
 export function SpendingChart({ data, rates, currency }: ChartProps) {
   const [mounted, setMounted] = useState(false);
+  const [monthsCount, setMonthsCount] = useState("6");
 
   useEffect(() => {
     setMounted(true);
@@ -107,7 +115,7 @@ export function SpendingChart({ data, rates, currency }: ChartProps) {
 
   const currentMonth = dayjs();
   
-  const chartData = Array.from({ length: 6 }).map((_, i) => {
+  const chartData = Array.from({ length: parseInt(monthsCount) }).map((_, i) => {
     const monthDate = currentMonth.add(i, "month");
     const monthName = monthDate.format("MMM");
     const fullDate = monthDate.format("MMMM YYYY");
@@ -140,51 +148,64 @@ export function SpendingChart({ data, rates, currency }: ChartProps) {
   });
 
   return (
-    <div className="h-[250px] w-full min-h-[250px] max-h-[250px]">
-      <ChartContainer config={chartConfig} className="h-full w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chartData} margin={{ left: 0, right: 0, top: 20, bottom: 0 }} barSize={32}>
-            
-            <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
-            
-            <XAxis
-              dataKey="month"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={10}
-              interval={0} 
-              padding={{ left: 20, right: 20 }}
-              tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} 
-            />
+    <div className="w-full flex flex-col gap-4">
+      <div className="flex items-center justify-end">
+        <Select value={monthsCount} onValueChange={setMonthsCount}>
+          <SelectTrigger className="w-[130px] h-8 text-xs bg-background">
+            <SelectValue placeholder="Select period" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="6">6 Months</SelectItem>
+            <SelectItem value="12">12 Months</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="h-[250px] w-full min-h-[250px] max-h-[250px]">
+        <ChartContainer config={chartConfig} className="h-full w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData} margin={{ left: 0, right: 0, top: 10, bottom: 0 }} barSize={32}>
+              
+              <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
+              
+              <XAxis
+                dataKey="month"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={10}
+                interval={0} 
+                padding={{ left: 20, right: 20 }}
+                tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} 
+              />
 
-            <YAxis 
-              width={0} 
-              tick={false} 
-              axisLine={false}
-            />
+              <YAxis 
+                width={0} 
+                tick={false} 
+                axisLine={false}
+              />
 
-            <Tooltip 
-              content={<CustomTooltip currency={currency} />}
-              cursor={{ fill: "var(--muted)", opacity: 0.2 }} 
-            />
-            
-            {categories.map((category, index) => {
-              const isLast = index === categories.length - 1;
-              const radius: [number, number, number, number] = isLast ? [4, 4, 0, 0] : [0, 0, 0, 0];
+              <Tooltip 
+                content={<CustomTooltip currency={currency} />}
+                cursor={{ fill: "var(--muted)", opacity: 0.2 }} 
+              />
+              
+              {categories.map((category, index) => {
+                const isLast = index === categories.length - 1;
+                const radius: [number, number, number, number] = isLast ? [4, 4, 0, 0] : [0, 0, 0, 0];
 
-              return (
-                <Bar
-                  key={category}
-                  dataKey={category}
-                  stackId="a"
-                  fill={chartConfig[category].color}
-                  radius={radius}
-                />
-              );
-            })}
-          </BarChart>
-        </ResponsiveContainer>
-      </ChartContainer>
+                return (
+                  <Bar
+                    key={category}
+                    dataKey={category}
+                    stackId="a"
+                    fill={chartConfig[category].color}
+                    radius={radius}
+                  />
+                );
+              })}
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartContainer>
+      </div>
     </div>
   );
 }
