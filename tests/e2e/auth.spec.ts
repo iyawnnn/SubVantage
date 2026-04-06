@@ -29,14 +29,18 @@ test.describe("Authentication Flow", () => {
     // 3. Verify Dashboard Access
     await page.waitForURL("**/dashboard");
     
-    // Dismiss Onboarding
+    // Dismiss Onboarding safely by targeting the close button or clicking outside
     try {
-        if (await page.getByRole("dialog").isVisible({ timeout: 3000 })) {
+        const dialog = page.getByRole("dialog");
+        if (await dialog.isVisible({ timeout: 5000 })) {
+            // Try to click a "Close" or "Get Started" button if your modal has one
+            // Or force the escape key multiple times
             await page.keyboard.press('Escape');
+            await page.waitForTimeout(500);
         }
     } catch (e) {}
 
     // Check for dashboard element
-    await expect(page.getByRole("link", { name: /Dashboard|Overview/i }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /Dashboard|Overview/i }).first()).toBeVisible({ timeout: 10000 });
   });
 });

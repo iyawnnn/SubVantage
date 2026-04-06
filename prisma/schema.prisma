@@ -17,7 +17,11 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?
-   
+  
+  // 2FA Fields
+  twoFactorSecret    String?
+  isTwoFactorEnabled Boolean @default(false)
+
   // Relations
   accounts      Account[]
   sessions      Session[]
@@ -27,7 +31,6 @@ model User {
    
   preferredCurrency String @default("USD")
 
-  // Onboarding Flags
   hasCompletedOnboarding Boolean @default(false)
   emailNotifications     Boolean @default(true)
 

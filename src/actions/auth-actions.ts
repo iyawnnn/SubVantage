@@ -1,12 +1,12 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { hash } from "bcryptjs";
+import { hash, compare } from "bcryptjs";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
+import { auth } from "@/auth";
+import { verify } from "otplib";
 
-// --- REGISTER (Sign Up) ---
-// 👇 FIX: Accept a plain object instead of FormData
 export async function register(data: { name: string; email: string; password: string }) {
   const { name, email, password } = data;
 
@@ -15,16 +15,13 @@ export async function register(data: { name: string; email: string; password: st
   }
 
   try {
-    // 1. Check if user exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       return { success: false, message: "Email already in use" };
     }
 
-    // 2. Hash Password (Securely)
     const hashedPassword = await hash(password, 10);
 
-    // 3. Create User
     await prisma.user.create({
       data: {
         name,
@@ -33,7 +30,6 @@ export async function register(data: { name: string; email: string; password: st
       },
     });
 
-    // 👇 FIX: Return 'success' boolean and 'message' string to match client
     return { success: true, message: "Account created! Please log in." };
   } catch (error) {
     console.error("Registration error:", error);
@@ -41,16 +37,25 @@ export async function register(data: { name: string; email: string; password: st
   }
 }
 
-// --- LOGIN (Sign In) ---
-// Kept as FormData if used by a standard HTML form, otherwise signIn is usually called directly from client
 export async function loginWithCredentials(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+  const code = formData.get("code") as string;
 
   try {
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (user && user.password) {
+      const passwordsMatch = await compare(password, user.password);
+      if (passwordsMatch && user.isTwoFactorEnabled && !code) {
+        return { twoFactor: true };
+      }
+    }
+
     await signIn("credentials", {
       email,
       password,
+      code,
       redirectTo: "/dashboard",
     });
   } catch (error) {
@@ -64,4 +69,20 @@ export async function loginWithCredentials(formData: FormData) {
     }
     throw error;
   }
+}
+
+export async function verifyOAuthTwoFactorAction(code: string) {
+  const session = await auth();
+  if (!session?.user?.id) return { success: false, message: "Unauthorized" };
+
+  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+  if (!user || !user.twoFactorSecret) return { success: false, message: "2FA not configured" };
+
+  const result = await verify({ token: code, secret: user.twoFactorSecret });
+  
+  if (result.valid) {
+    return { success: true };
+  }
+  
+  return { success: false, message: "Invalid code." };
 }

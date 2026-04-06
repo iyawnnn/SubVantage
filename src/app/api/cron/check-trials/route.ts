@@ -61,7 +61,8 @@ export async function GET(req: Request) {
           userName: sub.user.name || "User",
           vendorName: sub.vendor.name,
           daysLeft: Math.max(0, daysLeft),
-          renewalCost: formatCurrency(Number(sub.cost), sub.currency),
+          // Add the fallback here just to be double safe
+          renewalCost: formatCurrency(Number(sub.cost), sub.currency || "USD"),
         }),
       });
 
@@ -84,6 +85,6 @@ export async function GET(req: Request) {
 function formatCurrency(amount: number, currency: string) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: currency,
+    currency: currency || "USD",
   }).format(amount);
 }

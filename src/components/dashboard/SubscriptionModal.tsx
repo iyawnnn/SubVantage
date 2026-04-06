@@ -64,18 +64,8 @@ import {
   updateSubscription,
 } from "@/actions/subscription-actions";
 
-// Schema Validation
-const formSchema = z.object({
-  vendorName: z.string().min(2, "Name is too short"),
-  cost: z.coerce.number().min(0),
-  splitCost: z.coerce.number().min(0).optional(),
-  currency: z.string(),
-  frequency: z.enum(["MONTHLY", "YEARLY"]),
-  category: z.string().min(1, "Category is required"),
-  status: z.enum(["ACTIVE", "PAUSED", "CANCELLED"]),
-  startDate: z.date(),
-  isTrial: z.boolean().default(false),
-});
+// IMPORT THE GLOBAL SECURE SCHEMA
+import { subscriptionSchema } from "@/lib/validations/subscription";
 
 const PRESET_CATEGORIES = [
   "Entertainment",
@@ -107,29 +97,25 @@ export function SubscriptionModal({
   const router = useRouter();
   const [loading, setLoading] = React.useState(false);
   const [showAdvanced, setShowAdvanced] = React.useState(false);
-  
-  // Combobox State
+
   const [openCombobox, setOpenCombobox] = React.useState(false);
   const [searchValue, setSearchValue] = React.useState("");
 
-  const form = useForm({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<typeof subscriptionSchema>>({
+    resolver: zodResolver(subscriptionSchema) as any, 
     defaultValues: {
-      vendorName: "",
-      // 👇 FIX: Initialize as empty string to show placeholder
-      cost: "" as unknown as number,
-      splitCost: "" as unknown as number,
+      name: "",
+      cost: 0, 
+      splitCost: 0, 
       currency: "PHP",
       frequency: "MONTHLY",
       category: "Personal",
       status: "ACTIVE",
-      // 👇 FIX: Initialize as undefined to prevent Hydration Mismatch
-      startDate: undefined as unknown as Date,
+      startDate: undefined as any,
       isTrial: false,
     },
   });
 
-  // 👇 FIX: Set default date on client-side only to fix hydration error
   React.useEffect(() => {
     if (!subToEdit && !form.getValues("startDate")) {
       form.setValue("startDate", new Date());
@@ -138,10 +124,9 @@ export function SubscriptionModal({
 
   React.useEffect(() => {
     if (subToEdit) {
-      // @ts-ignore
       form.reset({
-        vendorName: subToEdit.vendor.name,
-        cost: Number(subToEdit.cost), // Keep existing value for edit
+        name: subToEdit.vendor.name, // Mapped accurately to the new 'name' field
+        cost: Number(subToEdit.cost),
         splitCost: subToEdit.splitCost ? Number(subToEdit.splitCost) : 0,
         currency: subToEdit.currency,
         frequency: subToEdit.frequency,
@@ -157,38 +142,27 @@ export function SubscriptionModal({
       ) {
         setShowAdvanced(true);
       }
-    } else {
-      // @ts-ignore
+} else {
       form.reset({
-        vendorName: "",
-        // 👇 FIX: Reset to empty string for new entries
-        cost: "" as unknown as number,
-        splitCost: "" as unknown as number,
+        name: "",
+        cost: 0,                   
+        splitCost: 0,             
         currency: "PHP",
         frequency: "MONTHLY",
         category: "Personal",
         status: "ACTIVE",
-        // 👇 FIX: Keep date handling safe
-        startDate: undefined as unknown as Date,
+        startDate: undefined as any, 
         isTrial: false,
       });
       setShowAdvanced(false);
       setSearchValue("");
-      // Re-trigger date set for new form
       setTimeout(() => form.setValue("startDate", new Date()), 0);
     }
   }, [subToEdit, opened, form]);
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  function onSubmit(values: z.infer<typeof subscriptionSchema>) {
     setLoading(true);
-    const payload = {
-      ...values,
-      name: values.vendorName,
-      frequency: values.frequency as "MONTHLY" | "YEARLY",
-      status: values.status as "ACTIVE" | "PAUSED" | "CANCELLED",
-    };
 
-    // Construct the optimistic item
     const optimisticData = {
       id: Math.random().toString(),
       cost: values.cost,
@@ -199,14 +173,12 @@ export function SubscriptionModal({
       startDate: values.startDate,
       nextRenewalDate: new Date(),
       isTrial: values.isTrial,
-      vendor: { name: values.vendorName },
+      vendor: { name: values.name },
     };
 
     startTransition(async () => {
-      // Determine if we can run the optimistic update
       const canRunOptimistic = !subToEdit && !!addOptimisticSub;
 
-      // 1. Show Optimistic Update immediately if possible
       if (canRunOptimistic && addOptimisticSub) {
         addOptimisticSub(optimisticData);
         toast.success("Subscription Added");
@@ -214,27 +186,28 @@ export function SubscriptionModal({
       }
 
       try {
-        // 2. Perform actual Server Action
+        // Because we unified the schema, we can pass 'values' directly
+        // to the server action without manipulating the payload object!
         const result = subToEdit
-          ? await updateSubscription(subToEdit.id, payload)
-          : await createSubscription(payload);
+          ? await updateSubscription(subToEdit.id, values)
+          : await createSubscription(values);
 
         if (result.success) {
-          // 3. Fallback: If we didn't do the optimistic close
           if (!canRunOptimistic) {
             toast.success(
-              subToEdit ? "Subscription Updated" : "Subscription Added"
+              subToEdit ? "Subscription Updated" : "Subscription Added",
             );
             close();
           }
-
           router.refresh();
         } else {
+          // Display the highly specific backend validation errors to the user if they bypassed the UI
+          const errorMessage = result.errors
+            ? Object.values(result.errors).flat()[0]
+            : result.message;
+
           toast.error("Error", {
-            description:
-              typeof result.message === "string"
-                ? result.message
-                : "Failed to save.",
+            description: errorMessage || "Failed to save.",
           });
         }
       } catch (error) {
@@ -265,7 +238,7 @@ export function SubscriptionModal({
               {/* 1. VENDOR NAME */}
               <FormField
                 control={form.control}
-                name="vendorName"
+                name="name" // Updated to match schema
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
@@ -301,7 +274,7 @@ export function SubscriptionModal({
                               type="number"
                               step="0.01"
                               {...field}
-                              value={field.value as any} // Use raw value to allow empty string
+                              value={field.value as any}
                               className="border-0 focus-visible:ring-0 shadow-none h-10 rounded-r-none pr-1 bg-transparent"
                               placeholder="0.00"
                             />
@@ -324,7 +297,7 @@ export function SubscriptionModal({
                                         <SelectItem key={c} value={c}>
                                           {c}
                                         </SelectItem>
-                                      )
+                                      ),
                                     )}
                                   </SelectContent>
                                 </Select>
@@ -362,6 +335,7 @@ export function SubscriptionModal({
                             <SelectItem value="YEARLY">Yearly</SelectItem>
                           </SelectContent>
                         </Select>
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
@@ -378,7 +352,10 @@ export function SubscriptionModal({
                       <FormLabel className="flex items-center gap-1.5 text-xs text-muted-foreground uppercase tracking-wider font-semibold">
                         Category
                       </FormLabel>
-                      <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
+                      <Popover
+                        open={openCombobox}
+                        onOpenChange={setOpenCombobox}
+                      >
                         <PopoverTrigger asChild>
                           <FormControl>
                             <Button
@@ -387,7 +364,7 @@ export function SubscriptionModal({
                               aria-expanded={openCombobox}
                               className={cn(
                                 "w-full justify-between bg-background/50 border-input h-10 font-normal",
-                                !field.value && "text-muted-foreground"
+                                !field.value && "text-muted-foreground",
                               )}
                             >
                               {field.value ? (
@@ -404,14 +381,14 @@ export function SubscriptionModal({
                         </PopoverTrigger>
                         <PopoverContent className="w-[200px] p-0" align="start">
                           <Command>
-                            <CommandInput 
-                              placeholder="Search or create..." 
+                            <CommandInput
+                              placeholder="Search or create..."
                               value={searchValue}
                               onValueChange={setSearchValue}
                             />
                             <CommandList>
                               <CommandEmpty>
-                                <div 
+                                <div
                                   className="py-3 px-3 text-sm text-foreground cursor-pointer hover:bg-accent flex items-center gap-2"
                                   onMouseDown={(e) => {
                                     e.preventDefault();
@@ -419,7 +396,10 @@ export function SubscriptionModal({
                                   }}
                                   onClick={() => {
                                     if (searchValue.trim()) {
-                                      form.setValue("category", searchValue.trim());
+                                      form.setValue(
+                                        "category",
+                                        searchValue.trim(),
+                                      );
                                       setOpenCombobox(false);
                                       setSearchValue("");
                                     }
@@ -444,7 +424,7 @@ export function SubscriptionModal({
                                         "mr-2 h-4 w-4",
                                         field.value === category
                                           ? "opacity-100"
-                                          : "opacity-0"
+                                          : "opacity-0",
                                       )}
                                     />
                                     {category}
@@ -475,7 +455,7 @@ export function SubscriptionModal({
                               variant={"outline"}
                               className={cn(
                                 "w-full pl-3 text-left font-normal bg-background/50 border-input h-10",
-                                !field.value && "text-muted-foreground"
+                                !field.value && "text-muted-foreground",
                               )}
                             >
                               {field.value ? (
@@ -501,6 +481,7 @@ export function SubscriptionModal({
                           />
                         </PopoverContent>
                       </Popover>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -539,11 +520,12 @@ export function SubscriptionModal({
                                 type="number"
                                 step="0.01"
                                 {...field}
-                                value={field.value as any} // Allow empty string here too
+                                value={field.value as any}
                                 className="bg-background h-9 border-input"
                                 placeholder="0.00"
                               />
                             </FormControl>
+                            <FormMessage />
                           </FormItem>
                         )}
                       />
@@ -571,6 +553,7 @@ export function SubscriptionModal({
                                 </SelectItem>
                               </SelectContent>
                             </Select>
+                            <FormMessage />
                           </FormItem>
                         )}
                       />

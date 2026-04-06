@@ -36,7 +36,7 @@ export default async function ArchivePage() {
   const baseCurrency = user?.preferredCurrency || "USD";
 
   return (
-    <div className="mx-auto max-w-[1600px] pb-0">
+    <div className="mx-auto max-w-[1600px] py-8 pb-0">
       <ArchiveView initialData={subs} currency={baseCurrency} />
     </div>
   );
