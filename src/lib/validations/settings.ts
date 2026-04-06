@@ -11,4 +11,5 @@ export const notificationSchema = z.boolean({
 export const onboardingSchema = z.object({
   currency: currencySchema,
   notifications: notificationSchema,
+  twoFactorEnabled: z.boolean().optional().default(false),
 });

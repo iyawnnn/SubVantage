@@ -54,14 +54,12 @@ export function GlobalSpotlight({ subscriptions }: { subscriptions: SimpleSub[] 
       <CommandDialog 
         open={open} 
         onOpenChange={setOpen}
-        // 👇 Transforms the default close button to match the sidebar's circular design
         className="w-[90vw] sm:max-w-lg border-primary/20 shadow-2xl shadow-primary/10 bg-popover/95 backdrop-blur-xl [&>button]:flex [&>button]:h-8 [&>button]:w-8 [&>button]:items-center [&>button]:justify-center [&>button]:rounded-full [&>button]:bg-muted/50 [&>button]:text-muted-foreground hover:[&>button]:bg-muted hover:[&>button]:text-foreground [&>button]:top-2 [&>button]:right-3 [&>button]:opacity-100 focus:[&>button]:ring-0"
       >
         <VisuallyHidden>
           <DialogTitle>Global Search</DialogTitle>
         </VisuallyHidden>
         
-        {/* 👇 Added pr-12 to prevent typed text from hiding under the new button */}
         <CommandInput 
           placeholder="Type a command or search..." 
           className="h-12 text-base pr-12"

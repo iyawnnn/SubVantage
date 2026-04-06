@@ -26,7 +26,6 @@ export function Footer() {
     >
       <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-violet-500/20 to-transparent" />
 
-      {/* UI FIX: Exactly matches the classes used in DashboardShell.tsx for perfect vertical alignment */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 text-xs font-medium">
           
@@ -70,12 +69,11 @@ export function Footer() {
               href="https://iansebastian.dev"
               target="_blank"
               rel="noreferrer"
-              className="group relative flex items-center pr-6" // Added pr-6 to give the absolute rocket room to fly in
+              className="group relative flex items-center pr-6" 
             >
               <span className="font-bold bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent transition-opacity group-hover:opacity-80 relative z-10">
                 Ian Macabulos
               </span>
-              {/* Smooth Rocket Animation */}
               <Rocket className="absolute right-0 h-4 w-4 text-violet-500 opacity-0 -translate-x-4 translate-y-4 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-x-0 group-hover:-translate-y-0.5" />
             </a>
           </div>

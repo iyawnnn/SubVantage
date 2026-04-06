@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { StatsGrid } from "@/components/dashboard/DashboardWidgets";
 import { UpcomingBills } from "@/components/dashboard/UpcomingBills";
-import { SubscriptionCarousel } from "@/components/dashboard/SubscriptionCarousel";
+import { DashboardClient } from "@/components/dashboard/DashboardClient"; 
 import { InsightsCard } from "@/components/dashboard/Insights";
 import { getExchangeRates } from "@/lib/currency-helper"; 
 import { processSubscriptionData } from "@/lib/calculations";
@@ -88,13 +88,12 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <div className="w-full pb-8">
-        <SubscriptionCarousel
-          data={activeSubs}
-          currency={baseCurrency}
-          rates={rates}
-        />
-      </div>
+      <DashboardClient 
+        initialSubs={activeSubs}
+        baseCurrency={baseCurrency}
+        rates={rates}
+      />
+      
     </div>
   );
 }

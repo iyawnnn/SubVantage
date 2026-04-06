@@ -15,13 +15,13 @@ export function RestoreButton({ id }: { id: string }) {
       const res = await restoreSubscription(id);
       
       if (res.success) {
-        // ✅ Success
+        // Success
         toast.success("Subscription Restored", { 
           description: "This subscription is now active." 
         });
         router.refresh();
       } else {
-        // ❌ Error
+        // Error
         toast.error("Restore Failed", { 
           description: typeof res.message === 'string' ? res.message : "Could not restore subscription." 
         });

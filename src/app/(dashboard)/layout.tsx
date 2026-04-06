@@ -16,7 +16,6 @@ export default async function DashboardLayout({
     redirect("/auth/login");
   }
 
-  // THE FOOLPROOF TRAP: Instead of redirecting, block the UI with the lock screen
   if ((session.user as any).is2faVerified === false) {
     return <Verify2FAScreen />;
   }

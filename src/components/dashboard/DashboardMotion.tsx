@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-// 1. Container that staggers its children (Float Up effect)
 export const StaggerContainer = ({
   children,
   className,
@@ -32,7 +31,6 @@ export const StaggerContainer = ({
   </motion.div>
 );
 
-// 2. The individual item that floats up
 export const StaggerItem = ({
   children,
   className,

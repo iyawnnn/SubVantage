@@ -68,9 +68,7 @@ export function SubscriptionTable({ data, rates, baseCurrency, onEdit, onArchive
 
           const badgeVariant = sub.isTrial ? "secondary" : "outline";
 
-          // 👇 FIX START: Consistent Date Logic
           const startDate = dayjs(sub.startDate);
-          // Use startOf('day') to avoid "27 vs 28" day mismatch due to time
           const today = dayjs().startOf('day'); 
           const isFuture = startDate.isAfter(today);
 
@@ -91,7 +89,6 @@ export function SubscriptionTable({ data, rates, baseCurrency, onEdit, onArchive
                 }
              }
           }
-          // FIX END
 
           return (
             <TableRow

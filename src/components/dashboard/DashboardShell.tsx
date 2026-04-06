@@ -13,7 +13,7 @@ import {
   CreditCard,
   Settings,
   LogOut,
-  X, // 👈 Added X icon for the custom close button
+  X,
 } from "lucide-react";
 import { motion } from "framer-motion";
 

@@ -96,13 +96,14 @@ export async function verifyAndEnableTwoFactor(token: string) {
     return { success: false, message: "2FA initialization missing." };
   }
 
-  const result = await verify({
+  const isValid = verify({
     token,
     secret: user.twoFactorSecret,
   });
 
-  if (!result.valid)
+  if (!isValid) {
     return { success: false, message: "Invalid synchronization code." };
+  }
 
   await prisma.user.update({
     where: { id: user.id },

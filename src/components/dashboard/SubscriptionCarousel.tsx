@@ -11,11 +11,13 @@ import { formatCurrency, convertTo } from "@/lib/currency-helper";
 export function SubscriptionCarousel({ 
   data, 
   currency, 
-  rates 
+  rates,
+  onAdd 
 }: { 
   data: any[], 
   currency: string, 
-  rates: any 
+  rates: any,
+  onAdd?: () => void 
 }) {
   const sorted = [...data]
     .filter(sub => !sub.isTrial)
@@ -30,8 +32,17 @@ export function SubscriptionCarousel({
     .slice(0, 8);
 
   return (
-    // 👇 Added mt-10 here to create a clear section break below the charts
-    <div className="w-full space-y-4 font-sans mt-10">
+    <div className="w-full space-y-4 font-sans mt-10 relative">
+      
+      <style dangerouslySetInnerHTML={{ __html: `
+        .hide-horizontal-scroll::-webkit-scrollbar {
+          display: none !important;
+          width: 0 !important;
+          height: 0 !important;
+          -webkit-appearance: none !important;
+        }
+      `}} />
+
       <div className="flex items-center justify-between px-1">
         <h3 className="text-xl font-bold tracking-tight text-foreground">Top Subscriptions</h3>
         {data.length > 0 && (
@@ -44,13 +55,19 @@ export function SubscriptionCarousel({
         )}
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pt-2 pb-8 px-1 snap-x snap-mandatory [scrollbar-width:'none'] [&::-webkit-scrollbar]:hidden">
+      <div 
+        className="hide-horizontal-scroll flex gap-4 overflow-x-auto pt-2 pb-8 px-1 snap-x snap-mandatory"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
         
         {sorted.length === 0 && (
-           <Link href="#" className="w-full sm:w-auto min-w-[300px] snap-center">
+           <button 
+             onClick={onAdd} 
+             className="w-full sm:w-auto min-w-[300px] snap-center text-left"
+           >
              <Card className="group relative h-full overflow-hidden border border-dashed border-primary/30 bg-primary/5 hover:border-primary/50 hover:bg-primary/10 transition-all duration-300 cursor-pointer">
                <CardContent className="p-6 flex flex-col items-center justify-center h-[180px] gap-4 text-primary/70 group-hover:text-primary">
-                 <div className="rounded-full bg-background p-4 shadow-sm border border-primary/20 transition-transform duration-300 group-hover:scale-110 group-hover:shadow-[0_0_15px_rgba(var(--primary),0.3)]">
+                 <div className="rounded-full bg-background p-4 shadow-sm border border-primary/20 transition-transform duration-300 group-hover:scale-110">
                    <Plus className="h-6 w-6" />
                  </div>
                  <span className="font-semibold tracking-wide text-sm">
@@ -58,7 +75,7 @@ export function SubscriptionCarousel({
                  </span>
                </CardContent>
              </Card>
-           </Link>
+           </button>
         )}
 
         {sorted.map((sub, i) => {
@@ -90,10 +107,8 @@ export function SubscriptionCarousel({
                 whileHover={{ y: -6 }}
                 className="h-full"
               >
-                <Card className="group relative h-full overflow-hidden border border-border/60 bg-gradient-to-br from-background to-secondary/10 shadow-sm transition-all duration-300 hover:shadow-[0_0_25px_-5px_rgba(var(--primary),0.2)] hover:border-primary/50 cursor-pointer">
-                  
+                <Card className="group relative h-full overflow-hidden border border-border/60 bg-gradient-to-br from-background to-secondary/10 shadow-sm transition-all duration-300 hover:border-primary/50 cursor-pointer">
                   <CardContent className="p-7 flex flex-col justify-between h-[180px]">
-                    
                     <div>
                       <h4 className="font-extrabold text-foreground tracking-tight truncate text-xl mb-3 transition-colors duration-300 group-hover:text-primary">
                         {sub.vendor.name}
@@ -110,11 +125,10 @@ export function SubscriptionCarousel({
                     
                     <div className="mt-4 flex items-center justify-between text-xs font-semibold border-t border-border/50 pt-4">
                       <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Next Renewal</span>
-                      <span className="text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20 shadow-[0_0_10px_rgba(var(--primary),0.1)]">
+                      <span className="text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
                         {nextRenewal.format("MMM D")}
                       </span>
                     </div>
-
                   </CardContent>
                 </Card>
               </motion.div>
@@ -127,7 +141,7 @@ export function SubscriptionCarousel({
              <motion.div 
                whileHover={{ scale: 1.1 }} 
                whileTap={{ scale: 0.95 }}
-               className="flex h-14 w-14 items-center justify-center rounded-full border border-border bg-card hover:bg-primary hover:border-transparent hover:text-primary-foreground text-muted-foreground transition-colors duration-300 shadow-sm hover:shadow-[0_0_15px_rgba(var(--primary),0.4)]"
+               className="flex h-14 w-14 items-center justify-center rounded-full border border-border bg-card hover:bg-primary hover:border-transparent hover:text-primary-foreground text-muted-foreground transition-colors duration-300 shadow-sm"
              >
                 <ArrowRight className="h-6 w-6" />
              </motion.div>

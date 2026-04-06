@@ -85,10 +85,8 @@ test.describe("Subscription Management", () => {
     await menuTrigger.click();
 
     // 4. Look for the menu item
-    // Your code uses "Delete Forever"
     const deleteOption = page.getByRole("menuitem", { name: /Delete Forever/i });
     
-    // If the standard click didn't work, we try one more time with a force click
     if (!(await deleteOption.isVisible())) {
         await menuTrigger.click({ force: true });
     }
@@ -100,6 +98,6 @@ test.describe("Subscription Management", () => {
     console.log("   - Waiting for deletion to reflect in UI...");
     await expect(page.getByText("Spotify")).toHaveCount(0, { timeout: 15000 });
     
-    console.log("✅ Test Completed successfully!");
+    console.log("Test Completed successfully!");
   });
 });

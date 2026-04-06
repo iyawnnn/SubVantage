@@ -35,7 +35,6 @@ export function UpcomingBills({ data }: UpcomingBillsProps) {
              // If sub starts in future, that IS the next bill
              nextDate = startDate;
         } else {
-             // 👇 FIX: Use "Diff" logic instead of "Loop" to avoid February clamping
              if (nextDate.isBefore(today)) {
                const diff = today.diff(nextDate, cycleUnit);
                nextDate = nextDate.add(diff, cycleUnit);
@@ -51,7 +50,7 @@ export function UpcomingBills({ data }: UpcomingBillsProps) {
         return { ...sub, nextRenewalDate: nextDate, daysLeft };
       })
       .sort((a, b) => a.daysLeft - b.daysLeft) // Sort by closest date
-      .slice(0, 4); // Take top 4
+      .slice(0, 4);
   }, [data]);
 
   return (

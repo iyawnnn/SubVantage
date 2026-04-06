@@ -16,6 +16,7 @@ import {
   Sparkles,
   Check,
   ChevronsUpDown,
+  PencilLine
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -64,7 +65,6 @@ import {
   updateSubscription,
 } from "@/actions/subscription-actions";
 
-// IMPORT THE GLOBAL SECURE SCHEMA
 import { subscriptionSchema } from "@/lib/validations/subscription";
 
 const PRESET_CATEGORIES = [
@@ -125,7 +125,7 @@ export function SubscriptionModal({
   React.useEffect(() => {
     if (subToEdit) {
       form.reset({
-        name: subToEdit.vendor.name, // Mapped accurately to the new 'name' field
+        name: subToEdit.vendor.name, 
         cost: Number(subToEdit.cost),
         splitCost: subToEdit.splitCost ? Number(subToEdit.splitCost) : 0,
         currency: subToEdit.currency,
@@ -187,7 +187,7 @@ export function SubscriptionModal({
 
       try {
         // Because we unified the schema, we can pass 'values' directly
-        // to the server action without manipulating the payload object!
+        // to the server action without manipulating the payload object
         const result = subToEdit
           ? await updateSubscription(subToEdit.id, values)
           : await createSubscription(values);
@@ -224,7 +224,7 @@ export function SubscriptionModal({
         <DialogHeader className="p-6 pb-2 border-b border-border/40">
           <DialogTitle className="flex items-center gap-2 text-xl">
             {subToEdit ? (
-              <Sparkles className="h-5 w-5 text-primary" />
+              <PencilLine className="h-5 w-5 text-primary" />
             ) : (
               <CreditCard className="h-5 w-5 text-primary" />
             )}
@@ -238,7 +238,7 @@ export function SubscriptionModal({
               {/* 1. VENDOR NAME */}
               <FormField
                 control={form.control}
-                name="name" // Updated to match schema
+                name="name"
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
@@ -405,7 +405,7 @@ export function SubscriptionModal({
                                     }
                                   }}
                                 >
-                                  <Sparkles className="h-3 w-3 text-primary" />
+                                  <PencilLine className="h-3 w-3 text-primary" />
                                   Create "{searchValue}"
                                 </div>
                               </CommandEmpty>

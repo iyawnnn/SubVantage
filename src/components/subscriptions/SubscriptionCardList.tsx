@@ -50,7 +50,7 @@ export function SubscriptionCardList({
         return (
           <Card
             key={sub.id}
-            data-testid={testId} // Task 2: Added ID
+            data-testid={testId}
             onClick={() => router.push(`/subscriptions/${sub.id}`)}
             className="group border-border bg-card shadow-sm active:scale-[0.99] transition-all cursor-pointer hover:border-primary/30"
           >

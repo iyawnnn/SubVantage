@@ -1,5 +1,4 @@
 import NextAuth from "next-auth";
-// 👇 FIX: Add curly braces to import the named export
 import { authConfig } from "./auth.config";
 
 const { auth } = NextAuth(authConfig);

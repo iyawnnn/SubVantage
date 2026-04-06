@@ -190,7 +190,6 @@ export default function SettingsView({ user }: { user: any }) {
         <div className="flex flex-col md:flex-row items-center md:items-center gap-6 text-center md:text-left">
           <div className="h-24 w-24 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 text-primary overflow-hidden shadow-inner">
             {user?.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <img src={user.image} alt="Profile" className="h-full w-full object-cover" />
             ) : (
               <span className="text-4xl font-bold">{user?.name?.charAt(0) || "U"}</span>
