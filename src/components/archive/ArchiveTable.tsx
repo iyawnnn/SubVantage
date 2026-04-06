@@ -49,7 +49,6 @@ export function ArchiveTable({ data, onRestore, onDelete }: ArchiveTableProps) {
             
             <TableCell>
                <span className="font-medium text-muted-foreground decoration-border">
-                  {/* Using subscription currency as we aren't converting here */}
                   {formatCurrency(sub.cost, sub.currency)}
                </span>
                <span className="text-xs text-muted-foreground ml-1">/ {sub.frequency === "MONTHLY" ? "mo" : "yr"}</span>

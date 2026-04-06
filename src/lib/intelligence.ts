@@ -7,7 +7,7 @@ interface Subscription {
   id: string;
   vendor: { name: string };
   cost: number;
-  splitCost?: number; // 👈 ADDED THIS
+  splitCost?: number; 
   currency: string;
   category: string;
   status: SubStatus | string;
@@ -27,13 +27,12 @@ const SAFE_CATEGORIES = [
   "Education"
 ];
 
-// Helper to get the actual amount you pay
 function getRealCost(sub: Subscription) {
   return (sub.splitCost && sub.splitCost > 0) ? sub.splitCost : sub.cost;
 }
 
 /**
- * 1. Redundancy Insights (v2.1 - Collaborative Aware)
+ * 1. Redundancy Insights
  */
 export function getRedundancyInsights(subs: Subscription[]) {
   const activeSubs = subs.filter((s) => s.status === "ACTIVE");
@@ -57,7 +56,6 @@ export function getRedundancyInsights(subs: Subscription[]) {
         category: vendorName, 
         count: items.length,
         vendors: items.map(i => i.vendor.name), 
-        // 👈 FIX: Use real cost (your share) for total
         totalCost: items.reduce((sum, i) => sum + getRealCost(i), 0),
         message: `You have ${items.length} subscriptions for ${vendorName}.`
       });
@@ -83,7 +81,6 @@ export function getRedundancyInsights(subs: Subscription[]) {
       category: category,
       count: items.length,
       vendors: items.map(i => i.vendor.name),
-      // 👈 FIX: Use real cost for total
       totalCost: items.reduce((sum, i) => sum + getRealCost(i), 0),
       message: `You have ${items.length} subscriptions in ${category}.`
     });
@@ -104,7 +101,6 @@ export function getGraveyardStats(
   const cancelled = subs.filter((s) => s.status === "CANCELLED");
 
   const totalSavedMonthly = cancelled.reduce((acc, sub) => {
-    // 👈 FIX: Calculate savings based on what YOU were paying
     const realCost = getRealCost(sub);
     
     const costInBase = convertTo(realCost, sub.currency, baseCurrency, rates);
@@ -139,7 +135,6 @@ export function getCashFlowRunway(
   active.forEach((sub) => {
     let renewal = dayjs(sub.nextRenewalDate);
     
-    // 👈 FIX: Use getRealCost so projections are accurate to your wallet
     const realCost = getRealCost(sub);
     const cost = convertTo(realCost, sub.currency, baseCurrency, rates);
 

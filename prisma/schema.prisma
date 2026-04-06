@@ -8,8 +8,6 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// --- Auth.js v5 Models ---
-
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -18,11 +16,9 @@ model User {
   image         String?
   password      String?
   
-  // 2FA Fields
   twoFactorSecret    String?
   isTwoFactorEnabled Boolean @default(false)
 
-  // Relations
   accounts      Account[]
   sessions      Session[]
   subscriptions Subscription[]
@@ -76,8 +72,6 @@ model VerificationToken {
   
   @@id([identifier, token])
 }
-
-// --- SubTrack Business Logic ---
 
 enum BillingFrequency {
   MONTHLY
@@ -142,8 +136,6 @@ model Subscription {
 
   @@index([userId])
 }
-
-// --- Collaborative Models ---
 
 model Circle {
   id          String       @id @default(cuid())

@@ -38,7 +38,7 @@ export default function SubscriptionDetailView({
 
   // 1. Date Calculations
   const startDate = dayjs(sub.startDate).startOf('day');
-  const today = dayjs().startOf('day'); // 👈 FIX: Ignore time components
+  const today = dayjs().startOf('day'); 
   const isFuture = startDate.isAfter(today);
 
   // Calculate Next Renewal
@@ -64,7 +64,7 @@ export default function SubscriptionDetailView({
     : nextRenewal.clone().subtract(1, cycleUnit);
 
   const totalDaysInCycle = nextRenewal.diff(currentCycleStart, "day") || 1; 
-  const daysUntilRenewal = nextRenewal.diff(today, "day"); // 👈 Now accurate (e.g. 28 days)
+  const daysUntilRenewal = nextRenewal.diff(today, "day");
 
   const daysUsed = isFuture ? 0 : totalDaysInCycle - daysUntilRenewal;
   const progressValue = Math.min(
@@ -75,7 +75,6 @@ export default function SubscriptionDetailView({
   // 2. Cost Calculations
   const yearlyCost = sub.frequency === "MONTHLY" ? sub.cost * 12 : sub.cost;
   
-  // 👇 FIX: Lifetime Spend Logic
   // We want to count "How many times has the billing cycle triggered?"
   let paymentsMade = 0;
 
@@ -115,7 +114,6 @@ export default function SubscriptionDetailView({
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* 🔙 Navigation */}
       <Button
         variant="ghost"
         onClick={() => router.back()}
@@ -125,7 +123,6 @@ export default function SubscriptionDetailView({
         Back to Subscriptions
       </Button>
 
-      {/* ✨ Hero Header */}
       <div className="rounded-3xl border border-border/40 bg-secondary/30 p-8 shadow-sm">
         <div className="flex flex-col md:flex-row gap-6 md:items-center justify-between">
           <div className="flex items-center gap-4 md:gap-6">
@@ -167,7 +164,7 @@ export default function SubscriptionDetailView({
                   / {sub.frequency === "MONTHLY" ? "mo" : "yr"}
                 </span>
               </div>
-              {/* ⬇️ Converted Price (if different) */}
+              {/* Converted Price (if different) */}
               {convertedCost && (
                 <div className="flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-400 mt-1 bg-emerald-50 dark:bg-emerald-950/20 px-2 py-0.5 rounded-full">
                   <Info className="h-3 w-3" />

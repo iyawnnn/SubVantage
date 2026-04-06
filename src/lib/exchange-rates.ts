@@ -1,5 +1,3 @@
-// src/lib/exchange-rates.ts
-
 const FALLBACK_RATES: Record<string, number> = {
   USD: 1,
   PHP: 58.50,
@@ -13,7 +11,6 @@ const FALLBACK_RATES: Record<string, number> = {
 export async function getLiveRates(base = "USD"): Promise<Record<string, number>> {
   try {
     const res = await fetch(`https://api.exchangerate-api.com/v4/latest/${base}`, {
-      // ✅ FIX: Cache this for 1 hour (3600 seconds)
       next: { revalidate: 3600 }, 
     });
 

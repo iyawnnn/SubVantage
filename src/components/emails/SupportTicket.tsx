@@ -67,7 +67,6 @@ export default function SupportTicketEmail({
   );
 }
 
-// Industry Standard Light Theme Styles
 const main = {
   backgroundColor: "#f6f9fc",
   fontFamily:

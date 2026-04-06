@@ -11,7 +11,6 @@ export default async function ArchivePage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/");
 
-  // ✅ PARALLEL FETCH: Fetch User (for currency) and Archived Subs together
   const [user, rawSubs] = await Promise.all([
     prisma.user.findUnique({
       where: { id: session.user.id },

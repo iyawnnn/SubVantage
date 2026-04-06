@@ -13,9 +13,8 @@ export function SubscriptionStats({ subs, rates, baseCurrency }: any) {
     const todayStart = today.startOf("day");
 
     // 1. Calculate Monthly Burn
-    // FIX: Exclude Trials from Monthly Burn
     const monthlyTotal = subs.reduce((acc: number, sub: any) => {
-      if (sub.isTrial) return acc; // 👈 Skip trials
+      if (sub.isTrial) return acc; 
 
       const realCost = sub.splitCost > 0 ? sub.splitCost : sub.cost;
       const costInBase = convertTo(realCost, sub.currency, baseCurrency, rates);
@@ -31,7 +30,6 @@ export function SubscriptionStats({ subs, rates, baseCurrency }: any) {
       const cycleUnit = sub.frequency === "MONTHLY" ? "month" : "year";
 
       if (isFuture) {
-        // FIX: If future, the next bill is the Start Date
         nextRenewal = startDate;
       } else {
         if (nextRenewal.isBefore(todayStart, "day")) {
@@ -55,8 +53,7 @@ export function SubscriptionStats({ subs, rates, baseCurrency }: any) {
         (s: any) =>
           s.effectiveRenewalDate.diff(todayStart, "day") >= 0 && 
           s.cost > 0 &&
-          !s.isTrial // 👈 Optionally exclude trials from "Next Bill" alert? Or keep them.
-          // If you want to see Trial Expiry in "Next Bill", remove "!s.isTrial".
+          !s.isTrial 
       )
       .sort(
         (a: any, b: any) =>

@@ -8,19 +8,14 @@ export const metadata = {
 
 export default function NotFound() {
   return (
-    // Using 'fixed inset-0 z-[999]' ensures this page overlays everything, 
-    // including headers/footers from the main layout.
     <div className="fixed inset-0 z-[999] flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#050505] text-white font-satoshi selection:bg-primary/20">
       
-      {/* 🌌 Ambient Background Effects */}
       <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_-20%,_#3b82f6_0%,_transparent_40%)] opacity-20 pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_100%_100%,_#6366f1_0%,_transparent_40%)] opacity-10 pointer-events-none" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 blur-[100px] rounded-full pointer-events-none" />
 
-      {/* Content Wrapper */}
       <div className="relative z-10 flex flex-col items-center text-center max-w-md mx-auto p-6 animate-in fade-in slide-in-from-bottom-10 duration-700">
         
-        {/* 🔹 New Visualization: Sleek Status Indicator instead of giant text */}
         <div className="mb-8 flex items-center gap-4 rounded-full bg-white/5 border border-white/10 p-2 pr-6 backdrop-blur-md shadow-2xl shadow-black/50">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-primary to-blue-600 shadow-lg shadow-primary/30">
                <AlertTriangle className="h-7 w-7 text-white" />

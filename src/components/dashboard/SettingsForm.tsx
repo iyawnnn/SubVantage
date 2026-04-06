@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { updateUserSettings } from "@/actions/user-actions";
 import { toast } from "sonner";
 import { Loader2, Save, Moon, Sun, Laptop } from "lucide-react";
-import { useTheme } from "next-themes"; // Import hook
+import { useTheme } from "next-themes"; 
 
 import { Button } from "@/components/ui/button";
 import {
@@ -29,11 +29,9 @@ export function SettingsForm({ user }: { user: any }) {
   const [loading, setLoading] = useState(false);
   const [currency, setCurrency] = useState(user?.preferredCurrency || "USD");
   
-  // Theme management
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  // Wait for mount to avoid hydration mismatch
   useEffect(() => {
     setMounted(true);
   }, []);

@@ -6,14 +6,12 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Footer } from "@/components/Footer"; 
 
-// Font Setup
 const satoshi = localFont({
   src: "./fonts/Satoshi-Variable.ttf",
   variable: "--font-satoshi",
   weight: "300 900",
 });
 
-// Domain Configuration
 const DOMAIN = "https://subvantage.iansebastian.dev";
 
 // SEO Metadata Configuration
@@ -82,16 +80,14 @@ export default function RootLayout({
         <SessionProvider>
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
-            enableSystem
+            defaultTheme="dark" 
+            enableSystem={false}
             disableTransitionOnChange
           >
-            {/* Main Content Area */}
             <main className="flex-1">
               {children}
             </main>
             
-            {/* Global Footer */}
             <Footer />
             
             <Toaster position="bottom-right" richColors closeButton />

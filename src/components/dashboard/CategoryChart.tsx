@@ -4,7 +4,6 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, convertTo } from "@/lib/currency-helper";
 
-// Standard Chart Colors (Using CSS Variables)
 const COLORS = [
   "var(--chart-1)",
   "var(--chart-2)",
@@ -22,7 +21,6 @@ export function CategoryChart({ subs, rates, currency }: { subs: any[], rates: a
   }, {} as Record<string, number>);
 
   const data = Object.entries(dataMap)
-    // 👇 FIX: Explicitly ensure 'value' is treated as a number
     .map(([name, value]) => ({ name, value: Number(value) }))
     .sort((a, b) => b.value - a.value);
 

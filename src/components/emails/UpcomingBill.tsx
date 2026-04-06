@@ -100,8 +100,6 @@ export const UpcomingBillEmail = ({
   );
 };
 
-// --- Styles (Identical to above) ---
-
 const main = {
   backgroundColor: "#f6f9fc",
   fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',

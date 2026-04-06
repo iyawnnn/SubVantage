@@ -12,7 +12,6 @@ export default async function SubscriptionsPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/");
 
-  // ✅ PARALLEL FETCH: Fetch User and Subscriptions at the same time
   const [user, rawSubs] = await Promise.all([
     prisma.user.findUnique({
       where: { id: session.user.id },
@@ -30,7 +29,6 @@ export default async function SubscriptionsPage() {
 
   const baseCurrency = user?.preferredCurrency || "USD";
 
-  // Fetch rates after we know the currency (this is fast)
   const rates = await getExchangeRates(baseCurrency);
 
   const subs = rawSubs.map(sub => ({

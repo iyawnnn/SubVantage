@@ -22,11 +22,9 @@ function Verify2FAForm() {
       const result = await verifyOAuthTwoFactorAction(code);
       
       if (result.success) {
-        // Upgrade the JWT token session state
         await update({ twoFactorVerified: true });
         toast.success("Identity verified");
         
-        // FIX: A hard reload destroys the lock screen and safely reveals the dashboard
         window.location.reload(); 
       } else {
         toast.error(result.message || "Invalid code");
@@ -94,7 +92,6 @@ function Verify2FAForm() {
   );
 }
 
-// Wraps the form safely in context so it never crashes
 export function Verify2FAScreen() {
   return (
     <SessionProvider>

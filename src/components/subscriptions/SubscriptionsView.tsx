@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useOptimistic } from "react";
 import { Search, Filter, ArrowUpDown } from "lucide-react";
-import dayjs from "dayjs"; // 👈 Added dayjs import
+import dayjs from "dayjs";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -100,23 +100,19 @@ export function SubscriptionsView({ initialData, rates, baseCurrency }: any) {
       result = result.filter((s) => s.category === category);
     }
 
-    // 👇 FIX: Use "Effective Date" for sorting, not the stale DB date
     result.sort((a, b) => {
       if (sort === "COST") {
         return b.cost - a.cost;
       }
 
-      // Helper to calculate the REAL next date (Same logic as Table)
       const getEffectiveDate = (sub: any) => {
         const today = dayjs().startOf("day");
         const startDate = dayjs(sub.startDate).startOf("day");
         let nextRenewal = dayjs(sub.nextRenewalDate).startOf("day");
         const cycleUnit = sub.frequency === "MONTHLY" ? "month" : "year";
 
-        // 1. If Future Start, use Start Date
         if (startDate.isAfter(today)) return startDate.valueOf();
 
-        // 2. If Past, Project Forward
         if (nextRenewal.isBefore(today)) {
           const diff = today.diff(nextRenewal, cycleUnit);
           nextRenewal = nextRenewal.add(diff, cycleUnit);

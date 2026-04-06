@@ -35,7 +35,7 @@ export const subscriptionSchema = z.object({
     .trim(),
   status: z.enum(["ACTIVE", "PAUSED", "CANCELLED"]).default("ACTIVE"),
   startDate: z.date({
-    message: "A valid start date is required", // Fixed this to only use 'message'
+    message: "A valid start date is required",
   }),
   isTrial: z.boolean().default(false),
 }).refine((data) => (data.splitCost || 0) <= data.cost, {

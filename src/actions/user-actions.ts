@@ -14,7 +14,6 @@ export async function updateUserSettings(data: UpdateSettingsData) {
     return { success: false, message: "Unauthorized" };
   }
 
-  // 👇 Fix: Access property directly from the object
   const { preferredCurrency } = data;
 
   try {
@@ -25,7 +24,7 @@ export async function updateUserSettings(data: UpdateSettingsData) {
 
     revalidatePath("/dashboard");
     revalidatePath("/settings");
-    revalidatePath("/archive"); // Ensure currency updates everywhere
+    revalidatePath("/archive"); 
     
     return { success: true, message: "Settings updated successfully" };
   } catch (error) {
