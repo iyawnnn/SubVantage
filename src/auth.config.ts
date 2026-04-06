@@ -18,22 +18,15 @@ export const authConfig = {
         nextUrl.pathname.startsWith("/settings");
 
       const isAuthRoute = nextUrl.pathname.startsWith("/auth");
-      const isVerifyRoute = nextUrl.pathname.startsWith("/auth/verify-2fa");
 
-      // 1. Protect Dashboard Routes (Basic Auth Check)
-      if (isOnDashboard) {
-        if (!isLoggedIn) return false; 
-        return true; 
+      // 1. Basic Auth Check for internal pages
+      if (isOnDashboard && !isLoggedIn) {
+        return false; 
       }
 
-      // 2. Manage Auth Routes
-      if (isAuthRoute) {
-        if (isVerifyRoute) return true; // Always allow access to the 2FA verify page
-        
-        if (isLoggedIn) {
-          return Response.redirect(new URL("/dashboard", nextUrl));
-        }
-        return true;
+      // 2. Keep logged-in users away from the login/signup pages
+      if (isAuthRoute && isLoggedIn) {
+        return Response.redirect(new URL("/dashboard", nextUrl));
       }
 
       // 3. Allow public routes

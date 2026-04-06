@@ -3,6 +3,7 @@ import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { SearchWrapper } from "@/components/dashboard/SearchWrapper";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import { Verify2FAScreen } from "@/components/auth/Verify2FAScreen";
 
 export default async function DashboardLayout({
   children,
@@ -15,9 +16,9 @@ export default async function DashboardLayout({
     redirect("/auth/login");
   }
 
-  // THE FOOLPROOF TRAP: The Node server reads the exact state. If they are false, kick them out.
+  // THE FOOLPROOF TRAP: Instead of redirecting, block the UI with the lock screen
   if ((session.user as any).is2faVerified === false) {
-    redirect("/auth/verify-2fa");
+    return <Verify2FAScreen />;
   }
 
   return (

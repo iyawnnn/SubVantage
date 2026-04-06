@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { SessionProvider, useSession, signOut } from "next-auth/react";
 import { Loader2, ShieldCheck, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
@@ -27,9 +26,8 @@ function Verify2FAForm() {
         await update({ twoFactorVerified: true });
         toast.success("Identity verified");
         
-        // FIX: Hard redirect bypasses Next.js client router cache, 
-        // forcing the Edge Middleware to read the newly updated token.
-        window.location.href = "/dashboard";
+        // FIX: A hard reload destroys the lock screen and safely reveals the dashboard
+        window.location.reload(); 
       } else {
         toast.error(result.message || "Invalid code");
         setCode("");
@@ -41,13 +39,8 @@ function Verify2FAForm() {
     }
   };
 
-  const handleCancel = async () => {
-    // Safely destroy the pending Google session and return to login
-    await signOut({ callbackUrl: "/auth/login" });
-  };
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#050505] text-white p-4 font-sans">
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#050505] text-white p-4 font-sans fixed inset-0 z-50">
       <div className="max-w-md w-full space-y-8 bg-white/5 p-8 rounded-3xl border border-white/10 shadow-xl">
         <div className="text-center space-y-3">
           <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -87,7 +80,7 @@ function Verify2FAForm() {
             <Button 
               type="button" 
               variant="ghost" 
-              onClick={handleCancel}
+              onClick={() => signOut({ callbackUrl: "/auth/login" })}
               disabled={loading}
               className="w-full h-12 text-sm text-muted-foreground hover:text-white hover:bg-white/5 cursor-pointer rounded-xl"
             >
@@ -101,8 +94,8 @@ function Verify2FAForm() {
   );
 }
 
-// FIX: Wrap the form in a SessionProvider to prevent React Context crashes
-export default function Verify2FAPage() {
+// Wraps the form safely in context so it never crashes
+export function Verify2FAScreen() {
   return (
     <SessionProvider>
       <Verify2FAForm />
