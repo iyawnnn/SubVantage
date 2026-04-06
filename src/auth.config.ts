@@ -18,9 +18,12 @@ export const authConfig = {
         nextUrl.pathname.startsWith("/settings");
 
       const isAuthRoute = nextUrl.pathname.startsWith("/auth");
+      // Add a specific check for our 2FA verify page
+      const isVerifyRoute = nextUrl.pathname === "/auth/verify-2fa";
 
       if (isAuthRoute) {
-        if (isLoggedIn) {
+        // If they are logged in, redirect away from auth routes EXCEPT the verify route
+        if (isLoggedIn && !isVerifyRoute) {
           return Response.redirect(new URL("/dashboard", nextUrl));
         }
         return true;

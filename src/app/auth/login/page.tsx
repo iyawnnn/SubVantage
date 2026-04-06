@@ -14,10 +14,12 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { loginWithCredentials } from "@/actions/auth-actions";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(1, "Password is required"),
+  code: z.string().optional(),
 });
 
 function LoginForm() {
@@ -28,6 +30,7 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showTwoFactor, setShowTwoFactor] = useState(false);
 
   useEffect(() => {
     if (urlError === "OAuthAccountNotLinked") {
@@ -46,6 +49,7 @@ function LoginForm() {
     defaultValues: {
       email: "",
       password: "",
+      code: "",
     },
   });
 
@@ -53,26 +57,38 @@ function LoginForm() {
     setLoading(true);
 
     try {
-      const result = await signIn("credentials", {
-        email: values.email,
-        password: values.password,
-        redirect: false,
-      });
+      const formData = new FormData();
+      formData.append("email", values.email);
+      formData.append("password", values.password);
+      if (values.code) {
+        formData.append("code", values.code);
+      }
+
+      const result = await loginWithCredentials(formData);
+
+      if (result?.twoFactor) {
+        setShowTwoFactor(true);
+        toast.info("Two-Factor Required", {
+          description: "Please enter your 6-digit authenticator code.",
+        });
+        setLoading(false);
+        return;
+      }
 
       if (result?.error) {
         toast.error("Login Failed", {
-          description: "Invalid email or password.",
+          description: result.error,
         });
-      } else {
-        toast.success("Welcome back!");
-        router.push("/dashboard");
-        router.refresh();
+        form.resetField("password");
+        if (showTwoFactor) form.resetField("code");
+        setLoading(false);
+        return;
       }
+
     } catch (err) {
       toast.error("Error", {
         description: "Something went wrong. Please try again.",
       });
-    } finally {
       setLoading(false);
     }
   };
@@ -102,95 +118,122 @@ function LoginForm() {
   return (
     <div className="mx-auto w-full max-w-[380px] space-y-6 relative z-10">
       <div className="flex flex-col space-y-2 text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-white">Welcome back</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-white">
+          {showTwoFactor ? "Verify Identity" : "Welcome back"}
+        </h1>
         <p className="text-sm text-muted-foreground">
-          Enter your email to sign in to your account
+          {showTwoFactor 
+            ? "Enter the code from your authenticator app" 
+            : "Enter your email to sign in to your account"}
         </p>
       </div>
 
       <div className="grid gap-6">
-        <Button 
-          variant="outline" 
-          className="w-full h-11 gap-3 bg-white/5 text-white border-white/10 hover:bg-white/10 hover:text-white hover:border-white/20 font-medium cursor-pointer transition-all active:scale-[0.98]"
-          onClick={handleGoogleLogin}
-          disabled={googleLoading || loading}
-        >
-          {googleLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <GoogleIcon className="h-5 w-5" />
-          )}
-          Sign in with Google
-        </Button>
+        {!showTwoFactor && (
+          <>
+            <Button 
+              variant="outline" 
+              className="w-full h-11 gap-3 bg-white/5 text-white border-white/10 hover:bg-white/10 hover:text-white hover:border-white/20 font-medium cursor-pointer transition-all active:scale-[0.98]"
+              onClick={handleGoogleLogin}
+              disabled={googleLoading || loading}
+            >
+              {googleLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <GoogleIcon className="h-5 w-5" />
+              )}
+              Sign in with Google
+            </Button>
 
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-white/10" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-[#050505] px-2 text-muted-foreground">
-              Or continue with
-            </span>
-          </div>
-        </div>
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-white/10" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-[#050505] px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+          </>
+        )}
 
         <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-white">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="name@example.com"
-              disabled={loading}
-              className="bg-white/5 border-white/10 focus:border-primary/50 focus:ring-primary/20 text-white placeholder:text-white/20 h-11"
-              {...form.register("email")}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password" className="text-white">Password</Label>
-            <div className="relative">
+          <div className={showTwoFactor ? "hidden" : "space-y-4"}>
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-white">Email</Label>
               <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
+                id="email"
+                type="email"
+                placeholder="name@example.com"
                 disabled={loading}
-                className="bg-white/5 border-white/10 focus:border-primary/50 focus:ring-primary/20 text-white placeholder:text-white/20 h-11 pr-10"
-                {...form.register("password")}
+                className="bg-white/5 border-white/10 focus:border-primary/50 focus:ring-primary/20 text-white placeholder:text-white/20 h-11"
+                {...form.register("email")}
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors cursor-pointer"
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-white">Password</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  disabled={loading}
+                  className="bg-white/5 border-white/10 focus:border-primary/50 focus:ring-primary/20 text-white placeholder:text-white/20 h-11 pr-10"
+                  {...form.register("password")}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors cursor-pointer"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
 
+          {showTwoFactor && (
+            <div className="space-y-2">
+              <Label htmlFor="code" className="text-white text-center block">Authentication Code</Label>
+              <Input
+                id="code"
+                type="text"
+                placeholder="000000"
+                maxLength={6}
+                disabled={loading}
+                className="bg-white/5 border-white/10 focus:border-primary/50 focus:ring-primary/20 text-white placeholder:text-white/20 h-14 text-center text-2xl tracking-[0.5em] font-mono"
+                {...form.register("code")}
+              />
+            </div>
+          )}
+
           <Button 
             type="submit" 
-            className="w-full h-11 text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98]" 
+            className="w-full h-11 text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] mt-2" 
             disabled={loading}
           >
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Sign In with Email
+            {showTwoFactor ? "Verify Code" : "Sign In with Email"}
           </Button>
         </form>
 
-        <p className="px-8 text-center text-sm text-muted-foreground">
-          Do not have an account?{" "}
-          <Link
-            href="/auth/signup"
-            className="hover:text-primary underline underline-offset-4 cursor-pointer transition-colors"
-          >
-            Sign up
-          </Link>
-        </p>
+        {!showTwoFactor && (
+          <p className="px-8 text-center text-sm text-muted-foreground">
+            Do not have an account?{" "}
+            <Link
+              href="/auth/signup"
+              className="hover:text-primary underline underline-offset-4 cursor-pointer transition-colors"
+            >
+              Sign up
+            </Link>
+          </p>
+        )}
       </div>
     </div>
   );
