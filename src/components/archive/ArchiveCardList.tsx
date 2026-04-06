@@ -4,7 +4,6 @@ import React from "react";
 import dayjs from "dayjs";
 import { MoreHorizontal, RotateCcw, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -24,53 +23,73 @@ export function ArchiveCardList({ data, onRestore, onDelete }: ArchiveCardListPr
   return (
     <div className="flex flex-col space-y-4">
       {data.map((sub) => (
-        <Card key={sub.id} className="border-border bg-card/50 shadow-sm opacity-80 hover:opacity-100 transition-opacity">
+        // UI FIX: Richer card design with soft borders and hover states
+        <Card key={sub.id} className="relative overflow-hidden border-border/40 bg-secondary/10 shadow-sm transition-all hover:bg-secondary/20 hover:border-border/60">
           <CardContent className="p-5">
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-bold text-lg shrink-0 grayscale">
+            
+            {/* Top Row: Icon, Context, & Actions */}
+            <div className="flex justify-between items-start mb-2">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-bold text-xl shrink-0 grayscale opacity-80 border border-border/50">
                   {sub.vendor.name.charAt(0)}
                 </div>
-                <div className="min-w-0">
-                  <h3 className="font-bold text-foreground truncate pr-2">{sub.vendor.name}</h3>
-                  <p className="text-xs text-muted-foreground truncate">{sub.category}</p>
+                <div className="flex flex-col">
+                  <h3 className="text-lg font-bold text-foreground leading-tight">{sub.vendor.name}</h3>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <span className="text-[11px] font-semibold text-muted-foreground opacity-80 bg-background/60 px-2 py-0.5 rounded border border-border/40">
+                      {sub.category}
+                    </span>
+                    <span className="text-[11px] font-semibold text-muted-foreground opacity-80 bg-background/60 px-2 py-0.5 rounded border border-border/40">
+                      {sub.frequency === 'MONTHLY' ? 'Monthly' : 'Yearly'}
+                    </span>
+                  </div>
                 </div>
               </div>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 text-muted-foreground hover:text-foreground">
-                    <MoreHorizontal className="h-4 w-4" />
+                  <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 text-muted-foreground hover:text-foreground cursor-pointer">
+                    <MoreHorizontal className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onRestore(sub.id)}>
-                    <RotateCcw className="mr-2 h-4 w-4" /> Restore
+                <DropdownMenuContent align="end" className="bg-background border-border/50 shadow-xl">
+                  <DropdownMenuItem onClick={() => onRestore(sub.id)} className="cursor-pointer font-medium py-2">
+                    <RotateCcw className="mr-2 h-4 w-4 text-emerald-500" /> Restore Record
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onDelete(sub.id)} className="text-destructive">
-                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                  <DropdownMenuItem onClick={() => onDelete(sub.id)} className="cursor-pointer text-red-500 font-medium hover:bg-red-500/10 hover:text-red-500 focus:text-red-500 focus:bg-red-500/10 py-2">
+                    <Trash2 className="mr-2 h-4 w-4" /> Delete Permanently
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
 
-            <div className="flex items-end justify-between mt-auto">
-              <div>
-                 <p className="text-xs text-muted-foreground uppercase font-semibold">Previous Cost</p>
-                 <p className="text-lg font-medium text-muted-foreground line-through decoration-border/50">
-                   {formatCurrency(sub.cost, sub.currency)}
-                 </p>
+            {/* Bottom Row: Advanced Pricing & Status */}
+            <div className="mt-6 flex items-end justify-between pt-4 border-t border-border/20">
+              <div className="flex flex-col gap-0.5">
+                 <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Previous Rate</p>
+                 <div className="flex items-baseline gap-1">
+                   <p className="text-2xl font-black text-muted-foreground/60 line-through decoration-muted-foreground/40">
+                     {formatCurrency(sub.cost, sub.currency)}
+                   </p>
+                   <span className="text-xs font-bold text-muted-foreground/50 line-through">
+                     /{sub.frequency === 'MONTHLY' ? 'mo' : 'yr'}
+                   </span>
+                 </div>
               </div>
 
-              <div className="text-right">
-                <Badge variant="secondary" className="mb-1 bg-muted text-muted-foreground">
-                  {sub.status}
-                </Badge>
-                <p className="text-xs text-muted-foreground whitespace-nowrap">
-                  Ended {sub.updatedAt ? dayjs(sub.updatedAt).format("MMM D, YYYY") : "-"}
+              <div className="flex flex-col items-end gap-2.5">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20">
+                  <div className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                  <span className="text-[10px] text-red-500 uppercase font-bold tracking-widest">
+                    {sub.status}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground font-semibold">
+                  Ended: {sub.updatedAt ? dayjs(sub.updatedAt).format("MMM D, YYYY") : "-"}
                 </p>
               </div>
             </div>
+
           </CardContent>
         </Card>
       ))}
