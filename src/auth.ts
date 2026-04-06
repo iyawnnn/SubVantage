@@ -17,6 +17,7 @@ const LoginSchema = z.object({
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig, 
   adapter: PrismaAdapter(prisma),
+  session: { strategy: "jwt" },
   providers: [
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
@@ -64,25 +65,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.id = user.id;
         token.picture = user.image;
 
-        // Check the database to see if this user has 2FA turned on
-        const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
-        const has2FA = dbUser?.isTwoFactorEnabled || false;
-
-        if (!has2FA) {
-          // If 2FA is off, they are verified by default
-          token.is2faVerified = true;
-        } else {
-          // If they logged in via email/password, our authorize function already checked the code
+        // FIX: Look up by email to ensure we catch Google OAuth users properly
+        const dbUser = await prisma.user.findUnique({ where: { email: user.email! } });
+        
+        if (dbUser?.isTwoFactorEnabled) {
           if (account?.provider === "credentials") {
             token.is2faVerified = true;
           } else {
-            // They logged in via Google (OAuth), and 2FA is enabled. Flag them as UNVERIFIED.
-            token.is2faVerified = false;
+            token.is2faVerified = false; // Google OAuth users get trapped here
           }
+        } else {
+          token.is2faVerified = true;
         }
       }
 
-      // If the user submits the correct code on the verify page, this upgrades the session
       if (trigger === "update" && session?.twoFactorVerified) {
         token.is2faVerified = true;
       }
@@ -95,8 +91,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (token.picture) {
           session.user.image = token.picture as string;
         }
-        // Pass the verification status down to the client layout
-        (session as any).is2faVerified = token.is2faVerified;
+        (session.user as any).is2faVerified = token.is2faVerified;
       }
       return session;
     },
