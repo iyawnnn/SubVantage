@@ -19,18 +19,17 @@ export const authConfig = {
 
       const isAuthRoute = nextUrl.pathname.startsWith("/auth");
 
-      if (isAuthRoute) {
-        if (isLoggedIn) {
-          return Response.redirect(new URL("/dashboard", nextUrl));
-        }
-        return true;
+      // 1. Basic Auth Check for internal pages
+      if (isOnDashboard && !isLoggedIn) {
+        return false; 
       }
 
-      if (isOnDashboard) {
-        if (isLoggedIn) return true;
-        return false;
+      // 2. Keep logged-in users away from the login/signup pages
+      if (isAuthRoute && isLoggedIn) {
+        return Response.redirect(new URL("/dashboard", nextUrl));
       }
 
+      // 3. Allow public routes
       return true;
     },
   },

@@ -2,7 +2,8 @@ import { Suspense } from "react";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { SearchWrapper } from "@/components/dashboard/SearchWrapper";
 import { auth } from "@/auth";
-import { redirect } from "next/navigation"; // 👈 Import redirect
+import { redirect } from "next/navigation";
+import { Verify2FAScreen } from "@/components/auth/Verify2FAScreen";
 
 export default async function DashboardLayout({
   children,
@@ -11,9 +12,13 @@ export default async function DashboardLayout({
 }) {
   const session = await auth();
 
-  // 👇 FIX: Redirect instead of returning null
   if (!session?.user) {
     redirect("/auth/login");
+  }
+
+  // THE FOOLPROOF TRAP: Instead of redirecting, block the UI with the lock screen
+  if ((session.user as any).is2faVerified === false) {
+    return <Verify2FAScreen />;
   }
 
   return (

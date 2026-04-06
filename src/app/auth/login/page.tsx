@@ -14,20 +14,23 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { loginWithCredentials } from "@/actions/auth-actions";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(1, "Password is required"),
+  code: z.string().optional(),
 });
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlError = searchParams.get("error");
-  
+
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showTwoFactor, setShowTwoFactor] = useState(false);
 
   useEffect(() => {
     if (urlError === "OAuthAccountNotLinked") {
@@ -46,6 +49,7 @@ function LoginForm() {
     defaultValues: {
       email: "",
       password: "",
+      code: "",
     },
   });
 
@@ -53,26 +57,44 @@ function LoginForm() {
     setLoading(true);
 
     try {
-      const result = await signIn("credentials", {
-        email: values.email,
-        password: values.password,
-        redirect: false,
-      });
+      const formData = new FormData();
+      formData.append("email", values.email);
+      formData.append("password", values.password);
+      if (values.code) {
+        formData.append("code", values.code);
+      }
+
+      const result = await loginWithCredentials(formData);
+
+      if (result?.twoFactor) {
+        setShowTwoFactor(true);
+        toast.info("Two-Factor Required", {
+          description: "Please enter your 6-digit authenticator code.",
+        });
+        setLoading(false);
+        return;
+      }
 
       if (result?.error) {
         toast.error("Login Failed", {
-          description: "Invalid email or password.",
+          description: result.error,
         });
-      } else {
-        toast.success("Welcome back!");
-        router.push("/dashboard");
-        router.refresh();
+        form.resetField("password");
+        if (showTwoFactor) form.resetField("code");
+        setLoading(false);
+        return;
       }
-    } catch (err) {
+    } catch (err: any) {
+      if (
+        err?.name === "RedirectError" ||
+        err?.digest?.startsWith("NEXT_REDIRECT")
+      ) {
+        throw err;
+      }
+
       toast.error("Error", {
         description: "Something went wrong. Please try again.",
       });
-    } finally {
       setLoading(false);
     }
   };
@@ -89,7 +111,9 @@ function LoginForm() {
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
     try {
-      const redirectUrl = process.env.NEXT_PUBLIC_APP_URL ? `${process.env.NEXT_PUBLIC_APP_URL}/dashboard` : "/dashboard";
+      const redirectUrl = process.env.NEXT_PUBLIC_APP_URL
+        ? `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`
+        : "/dashboard";
       await signIn("google", { callbackUrl: redirectUrl });
     } catch (error) {
       toast.error("Error", {
@@ -102,95 +126,131 @@ function LoginForm() {
   return (
     <div className="mx-auto w-full max-w-[380px] space-y-6 relative z-10">
       <div className="flex flex-col space-y-2 text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-white">Welcome back</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-white">
+          {showTwoFactor ? "Verify Identity" : "Welcome back"}
+        </h1>
         <p className="text-sm text-muted-foreground">
-          Enter your email to sign in to your account
+          {showTwoFactor
+            ? "Enter the code from your authenticator app"
+            : "Enter your email to sign in to your account"}
         </p>
       </div>
 
       <div className="grid gap-6">
-        <Button 
-          variant="outline" 
-          className="w-full h-11 gap-3 bg-white/5 text-white border-white/10 hover:bg-white/10 hover:text-white hover:border-white/20 font-medium cursor-pointer transition-all active:scale-[0.98]"
-          onClick={handleGoogleLogin}
-          disabled={googleLoading || loading}
-        >
-          {googleLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <GoogleIcon className="h-5 w-5" />
-          )}
-          Sign in with Google
-        </Button>
+        {!showTwoFactor && (
+          <>
+            <Button
+              variant="outline"
+              className="w-full h-11 gap-3 bg-white/5 text-white border-white/10 hover:bg-white/10 hover:text-white hover:border-white/20 font-medium cursor-pointer transition-all active:scale-[0.98]"
+              onClick={handleGoogleLogin}
+              disabled={googleLoading || loading}
+            >
+              {googleLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <GoogleIcon className="h-5 w-5" />
+              )}
+              Sign in with Google
+            </Button>
 
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-white/10" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-[#050505] px-2 text-muted-foreground">
-              Or continue with
-            </span>
-          </div>
-        </div>
-
-        <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-white">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="name@example.com"
-              disabled={loading}
-              className="bg-white/5 border-white/10 focus:border-primary/50 focus:ring-primary/20 text-white placeholder:text-white/20 h-11"
-              {...form.register("email")}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password" className="text-white">Password</Label>
             <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-white/10" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-[#050505] px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+          </>
+        )}
+
+        <form
+          onSubmit={form.handleSubmit(onSubmit, onInvalid)}
+          className="space-y-4"
+        >
+          <div className={showTwoFactor ? "hidden" : "space-y-4"}>
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-white">
+                Email
+              </Label>
               <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
+                id="email"
+                type="email"
+                placeholder="name@example.com"
                 disabled={loading}
-                className="bg-white/5 border-white/10 focus:border-primary/50 focus:ring-primary/20 text-white placeholder:text-white/20 h-11 pr-10"
-                {...form.register("password")}
+                className="bg-white/5 border-white/10 focus:border-primary/50 focus:ring-primary/20 text-white placeholder:text-white/20 h-11"
+                {...form.register("email")}
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors cursor-pointer"
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-white">
+                Password
+              </Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  disabled={loading}
+                  className="bg-white/5 border-white/10 focus:border-primary/50 focus:ring-primary/20 text-white placeholder:text-white/20 h-11 pr-10"
+                  {...form.register("password")}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors cursor-pointer"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
 
-          <Button 
-            type="submit" 
-            className="w-full h-11 text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98]" 
+          {showTwoFactor && (
+            <div className="space-y-2">
+              <Label htmlFor="code" className="text-white text-center block">
+                Authentication Code
+              </Label>
+              <Input
+                id="code"
+                type="text"
+                placeholder="000000"
+                maxLength={6}
+                disabled={loading}
+                className="bg-white/5 border-white/10 focus:border-primary/50 focus:ring-primary/20 text-white placeholder:text-white/20 h-14 text-center text-2xl tracking-[0.5em] font-mono"
+                {...form.register("code")}
+              />
+            </div>
+          )}
+
+          <Button
+            type="submit"
+            className="w-full h-11 text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] mt-2"
             disabled={loading}
           >
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Sign In with Email
+            {showTwoFactor ? "Verify Code" : "Sign In with Email"}
           </Button>
         </form>
 
-        <p className="px-8 text-center text-sm text-muted-foreground">
-          Do not have an account?{" "}
-          <Link
-            href="/auth/signup"
-            className="hover:text-primary underline underline-offset-4 cursor-pointer transition-colors"
-          >
-            Sign up
-          </Link>
-        </p>
+        {!showTwoFactor && (
+          <p className="px-8 text-center text-sm text-muted-foreground">
+            Do not have an account?{" "}
+            <Link
+              href="/auth/signup"
+              className="hover:text-primary underline underline-offset-4 cursor-pointer transition-colors"
+            >
+              Sign up
+            </Link>
+          </p>
+        )}
       </div>
     </div>
   );
@@ -206,54 +266,54 @@ export default function LoginPage() {
       <div className="hidden bg-black lg:flex relative overflow-hidden flex-col justify-between p-12 border-r border-white/5">
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_-20%,_#3b82f6_0%,_transparent_40%)] opacity-20" />
         <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_100%_100%,_#6366f1_0%,_transparent_40%)] opacity-20" />
-        
+
         <div className="relative z-10 flex items-center gap-2">
-            <div className="flex h-12 w-12 items-center justify-center bg-transparent overflow-hidden">
-               <Image 
-                 src="/logo.png" 
-                 alt="SubVantage" 
-                 width={48} 
-                 height={48} 
-                 className="object-cover"
-                 priority
-               />
-            </div>
-            <span className="text-xl font-bold tracking-tight">SubVantage</span>
+          <div className="flex h-12 w-12 items-center justify-center bg-transparent overflow-hidden">
+            <Image
+              src="/logo.png"
+              alt="SubVantage"
+              width={48}
+              height={48}
+              className="object-cover"
+              priority
+            />
+          </div>
+          <span className="text-xl font-bold tracking-tight">SubVantage</span>
         </div>
 
         <div className="relative z-10 max-w-lg">
-           <h2 className="text-4xl font-extrabold tracking-tight mb-6 leading-tight">
-             Master your <br />
-             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">
-               recurring life.
-             </span>
-           </h2>
-           <div className="space-y-4 text-muted-foreground">
-             <div className="flex items-center gap-3">
-               <CheckCircle2 className="h-5 w-5 text-primary" />
-               <span>Track unlimited subscriptions</span>
-             </div>
-             <div className="flex items-center gap-3">
-               <CheckCircle2 className="h-5 w-5 text-primary" />
-               <span>Get notified before renewals</span>
-             </div>
-             <div className="flex items-center gap-3">
-               <CheckCircle2 className="h-5 w-5 text-primary" />
-               <span>Visualize spending habits</span>
-             </div>
-           </div>
+          <h2 className="text-4xl font-extrabold tracking-tight mb-6 leading-tight">
+            Master your <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">
+              recurring life.
+            </span>
+          </h2>
+          <div className="space-y-4 text-muted-foreground">
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="h-5 w-5 text-primary" />
+              <span>Track unlimited subscriptions</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="h-5 w-5 text-primary" />
+              <span>Get notified before renewals</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="h-5 w-5 text-primary" />
+              <span>Visualize spending habits</span>
+            </div>
+          </div>
         </div>
 
         <div className="relative z-10 text-sm text-muted-foreground/60">
-           © {new Date().getFullYear()} SubVantage. All rights reserved.
+          © {new Date().getFullYear()} SubVantage. All rights reserved.
         </div>
       </div>
 
       <div className="relative flex items-center justify-center min-h-screen px-4 sm:px-6 lg:px-8 py-12">
         <div className="absolute inset-0 bg-primary/5 lg:hidden pointer-events-none blur-3xl" />
 
-        <Link 
-          href="/" 
+        <Link
+          href="/"
           className="absolute top-6 left-6 md:top-8 md:left-8 flex items-center gap-2 text-sm text-muted-foreground hover:text-white transition-colors group cursor-pointer z-50"
         >
           <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
@@ -261,7 +321,13 @@ export default function LoginPage() {
           <span className="sm:hidden">Back</span>
         </Link>
 
-        <Suspense fallback={<div className="flex justify-center items-center h-full"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>}>
+        <Suspense
+          fallback={
+            <div className="flex justify-center items-center h-full">
+              <Loader2 className="animate-spin h-8 w-8 text-primary" />
+            </div>
+          }
+        >
           <LoginForm />
         </Suspense>
       </div>
@@ -272,10 +338,22 @@ export default function LoginPage() {
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" {...props}>
-      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+      <path
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+        fill="#4285F4"
+      />
+      <path
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+        fill="#34A853"
+      />
+      <path
+        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+        fill="#FBBC05"
+      />
+      <path
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+        fill="#EA4335"
+      />
     </svg>
   );
 }
