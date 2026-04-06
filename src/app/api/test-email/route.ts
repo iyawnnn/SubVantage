@@ -21,7 +21,7 @@ export async function GET() {
     // 2. Send the "Upcoming Bill" Design
     const billEmail = await resend.emails.send({
       from: "SubVantage Support <updates@subvantage.iansebastian.dev>",
-      to: "ianmacabulos0@gmail.com", // ⚠️ YOUR REAL EMAIL
+      to: "ianmacabulos0@gmail.com",
       subject: "Test: Upcoming Bill Design (Light Mode)",
       react: UpcomingBillEmail({
         userName: "Ian",

@@ -9,7 +9,6 @@ export async function finishOnboarding(data: { currency: string; notifications: 
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: "Unauthorized" };
 
-  // Strict Validation
   const validated = onboardingSchema.safeParse(data);
   if (!validated.success) {
     return { success: false, error: "Invalid configuration data provided." };

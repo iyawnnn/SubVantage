@@ -18,7 +18,7 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"; // Import Popover
+} from "@/components/ui/popover";
 
 import { register } from "@/actions/auth-actions";
 
@@ -50,7 +50,6 @@ function SignupForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
-  // State to track if the password input is focused to show the popover
   const [passwordFocused, setPasswordFocused] = useState(false);
 
   useEffect(() => {

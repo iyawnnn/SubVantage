@@ -23,12 +23,10 @@ jobs:
         pnpm install
         pnpm exec playwright install --with-deps
 
-    # SAFE DB SETUP: Only generate the client, DO NOT push schema
     - name: Setup Database Client
       run: |
         pnpm prisma generate
       env:
-        # We don't need the URL for generate, but good to keep if needed later
         DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
         DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
 
@@ -42,11 +40,9 @@ jobs:
     - name: Run Playwright Tests
       run: pnpm exec playwright test
       env:
-        # These now point to PRODUCTION DB
         DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
         DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
         AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-        # Point to localhost because we are running the built app in the runner
         AUTH_URL: "http://localhost:3000"
         AUTH_TRUST_HOST: "true"
         RESEND_API_KEY: "re_mock_key"

@@ -65,7 +65,6 @@ import {
   updateSubscription,
 } from "@/actions/subscription-actions";
 
-// IMPORT THE GLOBAL SECURE SCHEMA
 import { subscriptionSchema } from "@/lib/validations/subscription";
 
 const PRESET_CATEGORIES = [
@@ -126,7 +125,7 @@ export function SubscriptionModal({
   React.useEffect(() => {
     if (subToEdit) {
       form.reset({
-        name: subToEdit.vendor.name, // Mapped accurately to the new 'name' field
+        name: subToEdit.vendor.name, 
         cost: Number(subToEdit.cost),
         splitCost: subToEdit.splitCost ? Number(subToEdit.splitCost) : 0,
         currency: subToEdit.currency,
@@ -188,7 +187,7 @@ export function SubscriptionModal({
 
       try {
         // Because we unified the schema, we can pass 'values' directly
-        // to the server action without manipulating the payload object!
+        // to the server action without manipulating the payload object
         const result = subToEdit
           ? await updateSubscription(subToEdit.id, values)
           : await createSubscription(values);
@@ -239,7 +238,7 @@ export function SubscriptionModal({
               {/* 1. VENDOR NAME */}
               <FormField
                 control={form.control}
-                name="name" // Updated to match schema
+                name="name"
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>

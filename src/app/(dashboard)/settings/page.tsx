@@ -11,7 +11,6 @@ export default async function SettingsPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/");
 
-  // Fetch fresh user data from DB
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
   });

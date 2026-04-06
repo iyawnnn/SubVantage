@@ -96,13 +96,11 @@ export async function verifyAndEnableTwoFactor(token: string) {
     return { success: false, message: "2FA initialization missing." };
   }
 
-  // FIX: otplib 'verify' returns a boolean, not an object.
   const isValid = verify({
     token,
     secret: user.twoFactorSecret,
   });
 
-  // Now it properly evaluates if the code is wrong
   if (!isValid) {
     return { success: false, message: "Invalid synchronization code." };
   }

@@ -44,11 +44,3 @@ The system is designed for serverless scalability:
 * **Hosting:** Deployed on **Vercel**, leveraging Edge Networks for global content delivery and serverless function execution.
 * **Edge Generation:** Dynamic asset generation (Favicons, Open Graph images) is handled at the edge using `next/og`, reducing bundle size and ensuring brand consistency.
 * **Email Infrastructure:** Transactional emails are routed through **Resend**, ensuring high deliverability for critical billing alerts.
-
-
-## Operational Features
-
-* **Adaptive Glassmorphism:** The UI features a sophisticated dark mode with ambient background lighting that reacts to screen size, providing a premium depth of field.
-* **Live Currency Conversion:** The system fetches and caches live exchange rates, allowing users to add a subscription in JPY and see the impact in USD instantly.
-* **Privacy-First Architecture:** Subscription data is scoped strictly to the authenticated user via multi-tenant database logic, ensuring no data bleed between accounts.
-* **Dynamic 404 Handling:** A custom error routing system that captures invalid paths and presents a branded recovery interface, overlaying standard layout elements.

@@ -11,7 +11,7 @@ const FALLBACK_RATES: Record<string, number> = {
 
 export async function getExchangeRates(base: string) {
   try {
-    // Using Frankfurter API (Free, no key required)
+    // Using Frankfurter API
     const res = await fetch(`https://api.frankfurter.app/latest?from=${base}`, {
       next: { revalidate: 3600 }, // Cache for 1 hour
     });
@@ -28,7 +28,6 @@ export async function getExchangeRates(base: string) {
   } catch (error) {
     console.error("Currency API Error, using fallback rates:", error);
     // If API fails, return fallback rates (adjusted roughly to base)
-    // Note: This fallback math is simple; for production, you'd want better fallback logic.
     return FALLBACK_RATES;
   }
 }
@@ -40,12 +39,11 @@ export function convertTo(amount: number, from: string, to: string, rates: Recor
   if (rates[to] && rates[from]) {
     // Convert 'from' to Base, then Base to 'to'
     // Formula: (Amount / Rate_From) * Rate_To
-    // Note: Since our rates dictionary is relative to the USER'S base currency (fetched above),
+    // Note: Since rates dictionary is relative to the USER'S base currency (fetched above),
     // the logic is slightly different depending on how we fetched it.
     
     // However, the getExchangeRates above fetches rates where Base = User's Preference.
-    // So 'rates[currency]' tells us "How much of this currency equals 1 BaseUnit".
-    // Wait, Frankfurter returns: "1 Base = X Target".
+    // So 'rates[currency]' tells "How much of this currency equals 1 BaseUnit".
     // So if Base is USD, rates['PHP'] is 56. 
     // If I have 100 PHP and want USD: 100 / 56.
     

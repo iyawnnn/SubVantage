@@ -7,11 +7,11 @@ export default function DashboardLoading() {
       {/* 1. Header Skeleton */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="space-y-2">
-          <Skeleton className="h-8 w-48" /> {/* Title */}
-          <Skeleton className="h-4 w-64" /> {/* Subtitle */}
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-64" /> 
         </div>
         <div className="flex items-center gap-2">
-          <Skeleton className="h-10 w-32" /> {/* Button */}
+          <Skeleton className="h-10 w-32" />
         </div>
       </div>
 
@@ -31,18 +31,16 @@ export default function DashboardLoading() {
         ))}
       </div>
 
-      {/* 3. Main Content / Table Skeleton */}
       <div className="rounded-xl border border-border/60 bg-card/50 p-6 space-y-6">
         {/* Toolbar */}
         <div className="flex flex-col sm:flex-row gap-4 justify-between">
-          <Skeleton className="h-10 w-full sm:w-64" /> {/* Search */}
+          <Skeleton className="h-10 w-full sm:w-64" />
           <div className="flex gap-2">
             <Skeleton className="h-10 w-24" />
             <Skeleton className="h-10 w-24" />
           </div>
         </div>
 
-        {/* List Items */}
         <div className="space-y-4">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="flex items-center justify-between p-4 rounded-lg border border-border/40">

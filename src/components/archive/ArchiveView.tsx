@@ -116,7 +116,6 @@ export default function ArchiveView({ initialData, currency }: ArchiveViewProps)
     <div className="space-y-8 pb-2">
       <ArchiveHeader />
 
-      {/* UI FIX: Removed the optimisticSubs.length > 0 check so KPI cards always show, even when 0 */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3 pt-2">
         <div className="flex flex-col gap-1 rounded-2xl border border-border/40 bg-secondary/10 p-5 shadow-sm transition-all hover:bg-secondary/20">
           <span className="text-sm font-medium text-muted-foreground">Total Cancelled</span>

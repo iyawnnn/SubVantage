@@ -15,8 +15,6 @@ export async function sendSupportTicket(formData: FormData) {
 
   try {
     await resend.emails.send({
-      // "onboarding@resend.dev" allows testing without a verified domain.
-      // Once you verify "subvantage.com" in Resend, change this to "support@subvantage.com"
       from: "SubVantage Support <onboarding@resend.dev>", 
       to: "iannmacabulos@gmail.com",
       subject: `[SubVantage Support] ${subject}`,

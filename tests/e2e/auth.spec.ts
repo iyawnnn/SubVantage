@@ -16,8 +16,6 @@ test.describe("Authentication Flow", () => {
     await page.getByLabel(/Email/i).fill(email);
     await page.getByLabel("Password", { exact: true }).fill(password);
     await page.getByLabel(/Confirm Password/i).fill(password);
-    
-    // 👇 FIX: Be specific! Only click the button that says exactly "Create Account"
     await page.getByRole("button", { name: "Create Account", exact: true }).click();
 
     // 2. Login (App redirects here)

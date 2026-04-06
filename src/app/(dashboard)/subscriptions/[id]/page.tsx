@@ -9,7 +9,6 @@ type Props = {
   params: Promise<{ id: string }>;
 };
 
-// 👇 REPLACED: Static metadata with Dynamic Metadata
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const session = await auth();
   const { id } = await params;
@@ -18,7 +17,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: "Details" };
   }
 
-  // Fetch just enough data to get the title
   const sub = await prisma.subscription.findUnique({
     where: { 
       id: id,

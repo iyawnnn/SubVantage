@@ -58,7 +58,6 @@ export function UserMenu({ image, name, email }: UserMenuProps) {
             <span>Settings</span>
           </Link>
         </DropdownMenuItem>
-        {/* 👇 FIX: Add callbackUrl to signOut */}
         <DropdownMenuItem 
           onClick={() => signOut({ callbackUrl: "/auth/login" })} 
           className="cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-500/10"

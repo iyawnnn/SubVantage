@@ -23,7 +23,6 @@ export function ArchiveCardList({ data, onRestore, onDelete }: ArchiveCardListPr
   return (
     <div className="flex flex-col space-y-4">
       {data.map((sub) => (
-        // UI FIX: Richer card design with soft borders and hover states
         <Card key={sub.id} className="relative overflow-hidden border-border/40 bg-secondary/10 shadow-sm transition-all hover:bg-secondary/20 hover:border-border/60">
           <CardContent className="p-5">
             
