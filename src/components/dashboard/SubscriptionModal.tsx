@@ -16,6 +16,7 @@ import {
   Sparkles,
   Check,
   ChevronsUpDown,
+  PencilLine
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -224,7 +225,7 @@ export function SubscriptionModal({
         <DialogHeader className="p-6 pb-2 border-b border-border/40">
           <DialogTitle className="flex items-center gap-2 text-xl">
             {subToEdit ? (
-              <Sparkles className="h-5 w-5 text-primary" />
+              <PencilLine className="h-5 w-5 text-primary" />
             ) : (
               <CreditCard className="h-5 w-5 text-primary" />
             )}
@@ -405,7 +406,7 @@ export function SubscriptionModal({
                                     }
                                   }}
                                 >
-                                  <Sparkles className="h-3 w-3 text-primary" />
+                                  <PencilLine className="h-3 w-3 text-primary" />
                                   Create "{searchValue}"
                                 </div>
                               </CommandEmpty>

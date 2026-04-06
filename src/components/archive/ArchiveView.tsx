@@ -108,7 +108,6 @@ export default function ArchiveView({ initialData, currency }: ArchiveViewProps)
     return acc;
   }, {} as Record<string, number>);
   
-  // Array type assertion ensures the TS compiler correctly infers the tuple values before sorting
   const topCategory = Object.keys(categoryCounts).length > 0 
     ? (Object.entries(categoryCounts) as [string, number][]).sort((a, b) => b[1] - a[1])[0][0] 
     : "-";
@@ -117,40 +116,36 @@ export default function ArchiveView({ initialData, currency }: ArchiveViewProps)
     <div className="space-y-8 pb-2">
       <ArchiveHeader />
 
-      {optimisticSubs.length > 0 && (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 pt-2">
-          
-          <div className="flex flex-col gap-1 rounded-2xl border border-border/40 bg-secondary/10 p-5 shadow-sm transition-all hover:bg-secondary/20">
-            <span className="text-sm font-medium text-muted-foreground">Total Cancelled</span>
-            <span className="text-3xl font-extrabold text-foreground">{optimisticSubs.length}</span>
-          </div>
-
-          <div className="flex flex-col gap-1 rounded-2xl border border-border/40 bg-secondary/10 p-5 shadow-sm transition-all hover:bg-secondary/20">
-            <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Wallet className="h-4 w-4 text-emerald-500" />
-              Monthly Savings
-            </span>
-            <span className="text-3xl font-extrabold text-emerald-500">
-              {formatCurrency(totalSaved, currency)}
-            </span>
-          </div>
-
-          <div className="flex flex-col gap-1 rounded-2xl border border-border/40 bg-secondary/10 p-5 shadow-sm transition-all hover:bg-secondary/20">
-            <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Tag className="h-4 w-4 text-violet-500" />
-              Top Cancelled Category
-            </span>
-            <span className="text-3xl font-extrabold text-foreground truncate">
-              {topCategory}
-            </span>
-          </div>
-
+      {/* UI FIX: Removed the optimisticSubs.length > 0 check so KPI cards always show, even when 0 */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 pt-2">
+        <div className="flex flex-col gap-1 rounded-2xl border border-border/40 bg-secondary/10 p-5 shadow-sm transition-all hover:bg-secondary/20">
+          <span className="text-sm font-medium text-muted-foreground">Total Cancelled</span>
+          <span className="text-3xl font-extrabold text-foreground">{optimisticSubs.length}</span>
         </div>
-      )}
+
+        <div className="flex flex-col gap-1 rounded-2xl border border-border/40 bg-secondary/10 p-5 shadow-sm transition-all hover:bg-secondary/20">
+          <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+            <Wallet className="h-4 w-4 text-emerald-500" />
+            Monthly Savings
+          </span>
+          <span className="text-3xl font-extrabold text-emerald-500">
+            {formatCurrency(totalSaved, currency)}
+          </span>
+        </div>
+
+        <div className="flex flex-col gap-1 rounded-2xl border border-border/40 bg-secondary/10 p-5 shadow-sm transition-all hover:bg-secondary/20">
+          <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+            <Tag className="h-4 w-4 text-primary" />
+            Top Cancelled Category
+          </span>
+          <span className="text-3xl font-extrabold text-foreground truncate">
+            {topCategory}
+          </span>
+        </div>
+      </div>
 
       <div className="sticky top-16 z-40 bg-background py-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-border/40 transition-all">
         <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between w-full">
-          
           <div className="relative w-full max-w-md mx-auto sm:mx-0 sm:flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
@@ -175,7 +170,6 @@ export default function ArchiveView({ initialData, currency }: ArchiveViewProps)
               </SelectContent>
             </Select>
           </div>
-
         </div>
       </div>
 

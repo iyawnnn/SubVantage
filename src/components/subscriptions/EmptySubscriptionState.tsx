@@ -1,45 +1,44 @@
 "use client";
 
-import React from "react";
-import { CreditCard, Plus } from "lucide-react";
+import { PlusCircle, SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-interface EmptyStateProps {
+interface EmptySubscriptionStateProps {
   onAdd: () => void;
   isSearching: boolean;
 }
 
-export function EmptySubscriptionState({ onAdd, isSearching }: EmptyStateProps) {
-  return (
-    <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in duration-500">
-      
-      {/* Icon with Ring Effect */}
-      <div className="relative mb-6">
-        <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full" />
-        <div className="relative h-20 w-20 bg-background border border-border/50 rounded-full flex items-center justify-center shadow-xl">
-          <CreditCard className="h-9 w-9 text-primary/80" />
+export function EmptySubscriptionState({ onAdd, isSearching }: EmptySubscriptionStateProps) {
+  // If the user is just searching and found nothing, show a different message
+  if (isSearching) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 px-4 text-center border-2 border-dashed border-border/60 rounded-2xl bg-secondary/10 mt-8">
+        <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-6 shadow-sm border border-border/50">
+          <SearchX className="h-8 w-8 text-muted-foreground" />
         </div>
+        <h3 className="text-xl font-bold text-foreground mb-2 tracking-tight">No results found</h3>
+        <p className="text-muted-foreground max-w-sm mx-auto text-sm leading-relaxed mb-6">
+          We couldn't find any subscriptions matching your search criteria.
+        </p>
       </div>
+    );
+  }
 
-      <h3 className="text-2xl font-bold text-foreground mb-2">
-        {isSearching ? "No matching subscriptions" : "No active subscriptions"}
-      </h3>
-      
-      <p className="text-muted-foreground max-w-sm mx-auto mb-8 leading-relaxed">
-        {isSearching 
-          ? "We couldn't find any subscriptions matching your search or filters."
-          : "You haven't added any subscriptions yet. Add your first one to start tracking your expenses."
-        }
+  // The default empty state for a new user
+  return (
+    <div className="flex flex-col items-center justify-center py-20 px-4 text-center border-2 border-dashed border-border/60 rounded-2xl bg-secondary/10 mt-8">
+      <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-6 shadow-sm border border-primary/20">
+        <PlusCircle className="h-8 w-8 text-primary" />
+      </div>
+      <h3 className="text-xl font-bold text-foreground mb-2 tracking-tight">No Active Subscriptions</h3>
+      <p className="text-muted-foreground max-w-sm mx-auto text-sm leading-relaxed mb-6">
+        You are not tracking any active subscriptions yet. Add your first recurring expense to start analyzing your spending.
       </p>
-
-      {/* Primary Action Button */}
       <Button 
-        onClick={onAdd} 
-        size="lg"
-        className="gap-2 rounded-xl h-11 px-6 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all"
+        onClick={onAdd}
+        className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 shadow-sm cursor-pointer"
       >
-        <Plus className="h-4 w-4" />
-        Add Subscription
+        Add First Subscription
       </Button>
     </div>
   );

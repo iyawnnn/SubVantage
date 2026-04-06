@@ -30,7 +30,6 @@ export function SubscriptionCarousel({
     .slice(0, 8);
 
   return (
-    // 👇 Added mt-10 here to create a clear section break below the charts
     <div className="w-full space-y-4 font-sans mt-10">
       <div className="flex items-center justify-between px-1">
         <h3 className="text-xl font-bold tracking-tight text-foreground">Top Subscriptions</h3>
@@ -44,7 +43,8 @@ export function SubscriptionCarousel({
         )}
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pt-2 pb-8 px-1 snap-x snap-mandatory [scrollbar-width:'none'] [&::-webkit-scrollbar]:hidden">
+      {/* UI FIX: Added !hidden to the webkit scrollbar to forcefully override the global scrollbar CSS */}
+      <div className="flex gap-4 overflow-x-auto pt-2 pb-8 px-1 snap-x snap-mandatory [scrollbar-width:'none'] [&::-webkit-scrollbar]:!hidden">
         
         {sorted.length === 0 && (
            <Link href="#" className="w-full sm:w-auto min-w-[300px] snap-center">

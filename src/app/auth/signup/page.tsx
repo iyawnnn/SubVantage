@@ -7,13 +7,18 @@ import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2, ArrowLeft, CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { Loader2, ArrowLeft, CheckCircle2, Eye, EyeOff, Info } from "lucide-react";
 import { toast } from "sonner";
 import { signIn } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"; // Import Popover
 
 import { register } from "@/actions/auth-actions";
 
@@ -44,6 +49,9 @@ function SignupForm() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  // State to track if the password input is focused to show the popover
+  const [passwordFocused, setPasswordFocused] = useState(false);
 
   useEffect(() => {
     if (urlError === "OAuthAccountNotLinked") {
@@ -63,10 +71,8 @@ function SignupForm() {
     },
   });
 
-  // Watch the password field in real-time
   const currentPassword = form.watch("password") || "";
 
-  // Define the validation criteria
   const passwordCriteria = [
     { label: "At least 8 characters", met: currentPassword.length >= 8 },
     { label: "At least 1 uppercase letter", met: /[A-Z]/.test(currentPassword) },
@@ -188,48 +194,68 @@ function SignupForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-white">
-              Password
-            </Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
-                disabled={loading}
-                className="bg-white/5 border-white/10 focus:border-primary/50 focus:ring-primary/20 text-white placeholder:text-white/20 h-11 pr-10"
-                {...form.register("password")}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors cursor-pointer"
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password" className="text-white">
+                Password
+              </Label>
             </div>
             
-            {/* Real-time Password Criteria Indicator */}
-            {currentPassword.length > 0 && (
-              <div className="flex flex-col gap-1.5 pt-2 text-xs">
-                {passwordCriteria.map((criterion, index) => (
-                  <div key={index} className="flex items-center gap-2 transition-colors duration-300">
-                    {criterion.met ? (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500 transition-all duration-300 scale-100" />
+            {/* Popover wrapper for the password input */}
+            <Popover open={passwordFocused}>
+              <PopoverTrigger asChild>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    disabled={loading}
+                    className="bg-white/5 border-white/10 focus:border-primary/50 focus:ring-primary/20 text-white placeholder:text-white/20 h-11 pr-10"
+                    {...form.register("password", {
+                      onBlur: () => setPasswordFocused(false),
+                    })}
+                    onFocus={() => setPasswordFocused(true)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors cursor-pointer"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
                     ) : (
-                      <div className="h-4 w-4 rounded-full border border-white/20 flex shrink-0 transition-all duration-300 scale-90" />
+                      <Eye className="h-4 w-4" />
                     )}
-                    <span className={criterion.met ? "text-emerald-500 transition-colors duration-300" : "text-muted-foreground transition-colors duration-300"}>
-                      {criterion.label}
-                    </span>
+                  </button>
+                </div>
+              </PopoverTrigger>
+              <PopoverContent 
+                className="w-full max-w-[280px] p-4 bg-[#111] border-zinc-800 text-white shadow-xl" 
+                side="top" 
+                align="start"
+                onOpenAutoFocus={(e) => e.preventDefault()}
+              >
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-sm flex items-center gap-2">
+                    <Info className="h-4 w-4 text-violet-500" />
+                    Password Requirements
+                  </h4>
+                  <div className="flex flex-col gap-2 text-xs">
+                    {passwordCriteria.map((criterion, index) => (
+                      <div key={index} className="flex items-center gap-2 transition-colors duration-300">
+                        {criterion.met ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500 transition-all duration-300 scale-100" />
+                        ) : (
+                          <div className="h-4 w-4 rounded-full border border-white/20 flex shrink-0 transition-all duration-300 scale-90" />
+                        )}
+                        <span className={criterion.met ? "text-emerald-500 transition-colors duration-300" : "text-muted-foreground transition-colors duration-300"}>
+                          {criterion.label}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="space-y-2">

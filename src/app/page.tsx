@@ -169,6 +169,19 @@ export default function LandingPage() {
   }
 
   return (
+    <>
+    
+    <style dangerouslySetInnerHTML={{ __html: `
+        body { 
+          background-color: #020202 !important; 
+          color-scheme: dark !important; 
+        }
+        :root { 
+          --scrollbar-thumb: #27272a !important; 
+          --scrollbar-thumb-hover: #3f3f46 !important; 
+        }
+      `}} />
+
     <div className="min-h-screen bg-[#020202] text-white font-satoshi selection:bg-violet-500/30 overflow-x-hidden">
       <script
         type="application/ld+json"
@@ -748,5 +761,6 @@ export default function LandingPage() {
         </section>
       </main>
     </div>
+    </>
   );
 }

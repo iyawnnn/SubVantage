@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { onboardingSchema } from "@/lib/validations/settings";
 
-export async function finishOnboarding(data: { currency: string; notifications: boolean }) {
+export async function finishOnboarding(data: { currency: string; notifications: boolean; twoFactorEnabled: boolean }) {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: "Unauthorized" };
 
@@ -21,6 +21,7 @@ export async function finishOnboarding(data: { currency: string; notifications: 
       data: {
         preferredCurrency: validated.data.currency,
         emailNotifications: validated.data.notifications,
+        isTwoFactorEnabled: validated.data.twoFactorEnabled,
         hasCompletedOnboarding: true,
       },
     });
