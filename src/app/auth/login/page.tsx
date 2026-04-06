@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { loginWithCredentials } from "@/actions/auth-actions";
-import { isRedirectError } from "next/dist/client/components/redirect";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -85,8 +84,11 @@ function LoginForm() {
         setLoading(false);
         return;
       }
-    } catch (err) {
-      if (isRedirectError(err)) {
+    } catch (err: any) {
+      if (
+        err?.name === "RedirectError" ||
+        err?.digest?.startsWith("NEXT_REDIRECT")
+      ) {
         throw err;
       }
 

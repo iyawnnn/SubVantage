@@ -29,10 +29,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (validatedFields.success) {
           const { email, password, code } = validatedFields.data;
-
-          const user = await prisma.user.findUnique({
-            where: { email },
-          });
+          const user = await prisma.user.findUnique({ where: { email } });
 
           if (!user || !user.password) return null;
 
@@ -41,19 +38,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           if (user.isTwoFactorEnabled && user.twoFactorSecret) {
             if (!code) return null;
-
-            // otplib v13 requires asynchronous verification and returns an object
-            const result = await verify({
-              token: code,
-              secret: user.twoFactorSecret,
-            });
-
+            const result = await verify({ token: code, secret: user.twoFactorSecret });
             if (!result.valid) return null;
           }
 
           return user;
         }
-
         return null;
       },
     }),
@@ -65,14 +55,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.id = user.id;
         token.picture = user.image;
 
-        // FIX: Look up by email to ensure we catch Google OAuth users properly
         const dbUser = await prisma.user.findUnique({ where: { email: user.email! } });
         
         if (dbUser?.isTwoFactorEnabled) {
           if (account?.provider === "credentials") {
             token.is2faVerified = true;
           } else {
-            token.is2faVerified = false; // Google OAuth users get trapped here
+            // Google OAuth users get flagged as strictly unverified right here
+            token.is2faVerified = false; 
           }
         } else {
           token.is2faVerified = true;
@@ -85,12 +75,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       
       return token;
     },
+    // The Node.js server maps the flag safely
     async session({ session, token }) {
       if (token && session.user) {
-        session.user.id = token.id as string || token.sub as string;
-        if (token.picture) {
-          session.user.image = token.picture as string;
-        }
+        session.user.id = (token.id as string) || (token.sub as string);
         (session.user as any).is2faVerified = token.is2faVerified;
       }
       return session;

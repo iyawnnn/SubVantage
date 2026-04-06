@@ -2,18 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { SessionProvider, useSession, signOut } from "next-auth/react";
+import { Loader2, ShieldCheck, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { verifyOAuthTwoFactorAction } from "@/actions/auth-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export default function Verify2FAPage() {
+function Verify2FAForm() {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
   const { update } = useSession();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -22,20 +21,29 @@ export default function Verify2FAPage() {
 
     try {
       const result = await verifyOAuthTwoFactorAction(code);
+      
       if (result.success) {
-        // Triggers the jwt update trigger we built in Step 1
+        // Upgrade the JWT token session state
         await update({ twoFactorVerified: true });
         toast.success("Identity verified");
-        router.push("/dashboard");
+        
+        // FIX: Hard redirect bypasses Next.js client router cache, 
+        // forcing the Edge Middleware to read the newly updated token.
+        window.location.href = "/dashboard";
       } else {
         toast.error(result.message || "Invalid code");
         setCode("");
+        setLoading(false);
       }
     } catch (error) {
       toast.error("Something went wrong");
-    } finally {
       setLoading(false);
     }
+  };
+
+  const handleCancel = async () => {
+    // Safely destroy the pending Google session and return to login
+    await signOut({ callbackUrl: "/auth/login" });
   };
 
   return (
@@ -51,7 +59,7 @@ export default function Verify2FAPage() {
           </p>
         </div>
         
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-3">
             <Label className="text-center block text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               Authentication Code
@@ -63,18 +71,41 @@ export default function Verify2FAPage() {
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, ''))}
               disabled={loading}
-              className="bg-[#050505] border-white/10 focus:border-primary/50 text-center text-3xl tracking-[0.4em] font-mono h-16 rounded-xl"
+              className="bg-[#050505] border-white/10 focus:border-primary/50 text-center text-3xl tracking-[0.4em] font-mono h-16 rounded-xl transition-colors"
             />
           </div>
-          <Button 
-            type="submit" 
-            disabled={code.length !== 6 || loading} 
-            className="w-full h-12 text-base font-bold rounded-xl cursor-pointer"
-          >
-            {loading ? <Loader2 className="animate-spin w-5 h-5 mx-auto" /> : "Verify & Continue"}
-          </Button>
+          
+          <div className="space-y-3 pt-2">
+            <Button 
+              type="submit" 
+              disabled={code.length !== 6 || loading} 
+              className="w-full h-12 text-base font-bold rounded-xl cursor-pointer"
+            >
+              {loading ? <Loader2 className="animate-spin w-5 h-5 mx-auto" /> : "Verify & Continue"}
+            </Button>
+            
+            <Button 
+              type="button" 
+              variant="ghost" 
+              onClick={handleCancel}
+              disabled={loading}
+              className="w-full h-12 text-sm text-muted-foreground hover:text-white hover:bg-white/5 cursor-pointer rounded-xl"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Cancel and return to login
+            </Button>
+          </div>
         </form>
       </div>
     </div>
+  );
+}
+
+// FIX: Wrap the form in a SessionProvider to prevent React Context crashes
+export default function Verify2FAPage() {
+  return (
+    <SessionProvider>
+      <Verify2FAForm />
+    </SessionProvider>
   );
 }

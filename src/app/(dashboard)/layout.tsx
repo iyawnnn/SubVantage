@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { SearchWrapper } from "@/components/dashboard/SearchWrapper";
 import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 
 export default async function DashboardLayout({
   children,
@@ -10,9 +11,14 @@ export default async function DashboardLayout({
 }) {
   const session = await auth();
 
-  // Middleware guarantees only authenticated, verified users reach this point.
-  // We only return null as a type-safety fallback.
-  if (!session?.user) return null;
+  if (!session?.user) {
+    redirect("/auth/login");
+  }
+
+  // THE FOOLPROOF TRAP: The Node server reads the exact state. If they are false, kick them out.
+  if ((session.user as any).is2faVerified === false) {
+    redirect("/auth/verify-2fa");
+  }
 
   return (
     <>
