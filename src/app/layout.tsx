@@ -12,9 +12,8 @@ const satoshi = localFont({
   weight: "300 900",
 });
 
-const DOMAIN = "https://subvantage.iansebastian.dev";
+const DOMAIN = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-// SEO Metadata Configuration
 export const metadata: Metadata = {
   metadataBase: new URL(DOMAIN),
   title: {
@@ -46,7 +45,7 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "SubVantage Dashboard Preview",
+        alt: "SubVantage subscription management dashboard displaying financial analytics and upcoming renewal alerts",
       },
     ],
   },
