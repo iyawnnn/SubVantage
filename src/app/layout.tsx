@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Instrument_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
@@ -6,15 +7,19 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Footer } from "@/components/Footer"; 
 
-const satoshi = localFont({
-  src: "./fonts/Satoshi-Variable.ttf",
-  variable: "--font-satoshi",
-  weight: "300 900",
+const instrumentSans = Instrument_Sans({
+  subsets: ["latin"],
+  variable: "--font-instrument-sans",
 });
 
-const DOMAIN = "https://subvantage.iansebastian.dev";
+const geist = localFont({
+  src: "./fonts/GeistVF.woff2",
+  variable: "--font-geist",
+});
 
-// SEO Metadata Configuration
+// Fallback prevents metadata initialization failure in local environments
+const DOMAIN = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
 export const metadata: Metadata = {
   metadataBase: new URL(DOMAIN),
   title: {
@@ -46,7 +51,7 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "SubVantage Dashboard Preview",
+        alt: "SubVantage dashboard showing subscription analytics and upcoming renewal alerts",
       },
     ],
   },
@@ -76,7 +81,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${satoshi.variable} font-satoshi antialiased bg-background text-foreground min-h-screen flex flex-col`}>
+      <body className={`${instrumentSans.variable} ${geist.variable} font-sans antialiased bg-background text-foreground min-h-screen flex flex-col`}>
         <SessionProvider>
           <ThemeProvider
             attribute="class"
