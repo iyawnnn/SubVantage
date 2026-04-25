@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Instrument_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
@@ -7,17 +6,12 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Footer } from "@/components/Footer"; 
 
-const instrumentSans = Instrument_Sans({
-  subsets: ["latin"],
-  variable: "--font-instrument-sans",
+const satoshi = localFont({
+  src: "./fonts/Satoshi-Variable.ttf",
+  variable: "--font-satoshi",
+  weight: "300 900",
 });
 
-const geist = localFont({
-  src: "./fonts/GeistVF.woff2",
-  variable: "--font-geist",
-});
-
-// Fallback prevents metadata initialization failure in local environments
 const DOMAIN = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 export const metadata: Metadata = {
@@ -51,7 +45,7 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "SubVantage dashboard showing subscription analytics and upcoming renewal alerts",
+        alt: "SubVantage subscription management dashboard displaying financial analytics and upcoming renewal alerts",
       },
     ],
   },
@@ -81,7 +75,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${instrumentSans.variable} ${geist.variable} font-sans antialiased bg-background text-foreground min-h-screen flex flex-col`}>
+      <body className={`${satoshi.variable} font-satoshi antialiased bg-background text-foreground min-h-screen flex flex-col`}>
         <SessionProvider>
           <ThemeProvider
             attribute="class"
